@@ -54,5 +54,5 @@ void main() {
     float r = dot(v,n);
     //clamp(r,0,1.0);
     float f = e*d*r;
-    gl_FragColor = vec4(vec3(f),1.0);
+    gl_FragColor = vec4(mix(DiffuseColour1,DiffuseColour2,f),1.0);
 }
