@@ -1,0 +1,197 @@
+;; -*- mode: scheme; -*-
+
+(define (butterfly type expr)
+  (list
+   type
+   (vmul (crndvec) 15) ;; pos
+   (vnormalise (crndvec)) ;; dir
+   (rndf) ;; fuzz
+   (load-texture (string-append "uploads/" expr))
+   expr ;; texture
+   (* 0.1 (- (rndf) 0.5))  ;; turn
+   "idle" ;; state
+   20 40)) ;; speed
+
+(define (demo-butterfly pos dir fuzz tex turn speed)
+  (list "demo" pos dir fuzz (load-texture "morph.png") () turn "demo" speed 40))
+
+(define (example-butterfly expr)
+  (list
+   "example"
+   (vector 0 0 15)
+   (vector 0 1 0)
+   (rndf) ;; fuzz
+   (load-texture (string-append "uploads/" expr))
+   expr ;; texture
+   (* 0.1 (- (rndf) 0.5))  ;; turn
+   "idle" ;; state
+   0 40)) ;; speed
+
+(define (comp-butterfly x y expr)
+  (let ((pos (hcrndvec 20)))
+    (list
+     "comp"
+     pos ;; pos
+     (vnormalise (vsub (vector x y 0) pos))
+     (rndf) ;; fuzz
+     (load-texture (string-append "uploads/" expr))
+     expr ;; texture
+     (* 0.1 (- (rndf) 0.5))  ;; turn
+     "idle" ;; state
+     (+ 10 (* (rndf) 20)) 40
+     (vector x y 0)
+     (vector 0 1 0)
+     0)))
+
+(define (butterfly-type s) (list-ref s 0))
+(define (butterfly-pos s) (list-ref s 1))
+(define (butterfly-modify-pos s v) (list-replace s 1 v))
+(define (butterfly-dir s) (list-ref s 2))
+(define (butterfly-modify-dir s v) (list-replace s 2 v))
+(define (butterfly-fuzz s) (list-ref s 3))
+(define (butterfly-texture s) (list-ref s 4))
+(define (butterfly-modify-texture s v) (list-replace s 4 v))
+(define (butterfly-expr s) (list-ref s 5))
+(define (butterfly-modify-expr s v) (list-replace s 5 v))
+(define (butterfly-turn s) (list-ref s 6))
+(define (butterfly-modify-turn s v) (list-replace s 6 v))
+(define (butterfly-state s) (list-ref s 7))
+(define (butterfly-modify-state s v) (list-replace s 7 v))
+(define (butterfly-speed s) (list-ref s 8))
+(define (butterfly-modify-speed s v) (list-replace s 8 v))
+(define (butterfly-flap-amount s) (list-ref s 9))
+(define (butterfly-modify-flap-amount s v) (list-replace s 9 v))
+(define (butterfly-target-pos s) (list-ref s 10))
+(define (butterfly-target-dir s) (list-ref s 11))
+(define (butterfly-target-time s) (list-ref s 12))
+(define (butterfly-modify-target-time s v) (list-replace s 12 v))
+
+(define safe-distance 10)
+
+(define (butterfly-advance-state s)
+  (let ((state (butterfly-state s)))
+    (cond
+     ((eq? state "re-centre")
+      (if (< (vmag (butterfly-pos s)) safe-distance)
+          (butterfly-modify-state s "idle")
+          (butterfly-modify-turn
+           (butterfly-modify-dir
+            s (vnormalise (vneg (butterfly-pos s))))
+           0)))
+
+     ((eq? state "idle")
+      (if (> (vmag (butterfly-pos s)) safe-distance)
+          ;; change pattern when off screen!
+          (let ((new-expr (chromosome-express edible-chromo)))
+            (butterfly-modify-state
+             (if (eq? (butterfly-type s) "edible")
+                 (butterfly-modify-texture
+                  (butterfly-modify-expr s new-expr)
+                  (load-texture (string-append "uploads/" new-expr))) s)
+             "re-centre"))
+          (if (< (rndf) 0.99)
+              s
+              (butterfly-modify-turn
+               (butterfly-modify-speed
+                s
+                (+ 10 (* (rndf) 20)))
+               (* 0.1 (- (rndf) 0.5))))))
+     (else s))))
+
+
+(define (butterfly-screen-pos s)
+  (project-point (butterfly-pos s)))
+
+(define (update-butterfly s)
+  (let ((a (* (butterfly-turn s) butterfly-speed-mult)))
+    (let ((dir (butterfly-dir s)))
+      (butterfly-advance-state
+       (butterfly-modify-pos
+        (butterfly-modify-dir
+         s
+         (vector (+ (* (vx dir) (cos a)) (* (vy dir) (- 0 (sin a))))
+                 (+ (* (vx dir) (sin a)) (* (vy dir) (cos a)))
+                 0))
+        (vadd (butterfly-pos s)
+              (vmul dir (* 0.05 butterfly-speed-mult))))))))
+
+(define (update-butterflies b)
+  (map
+   (lambda (b)
+     (update-butterfly b))
+   b))
+
+(define (blend-into a b d)
+  (vadd a (vmul (vsub b a) d)))
+
+(define (update-comp-butterfly s d)
+  (butterfly-modify-flap-amount
+   (if (> (butterfly-target-time s) 1)
+       s
+       (butterfly-modify-pos
+        (butterfly-modify-dir
+         (butterfly-modify-target-time s (+ (butterfly-target-time s)
+                                            (* d (butterfly-speed s) 0.01)))
+         (vnormalise (vlerp
+                      (butterfly-dir s)
+                      (butterfly-target-dir s)
+                      (butterfly-target-time s))))
+        (vlerp (butterfly-pos s) (butterfly-target-pos s) (butterfly-target-time s))))
+   (* (butterfly-flap-amount s) 0.995)))
+
+
+(define (update-comp-butterflies b d)
+  (map
+   (lambda (b)
+     (update-comp-butterfly b d))
+   b))
+
+(define (render-butterfly s)
+  (with-state
+   (clear-hints)
+   (hint-wire)
+   (texture (butterfly-texture s))
+   (translate (butterfly-pos s))
+   (maim (vnormalise (butterfly-dir s)) (vector 0 0 1))
+   (rotate (vector 0 90 90))
+   (scale (vector 0.25 0.25 0.25))
+   (draw-obj 4)
+   (with-state
+    (rotate (vector 180 0 0))
+    (translate (vector 0 0 -0.5))
+    (let ((a (- 90 (* (butterfly-flap-amount s)
+                      (+ 1 (sin (* (butterfly-speed s) butterfly-flap-mult
+                                   (+ (butterfly-fuzz s) (time)))))))))
+      (with-state
+       (rotate (vector 0 0 a))
+       (draw-obj 3))
+      (with-state
+       (scale (vector 1 -1 1))
+       (rotate (vector 0 0 a))
+       (draw-obj 3))))))
+
+(define big-tex (load-texture "wing-scale.png"))
+
+(define (render-big-butterfly)
+  (with-state
+   (texture big-tex)
+   (rotate (vector 90 180 90))
+   (scale (vector 0.5 0.5 0.5))
+   (with-state
+    (rotate (vector 180 0 0))
+    (translate (vector 0 0 -0.5))
+    (let ((a (+ 90 (* 3 (+ 1 (sin (* 5  (time))))))))
+      (with-state
+       (rotate (vector 0 0 a))
+       (draw-obj 3))
+      (with-state
+       (scale (vector 1 -1 1))
+       (rotate (vector 0 0 (+ 45 (- a 90))))
+       (draw-obj 3))))))
+
+
+(define (render-butterflies s)
+  (for-each
+   (lambda (p)
+     (render-butterfly p))
+   s))

@@ -1,0 +1,101 @@
+;; -*- mode: scheme; -*-
+;; Egglab Copyright (C) 2013 Dave Griffiths
+;;
+;; This program is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU Affero General Public License as
+;; published by the Free Software Foundation, either version 3 of the
+;; License, or (at your option) any later version.
+;;
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU Affero General Public License for more details.
+;;
+;; You should have received a copy of the GNU Affero General Public License
+;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(load "scm/butterfly/morph.jscm")
+
+(js "$.ajaxSetup ({ cache: false })")
+
+  ;; hack together a js object to send
+(define (build-url-args args)
+  (foldl
+   (lambda (i r) (js "r[i[0]]=i[1]") r)
+   (js "{}") args))
+
+(define (server-call-ret name argsl f)
+  (let ((args (build-url-args argsl)))
+    (set! args.fn name)
+    (let ((v ($.get "game" args f)))
+      (v.fail (lambda (jqXHR textStatus errorThrown)
+                (msg textStatus)
+                (msg errorThrown))))))
+
+
+(define (morph-form id texture probability active can-be-toxic wing-shape)
+  (string-append
+   "<div class='morph-edit'>
+   <div class='morph-left'> Name: " texture " </br> <img src='textures/uploads/" texture "'> </div>
+   <div class='morph-right'>
+   <form action='game?fn=update-morph' method='post' enctype='multipart/form-data'>
+          <input type='hidden' name='ID' value='" id "'></br>
+          Probability:
+          <input class='txt' type='text' name='probability' value='" probability "'></br>
+          Active:
+          <input class='chq' type='checkbox' name='active' " (if (zero? active) "" "checked='checked'") "></br>
+<!--          Can be toxic:
+          <input type='checkbox' name='can_be_toxic' " (if (zero? can-be-toxic) "" "checked='checked'") "></br>
+          Wing shape:
+          <input class='txt' type='text' name='wing_shape' value='" wing_shape "'></br>
+-->
+          <input class='btn' type='submit' value='Update me' name='update'>
+    </form>
+    <form action='game?fn=update-morph' method='post' enctype='multipart/form-data' onsubmit='return do_confirm();'>
+         <input class='btn' id='confirm' type='submit' value='Delete me' name='delete'>
+         <input type='hidden' name='ID' value='" id "'></br>
+    </form>
+    </div>
+    </div>"))
+
+(define (param-form key value)
+  (string-append
+   "<div class='param-edit'>
+    <form action='game?fn=set-game-param' method='post' enctype='multipart/form-data'>
+          <input type='hidden' name='key' value='" key "'></br>
+          " key "
+          <input class='txt' type='text' name='value' value='" value "'></br>
+    </form>
+    </div>"))
+
+(define (admin)
+  (server-call-ret
+   "get-morphs"
+   (list (list "type" "edible"))
+   (lambda (data)
+     (let ((c ($ ".morph-list-edible") ))
+       (for-each
+        (lambda (m)
+          (c.append (morph-form
+                     (morph-id m)
+                     (morph-texture-name m)
+                     (morph-probability m)
+                     (morph-active m)
+                     (morph-can-be-toxic m)
+                     (morph-wing-shape m))))
+        (JSON.parse data)))))
+
+  (server-call-ret
+   "get-game-params"
+   ()
+   (lambda (data)
+     (let ((c ($ ".param-list") ))
+       (for-each
+        (lambda (m)
+          (c.append (param-form (car m) (cadr m))))
+        (JSON.parse data)))))
+  )
+
+(admin)

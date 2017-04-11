@@ -1,0 +1,108 @@
+@font-face {
+    font-family: 'amatic';
+    src: url('../fonts/AmaticSC-Regular.ttf');
+}
+
+html, body {
+    font-family: 'Arial';
+    font-weight: bold;
+    color: #000;
+    font-size:  15px;
+    background: #fff;
+    // cursor: url(images/mouse.png), default;
+}
+
+.canvas {
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    width: 100%;
+    height: 100%;
+}
+
+.left {
+    float: left;
+    background: #ffaa22;
+    margin: 1em;
+    padding: 1em;
+}
+
+.right {
+    float: left;
+    background: #aaff22;
+    padding: 1em;
+    margin: 1em;
+}
+
+button {
+    background: #ffffff;
+}
+
+.morph-edit {
+
+    clear: left;
+    padding-bottom: 1em;
+}
+.morph-left {
+    float: left;
+}
+
+.morph-right {
+    padding-left: 2em;
+    overflow: hidden;
+}
+
+
+.morph-add {
+    padding-bottom: 2em;
+    clear: left;
+}
+
+.txt {
+  background: #ffffff;
+  font-family: 'Arial';
+  font-weight: bold;
+  color: #000;
+  font-size: 15px;
+  padding: 10px 20px 10px 20px;
+  text-decoration: none;
+  width: 3em;
+  border: none;
+}
+
+
+.btn {
+  background: #3498db;
+  background-image: -webkit-linear-gradient(top, #3498db, #2980b9);
+  background-image: -moz-linear-gradient(top, #3498db, #2980b9);
+  background-image: -ms-linear-gradient(top, #3498db, #2980b9);
+  background-image: -o-linear-gradient(top, #3498db, #2980b9);
+  background-image: linear-gradient(to bottom, #3498db, #2980b9);
+  font-family: 'Arial';
+  font-weight: bold;
+  color: #000;
+  font-size: 15px;
+  padding: 10px 20px 10px 20px;
+  text-decoration: none;
+  border: none;
+  width: 12em;
+}
+
+.btn:hover {
+  background: #3cb0fd;
+  background-image: -webkit-linear-gradient(top, #3cb0fd, #3498db);
+  background-image: -moz-linear-gradient(top, #3cb0fd, #3498db);
+  background-image: -ms-linear-gradient(top, #3cb0fd, #3498db);
+  background-image: -o-linear-gradient(top, #3cb0fd, #3498db);
+  background-image: linear-gradient(to bottom, #3cb0fd, #3498db);
+  text-decoration: none;
+}
+
+
+input[type=checkbox] {
+  /* All browsers except webkit*/
+  transform: scale(1.5);
+
+  /* Webkit browsers*/
+  -webkit-transform: scale(1.5);
+}

@@ -1,0 +1,176 @@
+;; -*- mode: scheme; -*-
+
+(define (number-display n)
+  (/ (Math.floor (* 100 n)) 100))
+
+(define (stroke-pie ctx x y time max-time)
+  (ctx.beginPath)
+  (ctx.moveTo x y)
+  (ctx.arc
+   x y 50 (+ (* Math.PI -0.5)
+             (/ (* time Math.PI 2) max-time))
+   (* Math.PI -0.5)
+   true)
+  (ctx.closePath))
+
+(define (draw-health ctx x y t max-t)
+  (let ((h (/ t max-t)))
+    (set! ctx.fillStyle (string-append "rgba(" (Math.floor (* (- 1 h) 255)) ", "
+                                       (Math.floor (* h 255)) ", " 0 ", 1.0)"))
+    (ctx.fillRect (+ x 50) (+ y 30) (* h 245) 37)
+    (ctx.drawImage (find-image "health.png") x y)))
+
+
+(define (draw-pie ctx x y time max-time r g b)
+  (stroke-pie ctx (+ x 3) (+ y 3) max-time max-time)
+  (set! ctx.fillStyle (string-append "rgba(" (Math.floor (/ r 2)) ", "
+                                     (Math.floor (/ g 2)) ", "
+                                     (Math.floor (/ b 2)) ", 1.0)"))
+  (ctx.fill)
+
+  (stroke-pie ctx x y time max-time)
+  (set! ctx.fillStyle (string-append "rgba(" (Math.floor r) ", "
+                                     (Math.floor g) ", "
+                                     (Math.floor b) ", 1.0)"))
+  (ctx.fill)
+
+  (set! ctx.lineWidth 1)
+  (set! ctx.fillStyle "#fff")
+  (set! ctx.font "bold 60pt amatic")
+  (let ((cm (ctx.measureText (+ "" (Math.floor time)))))
+    (ctx.fillText (Math.floor time) (- x (/ cm.width 2))  (+ y 33)))
+  )
+
+(define (draw-chromosome1 ctx x y chromo)
+  (let ((current 0)
+        (pos 0))
+  (index-for-each
+   (lambda (i gene)
+     (index-for-each
+      (lambda (i allele)
+        (set! ctx.fillStyle "#fff")
+        (set! ctx.font "bold 15pt amatic")
+        (ctx.drawImage
+         (find-image (string-append "alelle-" (+ current 1) ".png"))
+         (+ x -20 (* pos 40)) (+ y 110))
+
+        ;;(ctx.fillText (allele-id (car gene)) x (+ y (- (* i 40) 10)))
+        (set! ctx.fillStyle "#000")
+        (ctx.fillRect (+ x (* pos 40)) y 10 100)
+        (set! ctx.fillStyle "#ff0")
+        (ctx.fillRect (+ x (* pos 40))
+                      (+ y (- 100 (* 100 (allele-probability allele))))
+                      10
+                      (* 100 (allele-probability allele)))
+        (set! current (+ current 1))
+        (set! pos (+ pos 1)))
+      gene)
+     (set! pos (+ pos 1))
+     )
+   chromo)
+  ))
+
+(define (draw-chromosome ctx x y chromo)
+  (draw-chromosome1
+   ctx x y (map
+            (lambda (gene)
+              (list
+               (allele "dennis-patch"
+                       (+ (allele-probability (list-ref gene 2))
+                          (allele-probability (list-ref gene 3))))
+               (allele "hw-rays"
+                       (+ (allele-probability (list-ref gene 2))
+                          (allele-probability (list-ref gene 5))))
+               (allele "red-fw-band"
+                       (+ (allele-probability (list-ref gene 0))
+                          (allele-probability (list-ref gene 1))
+                          (allele-probability (list-ref gene 6))
+                          ))
+               (allele "yellow-fw-band"
+                       (+ (allele-probability (list-ref gene 2))
+                          (allele-probability (list-ref gene 3))
+                          (allele-probability (list-ref gene 4))
+                          (allele-probability (list-ref gene 5))
+                          (allele-probability (list-ref gene 6))
+                          ))
+               (allele "yellow-hw-bar"
+                       (+ (allele-probability (list-ref gene 1))
+                          (allele-probability (list-ref gene 4))))))
+            chromo)))
+
+
+(define (draw-expr ctx x y expr)
+  (index-for-each
+   (lambda (i e)
+     (set! ctx.fillStyle "#fff")
+     (set! ctx.font "bold 15pt amatic")
+     (ctx.fillText e x (+ y (- (* i 40) 10)))
+     (set! ctx.fillStyle "#000")
+     (ctx.fillRect x (+ y (* i 40)) 100 10)
+     (set! ctx.fillStyle "#f00")
+     (ctx.fillRect x (+ y (* i 40)) (cond
+                                     ((eq? e "dennis-patch-on") 100)
+                                     ((eq? e "hw-rays-on") 100)
+                                     ((eq? e "red-fw-band-on") 100)
+                                     ((eq? e "yellow-fw-band-on") 100)
+                                     ((eq? e "yellow-hw-bar-on") 100)
+                                     (else 0)) 10)
+     )
+   expr)
+  )
+
+
+(define (draw-flash ctx x y rad r g b a)
+  (ctx.beginPath)
+  (ctx.arc x y rad 0 (* Math.PI 2) true)
+  (ctx.closePath)
+  (let ((grd (ctx.createRadialGradient x y 50 x y 100)))
+    (grd.addColorStop 0 (string-append "rgba(" r ", " g ", " b ", " a ")"))
+    (grd.addColorStop 1 (string-append "rgba(255, 255, 0, 0.0)"))
+    (set! ctx.fillStyle grd)
+    (ctx.fill)))
+
+(define (make-gobble x y r g b s)
+  (set! gobble-x x)
+  (set! gobble-y y)
+  (set! gobble-t 0)
+  (set! gobble-r r)
+  (set! gobble-g g)
+  (set! gobble-b b)
+  (set! gobble-s s))
+
+(define gobble-x 0)
+(define gobble-y 0)
+(define gobble-t 1)
+(define gobble-r 1)
+(define gobble-g 1)
+(define gobble-b 1)
+(define gobble-s 0.2)
+
+(define (draw-gobble ctx)
+  (when (< gobble-t 1)
+        (ctx.beginPath)
+        (ctx.arc gobble-x gobble-y
+                 (* (- 1 gobble-t) 150)
+                 0 (* Math.PI 2) true)
+        (ctx.closePath)
+        (let ((grd (ctx.createRadialGradient
+                    gobble-x gobble-y (* (- 1 gobble-t) 10)
+                    gobble-x gobble-y (* (- 1 gobble-t) 150))))
+          (grd.addColorStop 0 (string-append "rgba(" gobble-r ", " gobble-g ", " gobble-b ", " a ")"))
+          (grd.addColorStop 1 (string-append "rgba(255, 255, 0, 0.0)"))
+          (set! ctx.fillStyle grd)
+          (ctx.fill))
+        (set! gobble-t (+ gobble-t gobble-s))))
+
+(define (draw-toxic-bg ctx)
+  (ctx.beginPath)
+  (ctx.arc 620 400 500 0 (* Math.PI 2) true)
+  (ctx.closePath)
+  (let ((grd (ctx.createRadialGradient
+              620 500 200
+              620 500 550)))
+    (grd.addColorStop 0 (string-append "rgba(255, 0, 0, 0.0)"))
+    (grd.addColorStop 1 (string-append "rgba(255, 255, 0, 1.0)"))
+    (set! ctx.fillStyle grd)
+    (ctx.fill)))

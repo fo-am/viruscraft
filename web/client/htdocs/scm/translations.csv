@@ -1,0 +1,31 @@
+id-code (don't change),English,French
+title,Hungry Bird Game,Les oiseaux affamés
+splash,Catch butterflies for citizen science!,Attrappez des papillons pour la science !
+play-button,PLAY!,Démarrer le jeu
+hiscores-button,Hall of fame,Meilleurs scores
+made-by-button,Made by,Obtenu par
+age-question,What is your age?,Quel âge avez-vous ?
+age-1,Younger than 10,Moins de 10 ans
+age-2,10 to 15,Entre 10 et 15 ans
+age-3,16 to 35,Entre 16 et 35 ans
+age-4,36 to 50,Entre 36 et 50 ans
+age-5,Older than 50,Plus de 50 ans
+played-before-question,Have you played this game before?,Avez-vous déjà joué ?
+played-before-1,Yes,Oui
+played-before-2,No,Non
+instructions-1,You are a hungry bird!,Vous êtes un oiseau d'Amazonie et vous avez très faim !
+instructions-2,Eat the butterflies to stay alive!,Il vous faut manger un maximum de papillons pour rester en vie
+instructions-button,GO!,C'est parti !
+low-health,Health Is Low!,Attention votre niveau de vie est bas !
+toxic-1,UGH!,AIE !
+toxic-2,That butterfly tasted disgusting!,Ce papillon a un goût dégoûtant
+game-over-1,Game Over,Partie terminée
+game-over-2,You survived,Vous avez survécu
+game-over-3,seconds,secondes
+game-over-4,Thankyou for playing!,Merci d'avoir joué !
+game-over-play,Play again!,Rejouer
+game-over-exit,Exit,Quitter le jeu
+enter-name,Enter your name,Entrez votre nom
+enter-name-delete,Delete,Suprimer
+enter-name-ok,Done,OK
+back,Back,Revenir

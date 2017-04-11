@@ -1,0 +1,179 @@
+;; -*- mode: scheme; -*-
+;; Egglab Copyright (C) 2013 Dave Griffiths
+;;
+;; This program is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU Affero General Public License as
+;; published by the Free Software Foundation, either version 3 of the
+;; License, or (at your option) any later version.
+;;
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU Affero General Public License for more details.
+;;
+;; You should have received a copy of the GNU Affero General Public License
+;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+(define (random n)
+  (Math.floor (* (Math.random) n)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; SIRS model
+
+(define (make-model background infection recovery susceptablity)
+  (list background infection recovery susceptablity))
+
+(define (model-background m) (list-ref m 0))
+(define (model-infection m) (list-ref m 1))
+(define (model-recovery m) (list-ref m 2))
+(define (model-susceptability m) (list-ref m 3))
+
+(define (model-update m incidence state)
+  (cond
+   ((eq? state 'susceptable)
+    (if (or (< (rndf) (* (model-infection m) incidence))
+	    (< (rndf) (model-background m)))
+	'infected 'susceptable))
+   ((eq? state 'infected)
+    (if (< (rndf) (model-recovery m)) 'recovered 'infected))
+   ((eq? state 'recovered)
+    (if (< (rndf) (model-susceptability m)) 'susceptable 'recovered))
+   (else state)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; spatial part
+
+(define (make-node id state pos connections) (list id state pos connections))
+(define (node-id n) (list-ref n 0))
+(define (node-state n) (list-ref n 1))
+(define (node-pos n) (list-ref n 2))
+(define (node-connections n) (list-ref n 3))
+
+(define (node-update node world model)
+  (let ((incidence
+	 (foldl  
+	  (lambda (id r)
+	    (if (eq? (node-state (world-find-node world id)) 'infected) 1 r))
+	  0
+	  (node-connections node))))
+    (make-node
+     (node-id node)
+     (model-update model incidence (node-state node))
+     (node-pos node)
+     (node-connections node))))
+
+(define (make-directed-world n-nodes n-connections infection-rate)
+  (build-list
+   n-nodes
+   (lambda (i)
+     (make-node i (if (< (rndf) infection-rate) 'infected 'susceptable) (list 0 0)
+                (build-list
+                 n-connections
+                 (lambda (_) 
+                   (random n-nodes)))))))
+
+(define (list-contains? l v)
+  (cond
+   ((null? l) #f)
+   ((eq? (car l) v) #t)
+   (else (list-contains? (cdr l) v))))
+
+(define (connected-nodes world id)
+  (foldl
+   (lambda (cn r)
+     (if (list-contains? (node-connections cn) id)
+	 (cons (node-id cn) r) r))
+   '()
+   world))
+
+(define (make-world-undirected world)
+  (map
+   (lambda (n)
+     (make-node 
+      (node-id n)
+      (node-state n)
+      (node-pos n)
+      (append (node-connections n) (connected-nodes world (node-id n)))))
+   world))
+     
+(define (world-find-node world id)
+  (cond
+   ((null? world) #f)
+   ((eq? (node-id (car world)) id) (car world))
+   (else (world-find-node (cdr world) id))))
+
+(define (world-update w model)
+  (map (lambda (n)
+         (node-update n w model))
+       w))
+
+(define (build-springy-graph world graph)
+  (map
+   (lambda (n)
+     (let ((id (node-id n))
+	   (state (node-state n)))
+       (list id (graph.newNode (js "{image: {src: 'images/yellowcircle.png', width: 15, height: 15}}")))))
+   world))
+
+(define (find-sp-node sp id)
+  (cond
+   ((null? sp) #f)
+   ((eq? (car (car sp)) id) (cadr (car sp)))
+   (else (find-sp-node (cdr sp) id))))
+
+(define (connect-springy-graph! sp world graph)
+  (for-each
+   (lambda (n)
+     (let ((spn (find-sp-node sp (node-id n))))
+       (for-each
+	(lambda (cn)
+	  (graph.newEdge (find-sp-node sp cn) spn))
+	(node-connections n))))
+   world))
+
+(define (update-springy-graph! sp world)
+  (for-each
+   (lambda (n)
+     (let ((spn (find-sp-node sp (node-id n))))
+       (set! spn.data.image.src 
+	     (cond
+	      ((eq? (node-state n) 'susceptable) "images/yellowcircle.png")
+	      ((eq? (node-state n) 'infected) "images/redcircle.png")
+	      ((eq? (node-state n) 'recovered) "images/greencircle.png")
+	      (else (console.log (node-state n)))))))
+   world))
+
+(define w (make-directed-world 100 1 0))
+(define m (make-model 0.001 0.3 0.1 0.03))
+
+(define sp (build-springy-graph w graph))
+(connect-springy-graph! sp w graph)
+
+(set! w (make-world-undirected w))
+
+(set! get-graph (lambda () graph))
+
+(set! rebuild (lambda () 
+		(graph.filterNodes (lambda (n) #f))
+		(set! w (make-directed-world 100 1 0))
+		(set! sp (build-springy-graph w graph))
+		(connect-springy-graph! sp w graph)
+		(set! w (make-world-undirected w))))
+
+(define (go)
+  (set! w (world-update w m))
+  (update-springy-graph! sp w)
+  (requestAnimFrame go))
+
+(requestAnimFrame go)
+
+(define (read-number id)
+  (let ((w ($ (string-append "#" id))))
+    (parseFloat (js "w[0].value"))))
+
+(set! update-params (lambda ()
+		      (set! m (make-model
+			       (dbg (read-number "background"))
+			       (read-number "infection")
+			       (read-number "recovery")
+			       (read-number "susceptability")))))

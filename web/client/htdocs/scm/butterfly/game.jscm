@@ -1,0 +1,162 @@
+;; -*- mode: scheme; -*-
+;; Egglab Copyright (C) 2013 Dave Griffiths
+;;
+;; This program is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU Affero General Public License as
+;; published by the Free Software Foundation, either version 3 of the
+;; License, or (at your option) any later version.
+;;
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU Affero General Public License for more details.
+;;
+;; You should have received a copy of the GNU Affero General Public License
+;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define butterfly-speed 0.05)
+
+(load "scm/translations.jscm")
+(load "scm/butterfly/chromosome.jscm")
+(load "scm/butterfly/gui.jscm")
+(load "scm/butterfly/butterfly.jscm")
+(load "scm/butterfly/morph.jscm")
+
+(define edible-model (list (list)))
+(define toxic-model (list (list)))
+
+(define edible-pop-size 15)
+(define toxic-pop-size 15)
+(define butterfly-list ())
+(define edible-chromo ())
+(define toxic-chromo ())
+(define toxic-example ())
+(define bg-tex (load-texture "bg.png"))
+(define title-tex (load-texture "title.png"))
+(define flash 0)
+(define toxic-flash 0)
+(define health 100)
+(define hint-dur 100)
+(define hint-time 100)
+(define replenish-tick 0)
+(define start-time 0)
+(define edible-score 0)
+(define toxic-score 0)
+(define toxic-hit-time 1000)
+(define player-age 0)
+(define player-id 0)
+(define player-game 0)
+(define player-name "???")
+(define health-dec 75)
+(define replenish-speed 100)
+(define butterfly-speed-mult 1)
+(define edible-morph-count 100)
+(define toxic-morph-count 100)
+(define no-cheaters 1)
+
+(define default-button-x (- (/ screen-width 2) 0))
+(define default-button-y (+ (/ screen-height 2) 20))
+(define button-gap 250)
+(define butterfly-flap-mult 2)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; population stuff
+
+
+(define (build-demo-population fn)
+  (set! edible-chromo the-model)
+  (set! butterfly-list
+        (list
+         (build-list 15 fn))))
+
+(define found 0)
+
+(define one (with-state
+	     (scale (vector 3 3 3))
+	     ;;(rotate (vector 45 45 45))
+	     (load-primitive "models/iso6.obj")))
+
+(with-state
+ (translate (vector 3 0 0))
+ (parent one)
+ (load-primitive "models/iso4.obj"))
+
+(define (render-intro)
+  (set! butterfly-list (map update-butterflies butterfly-list))
+  (for-each render-butterflies butterfly-list)
+
+  (with-state
+   (texture bg-tex)
+   ;;(translate (vector 0 0 -100))
+   (scale (vector 2 2 2))
+   ;;(draw-sphere)
+   ))
+
+(define comp-time 0)
+
+(define (nightjar-intro c)
+  (set! player-game 0)
+  (set! player-name "???")
+  (every-frame (render-intro))
+  (build-demo-population
+   (lambda (i)
+     (let ((i (* i (/ (* 2 3.141) 15))))
+       (demo-butterfly
+        (vmul (crndvec) 10) 
+	(vector (sin i) (cos i) 0)
+        (* i 0.1) 0 0.01 10))))
+  (game-modify-mouse-hook
+   (lambda (e c) c)
+   (game-modify-render
+    (lambda (ctx)
+      (set! ctx.font "bold 50pt amatic")
+      ;;(wrap-shadow-text ctx (mtext-lookup "title") 0 380)
+      (set! ctx.font "bold 30pt amatic")
+      ;;(wrap-text ctx (mtext-lookup "splash") 0 430)
+      )
+    (game-modify-buttons
+     (list
+      
+      )
+     c))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; startup
+(set! ctx.font "normal 10pt amatic")
+
+(load-images!
+ (append
+  (list
+   "heliconius.png"
+   "plus.png"
+   "minus.png"
+   "button.png"
+   "button-small.png"
+   "alelle-1.png"
+   "alelle-2.png"
+   "alelle-3.png"
+   "alelle-4.png"
+   "alelle-5.png"
+   "health.png"
+   "foam-logo-wos.png"
+   ))
+ (lambda ()
+   (server-call-ret
+    "get-morphs" (list (list "type" "edible"))
+    (lambda (data)
+      (set! the-model
+            (list
+             (foldl
+              (lambda (m r)
+                (if (morph-active m)
+                    (cons (allele (morph-texture-name m) (morph-probability m)) r)
+                    r))
+              ()
+              (JSON.parse data))))
+
+      (msg the-model)
+
+      (start-game canvas ctx)
+      ))))

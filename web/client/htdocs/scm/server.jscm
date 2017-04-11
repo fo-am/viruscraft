@@ -1,0 +1,15 @@
+(js "$.ajaxSetup ({ cache: false })")
+
+  ;; hack together a js object to send
+(define (build-url-args args)
+  (foldl
+   (lambda (i r) (js "r[i[0]]=i[1]") r)
+   (js "{}") args))
+
+(define (server-call-ret name argsl f)
+  (let ((args (build-url-args argsl)))
+    (set! args.fn name)
+    (let ((v ($.get "game" args f)))
+      (v.fail (lambda (jqXHR textStatus errorThrown)
+                (msg textStatus)
+                (msg errorThrown))))))

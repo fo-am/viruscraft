@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Raspberry Pi Butterfly Command Centre</title>
+
+
+    <link href="css/admin.css" rel="stylesheet" type="text/css">
+    <body bgcolor="#fff">
+      <center><h1>Raspberry Pi Butterfly Command Centre</h1></center>
+
+      <div class="left">
+        <div class="morph-add">
+          <h2>Add morph</h2>
+          <form action="game?fn=add-morph" method="post" enctype="multipart/form-data">
+            <input type='hidden' name='type' value='edible'>
+            <input class="btn" style="width:15em;" type="file" name="texture_name" id="texture_name">
+            <input class="btn" type="submit" value="Upload Image" name="submit">
+          </form>
+        </div>
+
+        <div class="morph-list-edible">
+        </div>
+      </div>
+
+      </div>
+
+
+      <div class="right">
+        <h2>Game parameters</h2>
+        <div class="param-list">
+        </div>
+      </div>
+
+      <div class="right">
+        <h2>Database commands</h2>
+        <button class="btn" onclick="location.href='game?fn=get-data&table-id=0'">Get eaten data</button></br>
+        <button class="btn" onclick="location.href='game?fn=get-data&table-id=1'">Get player data</button></br>
+        <button class="btn" onclick="location.href='game?fn=get-data&table-id=2'">Get player name data</button></br>
+        <button class="btn" onclick="location.href='game?fn=get-data&table-id=3'">Get morph data</button></br>
+        <button class="btn" onclick="location.href='game?fn=get-data&table-id=4'">Get hiscores data</button></br>
+        <p>
+          <button class="btn" onclick="if (confirm('Delete everying - are you sure?')) location.href='game?fn=nuke-data'" style="background:red;">Delete ALL data</button></br>
+        </p>
+      </div>
+
+    </body>
+
+    <script src="js/jquery-1.9.1.min.js"></script>
+    <script src="js/glMatrix.js"></script>
+    <script src="js/ditto.js"></script>
+    <script>init(["scm/admin.jscm"]);</script>
+
+</html>

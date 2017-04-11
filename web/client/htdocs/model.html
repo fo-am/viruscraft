@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Epidemic model prototype</title>
+    <link href="css/style.css" rel="stylesheet" type="text/css">
+    <body bgcolor="#777">
+      <script src="js/jquery-1.9.1.min.js"></script>
+      <script src="js/springy.js"></script>
+      <script src="js/springyui.js"></script>
+      <script src="js/base.js"></script>
+      <script src="js/ditto.js"></script>
+      <script>
+	graph = new Springy.Graph();
+      </script>
+      <script>init(["scm/model.jscm"]);</script>
+
+      <div>
+
+	<div style="float: left">
+          <form id="params" action="." method="POST">
+	    <b>Viruscraft prototype SIRS model</b><br>
+	    State change probabilities:<br>
+            Background infection <input type="number" id="background" value='0.001'/><br>
+            Infection from neighbour <input type="number" id="infection" value='0.3'/><br>
+            Recovery from infection <input type="number" id="recovery" value='0.1'/><br>
+            Susceptable after recovery <input type="number" id="susceptability" value='0.03'/>
+	  </form>
+	  <button onclick="update_params()">Update params</button>
+	  <button onclick="rebuild();">Rebuild world</button>
+	</div>
+	<div style="float: left">
+
+	  <canvas id="my_canvas" width="1000" height="800" />
+	  <script>
+	    $('#my_canvas').springy({ graph: graph });
+	  </script>
+	</div>
+
+        <div style="display:none;">
+          <pre><div id="output"></div></pre>
+          <pre><div id="compiled"></div></pre>
+        </div>
+      </div>
+    </body>
+
+</body>
+</html>
