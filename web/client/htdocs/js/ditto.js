@@ -474,7 +474,10 @@ ditto.core_forms = function(fn, args) {
                  [">=",">="],
                  ["=","=="],
                  ["and","&&"],
-                 ["or","||"]];
+                 ["or","||"],
+		 ["bitwise_and","&"],
+		 ["bitwise_or","|"],
+		 ["bitwise_not","^"]];
 
     for (var i=0; i<infix.length; i++) {
         if (fn == infix[i][0]) return debug+ditto.infixify(infix[i][1],args);
@@ -649,7 +652,7 @@ function init(filenames) {
             eval(js);
 	    //console.log(js);
         } catch (e) {
-	    console.log(js);
+	    //console.log(js);
             console.log(e);
             console.log(e.stack);
         }
@@ -661,5 +664,5 @@ function init(filenames) {
  */
  var requestAnimFrame = 
     function(callback) {
-	window.setTimeout(callback, 1000/10);    
+	window.setTimeout(callback, 1000/60);    
     };
