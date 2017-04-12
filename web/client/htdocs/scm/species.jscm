@@ -30,7 +30,7 @@
     (colour (vmul (vector 1 0.7 0.2) 2))
     (texture (load-texture "white.png"))
     (build-cube))
-   (* (+ 0.001 (* (rndf) 0.1)) 0.2)))
+   (+ 0.001 (* (rndf) 0.1))))
 
 (define (insect-state i) (list-ref i 0))
 (define (insect-pos i) (list-ref i 1))
@@ -50,43 +50,55 @@
        1 0)
    (insect-state i)))
 
+(define (insect-choose-new-plant i plants)
+  ;; random plant first time
+  (if (not (insect-plant-id i)) 
+      (plant-id (choose plants))
+      (let ((current-plant (list-ref plants (insect-plant-id i))))
+	(cond
+	 ;; a disconnected plant
+	 ((null? (plant-connections current-plant))
+	  (plant-id (choose plants)))
+	 ;; connection
+	 (else (choose (plant-connections current-plant)))))))
+  
 (define (insect-update i sirs-model plants insects)
   (with-primitive 
    (insect-prim i) 
    (when (< (insect-t i) 1)
-	 (identity) 
-	 (translate (insect-pos i)))
+	 (identity)
+	 (translate (insect-pos i))
+	 (scale (vector 0.5 0.5 0.5)))
    (colour 
     (cond 
      ((eq? (insect-state i) 'susceptable) (vector 1 1 1))
      ((eq? (insect-state i) 'infected) (vector 1 0 0))
      (else (vector 0.2 1 0.2)))))
 
-  (let ((new-sirs-state (insect-update-sirs-state i sirs-model plants insects))) 
-    (cond 
-     ((> (insect-t i) 1.5)
-      (let ((plant-id (random (length plants))))
-	(make-insect
-	 new-sirs-state
-	 (insect-pos i)
-	 (insect-next-pos i)
-	 (vadd (plant-pos (list-ref plants plant-id)) (vector 0 2 0)) 
-	 plant-id
-	 0
-	 (insect-prim i)
-	 (insect-speed i))))
-     (else
+  (cond 
+   ((> (insect-t i) 1.5)
+    (let ((plant-id (insect-choose-new-plant i plants)))
       (make-insect
-       new-sirs-state
-       (if (< (insect-t i) 1)
-	   (vlerp (insect-last-pos i) (insect-next-pos i) (insect-t i))
-	   (insect-t i))
-       (insect-last-pos i)
+       (insect-update-sirs-state i sirs-model plants insects)
+       (insect-pos i)
        (insect-next-pos i)
-       (insect-plant-id i)
-       (+ (insect-t i) (insect-speed i))
+       (vadd (plant-pos (list-ref plants plant-id)) (vector 0 2 0)) 
+       plant-id
+       0
        (insect-prim i)
-       (insect-speed i))))))
+       (insect-speed i))))
+   (else
+    (make-insect
+     (insect-state i)
+     (if (< (insect-t i) 1)
+	 (vlerp (insect-last-pos i) (insect-next-pos i) (insect-t i))
+	 (insect-t i))
+     (insect-last-pos i)
+     (insect-next-pos i)
+     (insect-plant-id i)
+     (+ (insect-t i) (insect-speed i))
+     (insect-prim i)
+     (insect-speed i)))))
 
 (define (update-insects insects plants sirs-model)
   (map 
@@ -96,25 +108,30 @@
 
 ;;;;;;;;;;;;;;;;
 
-(define (make-plant id state pos prim)
-  (list id state pos prim))
+(define (make-plant id state connections pos prim)
+  (list id state connections pos prim))
 
 (define (build-plant id)
-  (let ((pos (vmul (vector (- (rndf) 0.5) 0.01 (- (rndf) 0.5)) 25)))
+  (let ((pos (vmul (vector (- (rndf) 0.5) 0 (- (rndf) 0.5)) 25)))
     (make-plant 
      id
      'susceptable
+     '()
      pos
      (with-state 
       (colour (vmul (vector 0.3 0.1 0.2) 2))
       (translate pos)
+      ;(scale (vector 1.5 1.5 1.5))
       (texture (load-texture "white.png"))
-      (load-primitive "models/isotest.obj")))))
+      ;(build-cube)
+      (load-primitive "models/isotest.obj")
+      ))))
 
 (define (plant-id p) (list-ref p 0))
 (define (plant-state p) (list-ref p 1))
-(define (plant-pos p) (list-ref p 2))
-(define (plant-prim p) (list-ref p 3))
+(define (plant-connections p) (list-ref p 2))
+(define (plant-pos p) (list-ref p 3))
+(define (plant-prim p) (list-ref p 4))
 
 (define (plant-find-insect p insects)
   (foldl
@@ -144,20 +161,41 @@
   (make-plant
    (plant-id p)
    (plant-update-sirs-state p sirs-model plants insects)
+   (plant-connections p)
    (plant-pos p)
    (plant-prim p)))
+
+(define (find-close-plants p plants threshold)
+  (foldl
+   (lambda (op r)
+     (if (and (not (eq? (plant-id p) (plant-id op)))
+	      (< (vdist (plant-pos p) (plant-pos op)) threshold))
+	 (cons (plant-id op) r) r))
+   '()
+   plants))
+
+(define (plant-build-connections p plants)
+  (make-plant
+   (plant-id p)
+   (plant-state p)
+   (find-close-plants p plants 7)
+   (plant-pos p)
+   (plant-prim p)))
+
+(define (plants-build-connections plants)
+  (map (lambda (p) (plant-build-connections p plants)) plants))
 
 (define (update-plants plants insects sirs-model)
   (map 
    (lambda (p)
-     (plant-update p sirs-model plants insects))
+     (if (< (rndf) 0.1) 
+	 (plant-update p sirs-model plants insects) p))
    plants))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define floor
   (with-state
-   (colour (vector 0.5 0.5 0.5))
    ;;(translate (vector 0 -5 0))
    (scale (vector 30 0.1 30))
    (texture (load-texture "test-grey.png"))
@@ -169,13 +207,13 @@
   (mat4.rotateX
    (mat4.translate 
     (mat4.identity (mat4.create))
-    (vector 0 -3 -45))
-   0.5)
+    (vector 0 0 -35))
+   0.6)
   1.0))
 
-(define sirs-model (make-model 0.0001 1 0.0001 0.0001))
+(define sirs-model (make-model 0.001 1 0.01 0.01))
 (define insect-list (build-list 5 (lambda (i) (build-insect))))
-(define plant-list (build-list 30 (lambda (i) (build-plant i))))
+(define plant-list (plants-build-connections (build-list 30 (lambda (i) (build-plant i)))))
 
 (define (render)
   (set! insect-list (update-insects insect-list plant-list sirs-model))

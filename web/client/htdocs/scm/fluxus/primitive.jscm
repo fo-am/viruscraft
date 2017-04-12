@@ -102,8 +102,8 @@
 ;;      (gl.uniform1f shader.Roughness 1)
       
       (gl.uniformMatrix4fv shader.ModelViewMatrixUniform false model-view)
-      (mat4.inverse local inv-local)
-      (gl.uniformMatrix4fv shader.NormalMatrixUniform false local)
+      (mat4.toRotationMat local inv-local)
+      (gl.uniformMatrix4fv shader.NormalMatrixUniform false inv-local)
 
       (gl.uniform3fv shader.DiffuseColour colour)
           
