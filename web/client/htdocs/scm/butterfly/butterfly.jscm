@@ -13,7 +13,7 @@
    20 40)) ;; speed
 
 (define (demo-butterfly pos dir fuzz tex turn speed)
-  (list "demo" pos dir fuzz (load-texture "morph.png") () turn "demo" speed 40))
+  (list "demo" pos dir fuzz (load-texture "test-grey.png") () turn "demo" speed 40))
 
 (define (example-butterfly expr)
   (list
@@ -148,6 +148,7 @@
 
 (define (render-butterfly s)
   (with-state
+   (colour (vector 0.7 0.9 0.9))
    (texture (butterfly-texture s))
    (translate (butterfly-pos s))
    (maim (vnormalise (butterfly-dir s)) (vector 0 0 1))

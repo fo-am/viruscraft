@@ -25,16 +25,16 @@
     (append
      (list "begin" (list "push"))
       (list (list "let"
-                  (list (list "r" (append (list "begin") (do-syntax (cdr code)))))
-                  (list "pop") "r"))))
+                  (list (list "with_state_ret" (append (list "begin") (do-syntax (cdr code)))))
+                  (list "pop") "with_state_ret"))))
 
    ;; with-primitive
    ((eq? (car code) "with_primitive")
     (append
      (list "begin" (list "grab" (cadr code)))
      (list (list "let"
-                 (list (list "r" (append (list "begin") (do-syntax (cdr code)))))
-                 (list "ungrab") "r"))))
+                 (list (list "with_primitive_ret" (append (list "begin") (do-syntax (cdr code)))))
+                 (list "ungrab") "with_primitive_ret"))))
 
    ((eq? (car code) "every_frame")
     (append

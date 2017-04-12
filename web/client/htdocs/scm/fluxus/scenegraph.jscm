@@ -17,6 +17,7 @@
 (define (scenenode id state primitive children) (list id state primitive children)))
 (define (scenenode-id p) (list-ref p 0))
 (define (scenenode-state p) (list-ref p 1))
+(define (scenenode-modify-state! p v) (set! p (list-replace p 1 v)))
 (define (scenenode-primitive p)  (list-ref p 2))
 (define (scenenode-children p)  (list-ref p 3))
 (define (scenenode-modify-children p v)  (list-replace p 3 v))
@@ -44,16 +45,16 @@
 	(scenegraph-add sn parent-id node))
       (scenenode-children sn))))))
 
-(define (scenegraph-render sn gl view camera tx)
+(define (scenegraph-render sn gl view-camera tx)
   ;;(msg (scenenode-id sn))
   (when (not (zero? (scenenode-primitive sn)))
 	(primitive-render 
-	 (scenenode-primitive sn) gl view camera 
+	 (scenenode-primitive sn) gl view-camera 
 	 (scenenode-state sn)
 	 tx))
   ;;(msg (+ "len:" (length (scenenode-children sn))))
   (for-each 
    (lambda (child)
-     (scenegraph-render child gl view camera 
+     (scenegraph-render child gl view-camera 
 			(state-tx (scenenode-state sn))))
    (scenenode-children sn)))

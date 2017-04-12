@@ -1,5 +1,5 @@
 ;; -*- mode: scheme; -*-
-;; Egglab Copyright (C) 2013 Dave Griffiths
+;; Viruscraft Copyright (C) 2017 FoAM Kernow
 ;;
 ;; This program is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU Affero General Public License as
@@ -15,50 +15,177 @@
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(define butterfly-speed 0.05)
-
-(load "scm/translations.jscm")
-(load "scm/butterfly/chromosome.jscm")
-(load "scm/butterfly/gui.jscm")
-(load "scm/butterfly/butterfly.jscm")
-(load "scm/butterfly/morph.jscm")
 (load "scm/sirs-model.jscm")
-
-(define butterfly-flap-mult 1)
-(define butterfly-speed-mult 0)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; population stuff
 
-(define butterfly-list ())
-(define plant-list ())
+(define (make-insect state pos last-pos next-pos plant t prim speed)
+  (list state pos last-pos next-pos plant t prim speed))
 
-(define (make-plant state
+(define (build-insect)
+  (make-insect
+   'susceptable (vector 0 0 0) (vector 0 0 0) (vector 0 0 0) #f 0 
+   (with-state 
+    (colour (vmul (vector 1 0.7 0.2) 2))
+    (texture (load-texture "white.png"))
+    (build-cube))
+   (* (+ 0.001 (* (rndf) 0.1)) 0.2)))
 
-(define (build-plant i)
+(define (insect-state i) (list-ref i 0))
+(define (insect-pos i) (list-ref i 1))
+(define (insect-last-pos i) (list-ref i 2))
+(define (insect-next-pos i) (list-ref i 3))
+(define (insect-plant-id i) (list-ref i 4))
+(define (insect-t i) (list-ref i 5))
+(define (insect-prim i) (list-ref i 6))
+(define (insect-speed i) (list-ref i 7))
+
+(define (insect-update-sirs-state i sirs-model plants insects)
+  (model-update 
+   sirs-model 
+   (if (and (insect-plant-id i)
+	    (> (insect-t i) 1)
+	    (eq? (plant-state (list-ref plants (insect-plant-id i))) 'infected))
+       1 0)
+   (insect-state i)))
+
+(define (insect-update i sirs-model plants insects)
+  (with-primitive 
+   (insect-prim i) 
+   (when (< (insect-t i) 1)
+	 (identity) 
+	 (translate (insect-pos i)))
+   (colour 
+    (cond 
+     ((eq? (insect-state i) 'susceptable) (vector 1 1 1))
+     ((eq? (insect-state i) 'infected) (vector 1 0 0))
+     (else (vector 0.2 1 0.2)))))
+
+  (let ((new-sirs-state (insect-update-sirs-state i sirs-model plants insects))) 
+    (cond 
+     ((> (insect-t i) 1.5)
+      (let ((plant-id (random (length plants))))
+	(make-insect
+	 new-sirs-state
+	 (insect-pos i)
+	 (insect-next-pos i)
+	 (vadd (plant-pos (list-ref plants plant-id)) (vector 0 2 0)) 
+	 plant-id
+	 0
+	 (insect-prim i)
+	 (insect-speed i))))
+     (else
+      (make-insect
+       new-sirs-state
+       (if (< (insect-t i) 1)
+	   (vlerp (insect-last-pos i) (insect-next-pos i) (insect-t i))
+	   (insect-t i))
+       (insect-last-pos i)
+       (insect-next-pos i)
+       (insect-plant-id i)
+       (+ (insect-t i) (insect-speed i))
+       (insect-prim i)
+       (insect-speed i))))))
+
+(define (update-insects insects plants sirs-model)
+  (map 
+   (lambda (i)
+     (insect-update i sirs-model plants insects))
+   insects))
+
+;;;;;;;;;;;;;;;;
+
+(define (make-plant id state pos prim)
+  (list id state pos prim))
+
+(define (build-plant id)
+  (let ((pos (vmul (vector (- (rndf) 0.5) 0.01 (- (rndf) 0.5)) 25)))
+    (make-plant 
+     id
+     'susceptable
+     pos
+     (with-state 
+      (colour (vmul (vector 0.3 0.1 0.2) 2))
+      (translate pos)
+      (texture (load-texture "white.png"))
+      (load-primitive "models/isotest.obj")))))
+
+(define (plant-id p) (list-ref p 0))
+(define (plant-state p) (list-ref p 1))
+(define (plant-pos p) (list-ref p 2))
+(define (plant-prim p) (list-ref p 3))
+
+(define (plant-find-insect p insects)
+  (foldl
+   (lambda (i r)
+     (if (and (not r) 
+	      (eq? (plant-id p) (insect-plant-id i))
+	      (> (insect-t i) 1))
+	 i r))
+   #f
+   insects))
+
+(define (plant-update-sirs-state p sirs-model plants insects)
+  (let ((insect (plant-find-insect p insects)))
+    (model-update 
+     sirs-model 
+     (if (and insect (eq? (insect-state insect) 'infected)) 1 0)
+     (plant-state p))))
+    
+(define (plant-update p sirs-model plants insects)
+  (with-primitive 
+   (plant-prim p) 
+   (colour 
+    (cond 
+     ((eq? (plant-state p) 'susceptable) (vector 1 1 1))
+     ((eq? (plant-state p) 'infected) (vector 1 0 0))
+     (else (vector 0.2 1 0.2)))))
   (make-plant
-  (with-state 
-   (translate (vmul (rndvec) 10)) 
+   (plant-id p)
+   (plant-update-sirs-state p sirs-model plants insects)
+   (plant-pos p)
+   (plant-prim p)))
+
+(define (update-plants plants insects sirs-model)
+  (map 
+   (lambda (p)
+     (plant-update p sirs-model plants insects))
+   plants))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define floor
+  (with-state
+   (colour (vector 0.5 0.5 0.5))
+   ;;(translate (vector 0 -5 0))
+   (scale (vector 30 0.1 30))
+   (texture (load-texture "test-grey.png"))
    (build-cube)))
 
-(define (build-demo-population fn)
-  (set! plant-list (build-list 10 (lambda (i) (build-plant i))))
-  (set! butterfly-list (list (build-list 25 fn))))
+(with-state 0)
+(set-camera-transform 
+ (mat4.rotateY
+  (mat4.rotateX
+   (mat4.translate 
+    (mat4.identity (mat4.create))
+    (vector 0 -3 -45))
+   0.5)
+  1.0))
+
+(define sirs-model (make-model 0.0001 1 0.0001 0.0001))
+(define insect-list (build-list 5 (lambda (i) (build-insect))))
+(define plant-list (build-list 30 (lambda (i) (build-plant i))))
 
 (define (render)
-  (set! butterfly-list (map update-butterflies butterfly-list))
-  (for-each render-butterflies butterfly-list))
+  (set! insect-list (update-insects insect-list plant-list sirs-model))
+  (set! plant-list (update-plants plant-list insect-list sirs-model))
+  (set-camera-transform (mat4.rotateY (camera-transform) 0.002)))
 
 
 (define (nightjar-intro c)
   (every-frame (render))
-  (build-demo-population
-   (lambda (i)
-     (demo-butterfly
-      (vector (modulo i 5) (quotient i 5) 0) 
-      (vector 0 1 0)
-      (* i 0.01) 0 0.01 10)))
+
   (game-modify-mouse-hook
    (lambda (e c) c)
    (game-modify-render
@@ -82,33 +209,7 @@
  (append
   (list
    "heliconius.png"
-   "plus.png"
-   "minus.png"
-   "button.png"
-   "button-small.png"
-   "alelle-1.png"
-   "alelle-2.png"
-   "alelle-3.png"
-   "alelle-4.png"
-   "alelle-5.png"
-   "health.png"
-   "foam-logo-wos.png"
    ))
  (lambda ()
-   (server-call-ret
-    "get-morphs" (list (list "type" "edible"))
-    (lambda (data)
-      (set! the-model
-            (list
-             (foldl
-              (lambda (m r)
-                (if (morph-active m)
-                    (cons (allele (morph-texture-name m) (morph-probability m)) r)
-                    r))
-              ()
-              (JSON.parse data))))
-
-      (msg the-model)
-
-      (start-game canvas ctx)
-      ))))
+   (start-game canvas ctx)
+   ))

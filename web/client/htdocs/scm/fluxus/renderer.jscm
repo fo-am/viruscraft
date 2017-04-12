@@ -16,25 +16,26 @@
 
 (console.log "hello")
 
-(define renderer
-  (lambda (gl)
-    (list
-     gl
-     ()
-     (mat4.identity (mat4.create))
-     (mat4.identity (mat4.create))
-     (mat4.identity (mat4.create))
-     (list (state gl))
-     ()
-     #f
-     ()
-     (scenenode 0 (state gl) 0 '()))))
+(define (renderer gl)
+  (list
+   gl
+   ()
+   (mat4.identity (mat4.create))
+   (mat4.identity (mat4.create))
+   (mat4.identity (mat4.create))
+   (list (state gl))
+   ()
+   #f
+   ()
+   (scenenode 0 (state gl) 0 '())
+   ()))
 
 (define renderer-gl (lambda (r) (list-ref r 0)))
 (define renderer-list (lambda (r) (list-ref r 1)))
 (define renderer-modify-list (lambda (r v) (list-replace r 1 v)))
 (define renderer-view (lambda (r) (list-ref r 2)))
 (define renderer-camera (lambda (r) (list-ref r 3)))
+(define renderer-modify-camera (lambda (r v) (list-replace r 3 v)))
 (define renderer-world-to-screen (lambda (r) (list-ref r 4)))
 (define renderer-stack (lambda (r) (list-ref r 5)))
 (define renderer-modify-stack (lambda (r v) (list-replace r 5 v)))
@@ -46,132 +47,145 @@
 (define renderer-modify-prefab (lambda (r v) (list-replace r 8 v)))
 (define (renderer-scenegraph r) (list-ref r 9))
 (define (renderer-modify-scenegraph r v) (list-replace r 9 v))
+(define (renderer-grab-stack r) (list-ref r 10))
+(define (renderer-modify-grab-stack r v) (list-replace r 10 v))
 
-(define renderer-add
-  (lambda (r p)
-    (renderer-modify-list r (cons p (renderer-list r)))))
+(define (renderer-add r p)
+  (renderer-modify-list r (cons p (renderer-list r))))
 
-(define renderer-stack-dup
-  (lambda (r)
-    (renderer-modify-stack
-     r (cons (state-clone (car (renderer-stack r)))
-            (renderer-stack r)))))
-
-(define renderer-stack-pop
-  (lambda (r)
-    (renderer-modify-stack
-     r (cdr (renderer-stack r)))))
-
-(define renderer-stack-top
-  (lambda (r)
-    (car (renderer-stack r))))
-
-(define renderer-top-tx
-  (lambda (r)
-    (state-tx (renderer-stack-top r))))
-
-(define (renderer-modify-stack-top r fn)
+(define (renderer-stack-dup r)
   (renderer-modify-stack
-   r (cons (fn (car (renderer-stack r)))
-           (cdr (renderer-stack r)))))
+   r (cons (state-clone (car (renderer-stack r)))
+	   (renderer-stack r))))
 
-(define renderer-immediate-add
-  (lambda (r p)
-    (renderer-modify-immediate-prims
-     r (cons
-        ;; state, and a primitive to render in
-        (list (state-clone (renderer-stack-top r)) p)
-        (renderer-immediate-prims r)))))))
+(define (renderer-stack-pop r)
+  (renderer-modify-stack
+   r (cdr (renderer-stack r))))
 
-(define renderer-immediate-clear
-  (lambda (r)
-    (renderer-modify-immediate-prims r ())))
+(define (renderer-stack-top r)
+  (car (renderer-stack r)))
 
-(define renderer-render
-  (lambda (r t)
-    (let ((gl (renderer-gl r))
-          (hook (renderer-hook r)))
-      (gl.viewport 0 0 gl.viewportWidth gl.viewportHeight)
-      (gl.clearColor 0 0 0 1)
-      (gl.clear (js "gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT"))
-      (mat4.perspective 45 (/ gl.viewportWidth gl.viewportHeight) 0.1 1000.0
-                        (renderer-view r))
-      ;; for inspection purposes...
-      (mat4.multiply (renderer-view r) (renderer-camera r) (renderer-world-to-screen r))
-      (mat4.identity (renderer-top-tx r))
+(define (renderer-top-tx r)
+  (state-tx (renderer-stack-top r)))
 
-      (when hook (js "try{") (hook) (js "} catch(e) { ") (display e) (js "}"))
+(define (renderer-current-tx r)
+  (let ((grabbed (renderer-grab-stack-top r)))
+    ;; either modify the grabbed primitive or the stack top
+    (if grabbed
+	(let ((node (scenegraph-find 
+		     (renderer-scenegraph r)
+		     grabbed)))
+	  (state-tx (scenenode-state node)))
+	(state-tx (renderer-stack-top r)))))
 
-      ;; immediate mode
-      (let ((ident (mat4.identity (mat4.create))))
-	(for-each
-	 (lambda (p)
-	   (let ((state (car p))
-		 (prim (cadr p)))
-	     (primitive-render prim gl
-			       (renderer-view r)
-			       (renderer-camera r)
-			       state
-			       ident)))
-	 (renderer-immediate-prims r))
+(define (renderer-modify-current-state r fn)
+  (let ((grabbed (renderer-grab-stack-top r)))
+    ;; either modify the grabbed primitive or the stack top
+    (if grabbed
+	(let ((node (scenegraph-find 
+		     (renderer-scenegraph r)
+		     grabbed)))
+	  (scenenode-modify-state! node (fn (scenenode-state node))))
+	(renderer-modify-stack
+	 r (cons (fn (car (renderer-stack r)))
+		 (cdr (renderer-stack r)))))))
+
+(define (renderer-immediate-add r p)
+  (renderer-modify-immediate-prims
+   r (cons
+      ;; state, and a primitive to render in
+      (list (state-clone (renderer-stack-top r)) p)
+      (renderer-immediate-prims r))))))
+
+(define (renderer-immediate-clear r)
+  (renderer-modify-immediate-prims r ()))
+
+(define (renderer-grab-stack-push r id)
+  (renderer-modify-grab-stack
+   r (cons id (renderer-grab-stack r))))
+
+(define (renderer-grab-stack-pop r)
+  (renderer-modify-grab-stack r (cdr (renderer-grab-stack r))))
+
+(define (renderer-grab-stack-top r)
+  (if (null? (renderer-grab-stack r)) #f
+      (car (renderer-grab-stack r))))
+
+(define (renderer-render r t)
+  (let ((gl (renderer-gl r))
+	(hook (renderer-hook r))
+	(view-camera (mat4.create)))
+    
+    (gl.viewport 0 0 gl.viewportWidth gl.viewportHeight)
+    (gl.clearColor 0 0 0 1)
+    (gl.clear (js "gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT"))
+    (mat4.perspective 45 (/ gl.viewportWidth gl.viewportHeight) 0.1 1000.0
+		      (renderer-view r))
+    ;; for scene inspection purposes...
+    (mat4.multiply (renderer-view r) (renderer-camera r) (renderer-world-to-screen r))
+    (mat4.multiply (renderer-view r) (renderer-camera r) view-camera)
+
+    (mat4.identity (renderer-top-tx r))
+
+    (when hook (js "try{") (hook) (js "} catch(e) { ") (display e) (js "}"))
+
+    ;; immediate mode
+    (let ((ident (mat4.identity (mat4.create))))
+      (for-each
+       (lambda (p)
+	 (let ((state (car p))
+	       (prim (cadr p)))
+	   (primitive-render prim gl view-camera state ident)))
+       (renderer-immediate-prims r))
       
       ;; retained mode
-      (scenegraph-render 
-       (renderer-scenegraph r)
+      (scenegraph-render (renderer-scenegraph r) gl view-camera ident))
+    (renderer-immediate-clear r)))
+
+
+(define (renderer-build-prefab r)
+  (let ((gl (renderer-gl r)))
+    (renderer-modify-prefab
+     r
+     (list
+      (build-primitive
        gl
-       (renderer-view r)
-       (renderer-camera r)
-       ident))
-
-      (renderer-immediate-clear r)
-          
-      )))
-
-
-(define renderer-build-prefab
-  (lambda (r)
-    (let ((gl (renderer-gl r)))
-      (renderer-modify-prefab
-       r
+       (length unit-cube-vertices)
        (list
-        (build-primitive
-         gl
-         (length unit-cube-vertices)
-         (list
-          (buffer gl "p" unit-cube-vertices 3)
-          (buffer gl "n" unit-cube-normals 3)
-          (buffer gl "t" unit-cube-texcoords 3)
-          ))
-        (build-primitive
-         gl
-         (length sphere-vertices)
-         (list
-          (buffer gl "p" sphere-vertices 3)
-          (buffer gl "n" sphere-normals 3)
-          (buffer gl "t" sphere-texcoords 3)
-          ))
-        (build-primitive
-         gl
-         (length torus-vertices)
-         (list
-          (buffer gl "p" torus-vertices 3)
-          (buffer gl "n" torus-normals 3)
-          (buffer gl "t" torus-texcoords 3)
-          ))
-        (build-primitive
-         gl
-         (length wing-vertices)
-         (list
-          (buffer gl "p" wing-vertices 3)
-          (buffer gl "n" wing-normals 3)
-          (buffer gl "t" wing-texcoords 3)
-          ))
-        (build-primitive
-         gl
-         (length body-vertices)
-         (list
-          (buffer gl "p" body-vertices 3)
-          (buffer gl "n" body-normals 3)
-          (buffer gl "t" body-texcoords 3)
-          ))
-        )))))
+	(buffer gl "p" unit-cube-vertices 3)
+	(buffer gl "n" unit-cube-normals 3)
+	(buffer gl "t" unit-cube-texcoords 3)
+	))
+      (build-primitive
+       gl
+       (length sphere-vertices)
+       (list
+	(buffer gl "p" sphere-vertices 3)
+	(buffer gl "n" sphere-normals 3)
+	(buffer gl "t" sphere-texcoords 3)
+	))
+      (build-primitive
+       gl
+       (length torus-vertices)
+       (list
+	(buffer gl "p" torus-vertices 3)
+	(buffer gl "n" torus-normals 3)
+	(buffer gl "t" torus-texcoords 3)
+	))
+      (build-primitive
+       gl
+       (length wing-vertices)
+       (list
+	(buffer gl "p" wing-vertices 3)
+	(buffer gl "n" wing-normals 3)
+	(buffer gl "t" wing-texcoords 3)
+	))
+      (build-primitive
+       gl
+       (length body-vertices)
+       (list
+	(buffer gl "p" body-vertices 3)
+	(buffer gl "n" body-normals 3)
+	(buffer gl "t" body-texcoords 3)
+	))
+      ))))

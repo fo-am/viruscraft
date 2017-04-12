@@ -471,7 +471,8 @@ mat3.transpose = function(mat, dest) {
  *
  * Returns:
  * dest if specified, a new mat4 otherwise
- */mat3.toMat4 = function(mat, dest) {
+ */
+mat3.toMat4 = function(mat, dest) {
         if(!dest) { dest = mat4.create(); }
 
         dest[0] = mat[0];

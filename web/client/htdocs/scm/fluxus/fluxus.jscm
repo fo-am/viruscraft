@@ -14,19 +14,24 @@
 ;; You should have received a copy of the GNU Affero General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-(define r 0)
+(define the-renderer 0)
 
 (define (time) (js "new Date().getTime()/1000;"))
-(define (push) (set! r (renderer-stack-dup r)))
-(define (pop) (set! r (renderer-stack-pop r)))
+(define (push) (set! the-renderer (renderer-stack-dup r)))
+(define (pop) (set! the-renderer (renderer-stack-pop r)))
+(define (grab id) (set! the-renderer (renderer-grab-stack-push the-renderer id)))
+(define (ungrab) (set! the-renderer (renderer-grab-stack-pop r)))
+
+(define (identity)
+  (mat4.identity (renderer-current-tx r)))
 
 (define (translate v)
-  (mat4.translate (renderer-top-tx r) v))
+  (mat4.translate (renderer-current-tx r) v))
 
 (define (rotate v)
-  (mat4.rotate (renderer-top-tx r) (* (vx v) 0.0174532925) (list 1 0 0))
-  (mat4.rotate (renderer-top-tx r) (* (vy v) 0.0174532925) (list 0 1 0))
-  (mat4.rotate (renderer-top-tx r) (* (vz v) 0.0174532925) (list 0 0 1)))
+  (mat4.rotate (renderer-current-tx r) (* (vx v) 0.0174532925) (list 1 0 0))
+  (mat4.rotate (renderer-current-tx r) (* (vy v) 0.0174532925) (list 0 1 0))
+  (mat4.rotate (renderer-current-tx r) (* (vz v) 0.0174532925) (list 0 0 1)))
 
 (define aim-matrix (mat4.create))
 
@@ -55,10 +60,13 @@
     (js "aim_matrix[14]=0;")
     (js "aim_matrix[15]=1;")
 
-    (mat4.multiply (renderer-top-tx r) aim-matrix)))
+    (mat4.multiply (renderer-current-tx r) aim-matrix)))
 
 (define (camera-transform)
   (renderer-camera r))
+
+(define (set-camera-transform tx)
+  (set! the-renderer (renderer-modify-camera the-renderer tx)))
 
 (define (view-transform)
   (renderer-view r))
@@ -75,7 +83,7 @@
 
 (define scale
   (lambda (v)
-    (mat4.scale (renderer-top-tx r) v)))
+    (mat4.scale (renderer-current-tx r) v)))
 
 (define (load-texture name)
   (load-texture-impl!
@@ -83,13 +91,13 @@
    (+ "textures/" name)))
 
 (define (texture name)
-  (set! r (renderer-modify-stack-top
+  (set! the-renderer (renderer-modify-current-state
            r
            (lambda (state)
              (state-modify-texture state name)))))
 
 (define (shader vert frag)
-  (set! r (renderer-modify-stack-top
+  (set! the-renderer (renderer-modify-current-state
            r
            (lambda (state)
              (state-modify-shader
@@ -97,29 +105,29 @@
               (build-shader (renderer-gl r) vert frag))))))
 
 (define (colour col)
-  (set! r (renderer-modify-stack-top
+  (set! the-renderer (renderer-modify-current-state
            r
            (lambda (state)
              (state-modify-colour state col)))))
 
 (define (every-frame-impl hook)
-  (set! r (renderer-modify-hook r hook)))
+  (set! the-renderer (renderer-modify-hook the-renderer hook)))
 
 (define (draw-cube)
-  (set! r (renderer-immediate-add
-	   r (list-ref (renderer-prefab r) 0))))
+  (set! the-renderer (renderer-immediate-add
+	   the-renderer (list-ref (renderer-prefab r) 0))))
 
 (define (draw-sphere)
-  (set! r (renderer-immediate-add
-	   r (list-ref (renderer-prefab r) 1))))
+  (set! the-renderer (renderer-immediate-add
+	   the-renderer (list-ref (renderer-prefab r) 1))))
 
 (define (draw-torus)
-  (set! r (renderer-immediate-add
-	   r (list-ref (renderer-prefab r) 2))))
+  (set! the-renderer (renderer-immediate-add
+	   the-renderer (list-ref (renderer-prefab r) 2))))
 
 (define (draw-obj obj)
-  (set! r (renderer-immediate-add
-	   r (list-ref (renderer-prefab r) obj))))
+  (set! the-renderer (renderer-immediate-add
+	   the-renderer (list-ref (renderer-prefab r) obj))))
 
 (define (build-polygons type count)
   (let ((gl (renderer-gl r)))
@@ -135,13 +143,13 @@
              ))))))
 
 (define (set-hint! hint)
-  (set! r (renderer-modify-stack-top
+  (set! the-renderer (renderer-modify-current-state
            r
            (lambda (state)
              (state-modify-hints state (bitwise-or (state-hints state) hint))))))
 
 (define (clear-hints)
-  (set! r (renderer-modify-stack-top
+  (set! the-renderer (renderer-modify-current-state
            r
            (lambda (state)
              (state-modify-hints state 0)))))
@@ -174,15 +182,15 @@
   next-id)
 
 (define (parent id)
-  (set! r (renderer-modify-stack-top
+  (set! the-renderer (renderer-modify-current-state
            r
            (lambda (state)
              (state-modify-parent state id)))))
 
 (define (add-to-scenegraph! prim)
   (let ((id (new-id)))
-    (set! r (renderer-modify-scenegraph
-	     r (scenegraph-add 
+    (set! the-renderer (renderer-modify-scenegraph
+	     the-renderer (scenegraph-add 
 		(renderer-scenegraph r) 
 		(state-parent (renderer-stack-top r)) ;; parent from state 
 		(scenenode

@@ -18,13 +18,14 @@
 (define FLX_HINT_WIRE 0x2)
 
 (define (state gl)
-  (list
-   (mat4.identity (mat4.create))
-   (build-shader gl vertex-shader fragment-shader)
-   (vector 1 1 1)
-   ""
-   FLX_HINT_SOLID
-   0))
+  (let ((shader (build-shader gl vertex-shader fragment-shader)))
+    (list
+     (mat4.identity (mat4.create))
+     shader
+     (vector 1 1 1)
+     ""
+     FLX_HINT_SOLID
+     0)))
 
 (define (state-tx s) (list-ref s 0))
 (define (state-shader s) (list-ref s 1))
