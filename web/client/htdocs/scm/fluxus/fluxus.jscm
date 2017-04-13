@@ -201,6 +201,9 @@
 		 ))))
     id))
 
+(define (clear)
+  (set! r (renderer-modify-scenegraph r ())))
+
 (define (build-cube)
   (add-to-scenegraph! (list-ref (renderer-prefab r) 0)))
 

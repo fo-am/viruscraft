@@ -89,7 +89,9 @@
        (insect-speed i))))
    (else
     (make-insect
-     (insect-state i)
+     (if (< (rndf) 0.5)
+	 (insect-update-sirs-state i sirs-model plants insects)
+	 (insect-state i))
      (if (< (insect-t i) 1)
 	 (vlerp (insect-last-pos i) (insect-next-pos i) (insect-t i))
 	 (insect-t i))
@@ -178,7 +180,7 @@
   (make-plant
    (plant-id p)
    (plant-state p)
-   (find-close-plants p plants 7)
+   (find-close-plants p plants 6)
    (plant-pos p)
    (plant-prim p)))
 
@@ -188,7 +190,7 @@
 (define (update-plants plants insects sirs-model)
   (map 
    (lambda (p)
-     (if (< (rndf) 0.1) 
+     (if (< (rndf) 0.5) 
 	 (plant-update p sirs-model plants insects) p))
    plants))
 
@@ -211,13 +213,14 @@
    0.6)
   1.0))
 
-(define sirs-model (make-model 0.001 1 0.01 0.01))
+(define insect-sirs-model (make-model 0.01 1 0.01 0.001))
+(define plant-sirs-model (make-model 0 1 0.01 0.001))
 (define insect-list (build-list 5 (lambda (i) (build-insect))))
 (define plant-list (plants-build-connections (build-list 30 (lambda (i) (build-plant i)))))
 
 (define (render)
-  (set! insect-list (update-insects insect-list plant-list sirs-model))
-  (set! plant-list (update-plants plant-list insect-list sirs-model))
+  (set! insect-list (update-insects insect-list plant-list insect-sirs-model))
+  (set! plant-list (update-plants plant-list insect-list plant-sirs-model))
   (set-camera-transform (mat4.rotateY (camera-transform) 0.002)))
 
 
@@ -251,3 +254,30 @@
  (lambda ()
    (start-game canvas ctx)
    ))
+
+(define (read-number id)
+  (let ((w ($ (string-append "#" id))))
+    (parseFloat (js "w[0].value"))))
+
+
+(set! rebuild 
+      (lambda () 
+	(clear)
+	(set! insect-list (build-list 5 (lambda (i) (build-insect))))
+	(set! plant-list (plants-build-connections (build-list 30 (lambda (i) (build-plant i)))))))
+
+
+(set! update-params 
+      (lambda ()
+	(set! insect-sirs-model 
+	      (make-model
+	       (read-number "i-background")
+	       (read-number "i-infection")
+	       (read-number "i-recovery")
+	       (read-number "i-susceptability")))
+	(set! plant-sirs-model 
+	      (make-model
+	       (read-number "p-background")
+	       (read-number "p-infection")
+	       (read-number "p-recovery")
+	       (read-number "p-susceptability")))))
