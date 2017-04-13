@@ -1,6 +1,17 @@
-.input {
-    float: left;
-    width: 3em;
+@import url('https://fonts.googleapis.com/css?family=Barrio|Comfortaa|Josefin+Sans');
+
+body {
+    /*font-family: 'Josefin Sans', sans-serif;*/
+    font-family: 'Comfortaa', cursive;
+    font-size: 150%;
+}
+
+h1 {
+    font-family: 'Barrio', cursive;
+}
+
+input {
+    width: 12em;
 }
 
 .image-button {
