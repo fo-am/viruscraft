@@ -4,7 +4,6 @@
     <title>Viruscraft prototype</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
     <link href="css/style.css" rel="stylesheet" type="text/css">
     <body>
       <div class="container">
@@ -13,15 +12,15 @@
 	  <div class="col-xs-12 col-sm-2">
             <form id="params" action="." method="POST">
 	      <b>Insect probabilities:</b><br>
-              Background infection <input type="number" id="i-background" value='0.01'/><br>
+              Background infection <input type="number" id="i-background" value='0.0001'/><br>
               Neighbour infection  <input type="number" id="i-infection" value='1.0'/><br>
-              Immunity <input type="number" id="i-recovery" value='0.01'/><br>
-              Susceptability <input type="number" id="i-susceptability" value='0.001'/></br>
+              Immunity <input type="number" id="i-recovery" value='0.02'/><br>
+              Susceptability <input type="number" id="i-susceptability" value='0.005'/></br>
 	      <b>Plant probabilities:</b><br>
               Background infection <input type="number" id="p-background" value='0.0'/><br>
               Neighbour infection<input type="number" id="p-infection" value='1.0'/><br>
-              Immunity <input type="number" id="p-recovery" value='0.01'/><br>
-              Susceptability <input type="number" id="p-susceptability" value='0.001'/>
+              Immunity <input type="number" id="p-recovery" value='0.02'/><br>
+              Susceptability <input type="number" id="p-susceptability" value='0.005'/>
 	    </form>
 	    <button onclick="update_params()">Update params</button></br>
 	    <a href="/">Back</a>
@@ -44,6 +43,7 @@
       </div>
     </body>
     <script src="js/jquery-1.9.1.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
     <script src="js/glMatrix.js"></script>
     <script src="js/glObjLoader.js"></script>
     <script src="js/base.js"></script>

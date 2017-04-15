@@ -110,6 +110,8 @@
 
 ;;;;;;;;;;;;;;;;
 
+(define plant-poly (load-primitive "models/isotest.obj"))
+
 (define (make-plant id state connections pos prim)
   (list id state connections pos prim))
 
@@ -126,7 +128,8 @@
       ;(scale (vector 1.5 1.5 1.5))
       (texture (load-texture "white.png"))
       ;(build-cube)
-      (load-primitive "models/isotest.obj")
+      ;;(load-primitive "models/isotest.obj")
+      (build-instance plant-poly)
       ))))
 
 (define (plant-id p) (list-ref p 0))
@@ -180,7 +183,7 @@
   (make-plant
    (plant-id p)
    (plant-state p)
-   (find-close-plants p plants 6)
+   (find-close-plants p plants 4)
    (plant-pos p)
    (plant-prim p)))
 
@@ -213,10 +216,10 @@
    0.6)
   1.0))
 
-(define insect-sirs-model (make-model 0.01 1 0.01 0.001))
-(define plant-sirs-model (make-model 0 1 0.01 0.001))
-(define insect-list (build-list 5 (lambda (i) (build-insect))))
-(define plant-list (plants-build-connections (build-list 30 (lambda (i) (build-plant i)))))
+(define insect-sirs-model (make-model 0.0001 1 0.02 0.005))
+(define plant-sirs-model (make-model 0 1 0.02 0.005))
+(define insect-list (build-list 50 (lambda (i) (build-insect))))
+(define plant-list (plants-build-connections (build-list 100 (lambda (i) (build-plant i)))))
 
 (define (render)
   (set! insect-list (update-insects insect-list plant-list insect-sirs-model))

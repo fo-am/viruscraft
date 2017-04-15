@@ -21,17 +21,43 @@
 (define (scenenode-primitive p)  (list-ref p 2))
 (define (scenenode-children p)  (list-ref p 3))
 (define (scenenode-modify-children p v)  (list-replace p 3 v))
-(define (scenenode-modify-add-child p child) (list-replace p 3 (cons child (scenenode-children p))))
+;;(define (scenenode-modify-add-child p child) (list-replace p 3 (cons child (scenenode-children p))))
+
+;; order children by id
+(define (scenenode-modify-add-child p child)
+  (define (_ l v)
+    (cond
+     ((null? l) (list v))
+     ((< (scenenode-id  v) (scenenode-id (car l))) (cons v l))
+     (else (cons (car l) (_ (cdr l) v)))))
+  (list-replace p 3 (_ (scenenode-children p) child)))
+
+;; binary search
+(define (scenenode-search-child l id)
+  (define (_ start end)
+    (cond
+      ((null? l) #f)
+      (else
+       (let ((mid (trunc (+ start (/ (- end start) 2)))))
+         (cond
+           ((eq? id (car (list-ref l mid))) (list-ref l mid))
+           ((> (car (list-ref l mid)) id)
+            (_ start mid))
+           (else
+            (_ mid end)))))))
+  (_ 0 (length l)))
 
 (define (scenegraph-find sn id)
   (cond
    ((eq? (scenenode-id sn) id) sn)
    (else 
-    (foldl
-     (lambda (sn r)
-       (if r r (scenegraph-find sn id)))
-     #f
-     (scenenode-children sn)))))
+    (let ((result (scenenode-search-child (scenenode-children sn) id)))
+      (if result result
+	  (foldl
+	   (lambda (sn r)
+	     (if r r (scenegraph-find sn id)))
+	   #f
+	   (scenenode-children sn)))))))
 
 (define (scenegraph-add sn parent-id node)
   (cond

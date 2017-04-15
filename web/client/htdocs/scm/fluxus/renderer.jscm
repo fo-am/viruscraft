@@ -30,21 +30,21 @@
    (scenenode 0 (state gl) 0 '())
    ()))
 
-(define renderer-gl (lambda (r) (list-ref r 0)))
-(define renderer-list (lambda (r) (list-ref r 1)))
-(define renderer-modify-list (lambda (r v) (list-replace r 1 v)))
-(define renderer-view (lambda (r) (list-ref r 2)))
-(define renderer-camera (lambda (r) (list-ref r 3)))
-(define renderer-modify-camera (lambda (r v) (list-replace r 3 v)))
-(define renderer-world-to-screen (lambda (r) (list-ref r 4)))
-(define renderer-stack (lambda (r) (list-ref r 5)))
-(define renderer-modify-stack (lambda (r v) (list-replace r 5 v)))
-(define renderer-immediate-prims (lambda (r) (list-ref r 6)))
-(define renderer-modify-immediate-prims (lambda (r v) (list-replace r 6 v)))
-(define renderer-hook (lambda (r) (list-ref r 7)))
-(define renderer-modify-hook (lambda (r v) (list-replace r 7 v)))
-(define renderer-prefab (lambda (r) (list-ref r 8)))
-(define renderer-modify-prefab (lambda (r v) (list-replace r 8 v)))
+(define (renderer-gl r) (list-ref r 0))
+(define (renderer-list r) (list-ref r 1))
+(define (renderer-modify-list r v) (list-replace r 1 v))
+(define (renderer-view r) (list-ref r 2))
+(define (renderer-camera r) (list-ref r 3))
+(define (renderer-modify-camera r v) (list-replace r 3 v))
+(define (renderer-world-to-screen r) (list-ref r 4))
+(define (renderer-stack r) (list-ref r 5))
+(define (renderer-modify-stack r v) (list-replace r 5 v))
+(define (renderer-immediate-prims r) (list-ref r 6))
+(define (renderer-modify-immediate-prims r v) (list-replace r 6 v))
+(define (renderer-hook r) (list-ref r 7))
+(define (renderer-modify-hook r v) (list-replace r 7 v))
+(define (renderer-prefab r) (list-ref r 8))
+(define (renderer-modify-prefab r v) (list-replace r 8 v))
 (define (renderer-scenegraph r) (list-ref r 9))
 (define (renderer-modify-scenegraph r v) (list-replace r 9 v))
 (define (renderer-grab-stack r) (list-ref r 10))
@@ -72,20 +72,14 @@
   (let ((grabbed (renderer-grab-stack-top r)))
     ;; either modify the grabbed primitive or the stack top
     (if grabbed
-	(let ((node (scenegraph-find 
-		     (renderer-scenegraph r)
-		     grabbed)))
-	  (state-tx (scenenode-state node)))
+	(state-tx (scenenode-state grabbed))
 	(state-tx (renderer-stack-top r)))))
 
 (define (renderer-modify-current-state r fn)
   (let ((grabbed (renderer-grab-stack-top r)))
     ;; either modify the grabbed primitive or the stack top
     (if grabbed
-	(let ((node (scenegraph-find 
-		     (renderer-scenegraph r)
-		     grabbed)))
-	  (scenenode-modify-state! node (fn (scenenode-state node))))
+	(scenenode-modify-state! grabbed (fn (scenenode-state grabbed)))
 	(renderer-modify-stack
 	 r (cons (fn (car (renderer-stack r)))
 		 (cdr (renderer-stack r)))))))
@@ -102,7 +96,8 @@
 
 (define (renderer-grab-stack-push r id)
   (renderer-modify-grab-stack
-   r (cons id (renderer-grab-stack r))))
+   r (cons (scenegraph-find (renderer-scenegraph r) id)
+	   (renderer-grab-stack r))))
 
 (define (renderer-grab-stack-pop r)
   (renderer-modify-grab-stack r (cdr (renderer-grab-stack r))))
@@ -148,44 +143,54 @@
     (renderer-modify-prefab
      r
      (list
-      (build-primitive
-       gl
-       (length unit-cube-vertices)
-       (list
-	(buffer gl "p" unit-cube-vertices 3)
-	(buffer gl "n" unit-cube-normals 3)
-	(buffer gl "t" unit-cube-texcoords 3)
-	))
-      (build-primitive
-       gl
-       (length sphere-vertices)
-       (list
-	(buffer gl "p" sphere-vertices 3)
-	(buffer gl "n" sphere-normals 3)
-	(buffer gl "t" sphere-texcoords 3)
-	))
-      (build-primitive
-       gl
-       (length torus-vertices)
-       (list
-	(buffer gl "p" torus-vertices 3)
-	(buffer gl "n" torus-normals 3)
-	(buffer gl "t" torus-texcoords 3)
-	))
-      (build-primitive
-       gl
-       (length wing-vertices)
-       (list
-	(buffer gl "p" wing-vertices 3)
-	(buffer gl "n" wing-normals 3)
-	(buffer gl "t" wing-texcoords 3)
-	))
-      (build-primitive
-       gl
-       (length body-vertices)
-       (list
-	(buffer gl "p" body-vertices 3)
-	(buffer gl "n" body-normals 3)
-	(buffer gl "t" body-texcoords 3)
-	))
+      (primitive
+       'polyprim
+       (build-polyprim
+	gl
+	(length unit-cube-vertices)
+	(list
+	 (buffer gl "p" unit-cube-vertices 3)
+	 (buffer gl "n" unit-cube-normals 3)
+	 (buffer gl "t" unit-cube-texcoords 3)
+	 )))
+      (primitive
+       'polyprim
+       (build-polyprim
+	gl
+	(length sphere-vertices)
+	(list
+	 (buffer gl "p" sphere-vertices 3)
+	 (buffer gl "n" sphere-normals 3)
+	 (buffer gl "t" sphere-texcoords 3)
+	 )))
+      (primitive
+       'polyprim
+       (build-polyprim
+	gl
+	(length torus-vertices)
+	(list
+	 (buffer gl "p" torus-vertices 3)
+	 (buffer gl "n" torus-normals 3)
+	 (buffer gl "t" torus-texcoords 3)
+	 )))
+      (primitive
+       'polyprim
+       (build-polyprim
+	gl
+	(length wing-vertices)
+	(list
+	 (buffer gl "p" wing-vertices 3)
+	 (buffer gl "n" wing-normals 3)
+	 (buffer gl "t" wing-texcoords 3)
+	 )))
+      (primitive
+       'polyprim
+       (build-polyprim
+	gl
+	(length body-vertices)
+	(list
+	 (buffer gl "p" body-vertices 3)
+	 (buffer gl "n" body-normals 3)
+	 (buffer gl "t" body-texcoords 3)
+	 )))
       ))))

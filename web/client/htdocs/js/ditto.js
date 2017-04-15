@@ -662,7 +662,30 @@ function init(filenames) {
 /**
  * Provides requestAnimationFrame in a cross browser way.
  */
- var requestAnimFrame = 
-    function(callback) {
-	window.setTimeout(callback, 1000/60);    
-    };
+ // var requestAnimFrame = 
+ //    function(callback) {
+ // 	window.setTimeout(callback, 1000/60);    
+ //    };
+
+// cycle : 
+// function()
+// {        
+//     var now = Date.now();        
+//     var elapsed = Math.min((now - this.lastCycle) / 1000,1/this.fpsMin);        
+//     this.lastCycle = now; // Triggering cycle only if not paused and with focus        
+//     if(!this.pause){            
+// 	try{                
+// 	    this.oncycle(elapsed);            
+// 	}catch(e){                
+// 	    console.log('Error: ' + e + ' - ');                
+// 	    throw e;            
+// 	}                        
+// 	// Calculating FPS            
+// 	this.framesUntilNextStat--;            
+// 	if(this.framesUntilNextStat <= 0){                
+// 	    this.framesUntilNextStat = 60; // Scheduling the next statistics                
+// 	    this.fps = ~~(60 * 1000 / (Date.now() - this.lastStat + elapsed));                
+// 	    this.lastStat = Date.now();            
+// 	}        
+//     }    
+// }

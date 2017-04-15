@@ -14,20 +14,13 @@
 ;; You should have received a copy of the GNU Affero General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-(load "scm/fluxus/polyprim.jscm")
-(load "scm/fluxus/instanceprim.jscm")
+(define (instanceprim polyref)
+  (list polyref))
 
-(define (primitive type inner)
-  (list type inner))
+(define (instanceprim-polyref p) (list-ref p 0))
 
-(define (primitive-type p) (list-ref p 0))
-(define (primitive-inner p) (list-ref p 1))
-
-(define (primitive-render p gl view-camera state tx)
-  ;; dispatch
-  (cond 
-   ((eq? (primitive-type p) 'polyprim) 
-    (polyprim-render (primitive-inner p) gl view-camera state tx))
-   ((eq? (primitive-type p) 'instanceprim) 
-    (instanceprim-render (primitive-inner p) gl view-camera state tx))
-   (else (msg "unknown primitive"))))
+(define (instanceprim-render p gl view-camera state tx)
+  (render-buffers p gl view-camera state tx
+		  (buffer-vb (list-ref (polyprim-vb (instanceprim-polyref p)) 0))
+		  (buffer-vb (list-ref (polyprim-vb (instanceprim-polyref p)) 1))
+		  (buffer-vb (list-ref (polyprim-vb (instanceprim-polyref p)) 2))))

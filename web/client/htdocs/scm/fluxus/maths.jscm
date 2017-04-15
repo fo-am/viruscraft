@@ -19,6 +19,7 @@
 
 (define (sqrt a) (Math.sqrt a))
 (define (square x) (* x x))
+(define (trunc x) (js "~~x"))
 
 (define vector
   (lambda (x y z)

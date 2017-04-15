@@ -1,0 +1,68 @@
+;; -*- mode: scheme; -*-
+;; Planet Fluxus Copyright (C) 2013 Dave Griffiths
+;;
+;; This program is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU Affero General Public License as
+;; published by the Free Software Foundation, either version 3 of the
+;; License, or (at your option) any later version.
+;;
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU Affero General Public License for more details.
+;;
+;; You should have received a copy of the GNU Affero General Public License
+;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+(define (polyprim size type vb)
+  (list size type vb))
+
+(define (polyprim-size p) (list-ref p 0))
+(define (polyprim-type p) (list-ref p 1))
+(define (polyprim-vb p) (list-ref p 2))
+(define (polyprim-modify-vb p v) (list-replace p 2 v))
+
+(define (build-polyprim gl size vbs)
+  (let ((p (polyprim size 0 vbs)))
+    (polyprim-update-buffers! gl p)
+    p))
+
+(define (polyprim-update-buffers! gl p)
+  (for-each
+   (lambda (b)
+     (buffer-update! gl b))
+   (polyprim-vb p)))
+
+(define (polyprim-find-buffer p name)
+  (foldl
+   (lambda (b r)
+     (if (and (not r) (eq? (buffer-name b) name))
+	 b r))
+   #f
+   (polyprim-vb p)))
+
+(define (polyprim-modify-buffer p name fn)
+  (map
+   (lambda (b)
+     (if (eq? (buffer-name b) name)
+	 (fn b) b))
+   (polyprim-vb p)))
+
+;(define polyprim-add-vb
+;  (lambda (p name item-size)
+;    (let ((p (polyprim-modify-vb
+;              p (cons (buffer name
+;                              (build-empty-buffer
+;                               (polyprim-size p)
+;                               item-size))
+;                      (polyprim-vb p)))))
+;;      (polyprim-connect-vb-to-shader p name)
+;      p)))
+
+(define (polyprim-render p gl view-camera state tx)
+  (render-buffers p gl view-camera state tx
+		  (buffer-vb (list-ref (polyprim-vb p) 0))
+		  (buffer-vb (list-ref (polyprim-vb p) 1))
+		  (buffer-vb (list-ref (polyprim-vb p) 2))))
+
+

@@ -134,13 +134,15 @@
     (set! r
           (renderer-add
            r
-           (build-primitive
-            gl
-            (length unit-cube-vertices)
-            (list
-             (buffer gl "p" unit-cube-vertices 3)
-             (buffer gl "n" unit-cube-normals 3)
-             ))))))
+           (primitive
+	    'polyprim
+	    (build-polyprim
+	     gl
+	     (length unit-cube-vertices)
+	     (list
+	      (buffer gl "p" unit-cube-vertices 3)
+	      (buffer gl "n" unit-cube-normals 3)
+	      )))))))
 
 (define (set-hint! hint)
   (set! the-renderer (renderer-modify-current-state
@@ -164,14 +166,16 @@
   (let ((gl (renderer-gl r))
 	(raw (load-obj url)))
     (add-to-scenegraph!     
-     (build-primitive
-      gl
-      (length (list-ref raw 0))
-      (list
-       (buffer gl "p" (list-ref raw 0) 3)
-       (buffer gl "n" (list-ref raw 1) 3)
-       (buffer gl "t" (list-ref raw 0) 3)
-       )))))
+     (primitive
+      'polyprim
+      (build-polyprim
+       gl
+       (length (list-ref raw 0))
+       (list
+	(buffer gl "p" (list-ref raw 0) 3)
+	(buffer gl "n" (list-ref raw 1) 3)
+	(buffer gl "t" (list-ref raw 0) 3)
+	))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; retained mode
@@ -207,3 +211,14 @@
 (define (build-cube)
   (add-to-scenegraph! (list-ref (renderer-prefab r) 0)))
 
+(define (build-instance polyref)
+  (add-to-scenegraph! 
+   (primitive 
+    'instanceprim 
+    (instanceprim 
+     (primitive-inner
+      (scenenode-primitive 
+       (scenegraph-find 
+	(renderer-scenegraph r) 
+	polyref)))))))
+  
