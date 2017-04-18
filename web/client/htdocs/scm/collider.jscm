@@ -1,0 +1,142 @@
+;; -*- mode: scheme; -*-
+;; Viruscraft Copyright (C) 2017 FoAM Kernow
+;;
+;; This program is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU Affero General Public License as
+;; published by the Free Software Foundation, either version 3 of the
+;; License, or (at your option) any later version.
+;;
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU Affero General Public License for more details.
+;;
+;; You should have received a copy of the GNU Affero General Public License
+;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(load "scm/sirs-model.jscm")
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; population stuff
+
+(define (protein prim points)
+  (list prim points))
+
+(define (protein-prim p) (list-ref p 0))
+(define (protein-points p) (list-ref p 1))
+
+(define (build-protein type)
+  (let ((p (with-state (load-primitive "models/isotest.obj")))
+	(points (list (vector 0.3 0 0) (vector 0 0.3 0))))
+    (with-state
+     (parent p)
+     (for-each
+      (lambda (point)
+    	(with-state
+    	 (colour (vector 1 0 0))
+    	 (translate point)
+    	 (scale (vector 0.1 0.1 0.1))
+    	 (load-primitive "models/isotest.obj")))
+      points))
+    (protein p points)))
+  
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; (define floor
+;;   (with-state
+;;    ;;(translate (vector 0 -5 0))
+;;    (scale (vector 30 0.1 30))
+;;    (texture (load-texture "test-grey.png"))
+;;    (build-cube)))
+
+(console.log 10)
+
+;; (set-camera-transform 
+;;  (mat4.rotateY
+;;   (mat4.rotateX
+;;    (mat4.translate 
+;;     (mat4.identity (mat4.create))
+;;     (vector 0 0 -35))
+;;    0.6)
+;;   1.0))
+
+(define prot (with-state
+ (texture (load-texture "white.png"))
+ (scale (vector 3 3 3))
+ (build-protein)))
+
+(with-state
+ (translate (vector -4 0 0))
+ (build-cube))
+ ;;(build-instance (protein-prim prot)))
+
+(define (render)
+  (with-primitive 
+   (protein-prim prot)
+    (pdata-map! 
+     (lambda (p) 
+       (vadd p (vmul (crndvec) 0.02)))
+     "p"))
+
+  (set-camera-transform (mat4.rotateY (camera-transform) 0.002)))
+
+
+(define (nightjar-intro c)
+  (every-frame (render))
+
+  (game-modify-mouse-hook
+   (lambda (e c) c)
+   (game-modify-render
+    (lambda (ctx)
+      (set! ctx.font "bold 50pt amatic")
+      ;;(wrap-shadow-text ctx (mtext-lookup "title") 0 380)
+      (set! ctx.font "bold 30pt amatic")
+      ;;(wrap-text ctx (mtext-lookup "splash") 0 430)
+      )
+    (game-modify-buttons
+     (list
+      
+      )
+     c))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; startup
+(set! ctx.font "normal 10pt amatic")
+
+(load-images!
+ (append
+  (list
+   "heliconius.png"
+   ))
+ (lambda ()
+   (start-game canvas ctx)
+   ))
+
+(define (read-number id)
+  (let ((w ($ (string-append "#" id))))
+    (parseFloat (js "w[0].value"))))
+
+
+(set! rebuild 
+      (lambda () 
+	(clear)
+	(set! insect-list (build-list 5 (lambda (i) (build-insect))))
+	(set! plant-list (plants-build-connections (build-list 30 (lambda (i) (build-plant i)))))))
+
+
+(set! update-params 
+      (lambda ()
+	(set! insect-sirs-model 
+	      (make-model
+	       (read-number "i-background")
+	       (read-number "i-infection")
+	       (read-number "i-recovery")
+	       (read-number "i-susceptability")))
+	(set! plant-sirs-model 
+	      (make-model
+	       (read-number "p-background")
+	       (read-number "p-infection")
+	       (read-number "p-recovery")
+	       (read-number "p-susceptability")))))

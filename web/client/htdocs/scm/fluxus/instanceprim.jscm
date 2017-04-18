@@ -20,7 +20,6 @@
 (define (instanceprim-polyref p) (list-ref p 0))
 
 (define (instanceprim-render p gl view-camera state tx)
-  (render-buffers p gl view-camera state tx
-		  (buffer-vb (list-ref (polyprim-vb (instanceprim-polyref p)) 0))
-		  (buffer-vb (list-ref (polyprim-vb (instanceprim-polyref p)) 1))
-		  (buffer-vb (list-ref (polyprim-vb (instanceprim-polyref p)) 2))))
+  (pdata-render 
+   (polyprim-pdata (instanceprim-polyref p))
+   gl view-camera state tx))

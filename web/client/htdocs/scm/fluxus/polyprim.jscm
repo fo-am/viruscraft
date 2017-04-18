@@ -19,50 +19,19 @@
 
 (define (polyprim-size p) (list-ref p 0))
 (define (polyprim-type p) (list-ref p 1))
-(define (polyprim-vb p) (list-ref p 2))
-(define (polyprim-modify-vb p v) (list-replace p 2 v))
+(define (polyprim-pdata p) (list-ref p 2))
+(define (polyprim-modify-pdata p v) (list-replace p 2 v))
 
-(define (build-polyprim gl size vbs)
-  (let ((p (polyprim size 0 vbs)))
-    (polyprim-update-buffers! gl p)
+(define (build-polyprim gl pdata)
+  (let ((p (polyprim 
+	    (pdata-size-verts pdata) 0 
+	    (pdata-build-vbo gl pdata))))
+    (pdata-update-vbo! gl pdata)
     p))
 
 (define (polyprim-update-buffers! gl p)
-  (for-each
-   (lambda (b)
-     (buffer-update! gl b))
-   (polyprim-vb p)))
-
-(define (polyprim-find-buffer p name)
-  (foldl
-   (lambda (b r)
-     (if (and (not r) (eq? (buffer-name b) name))
-	 b r))
-   #f
-   (polyprim-vb p)))
-
-(define (polyprim-modify-buffer p name fn)
-  (map
-   (lambda (b)
-     (if (eq? (buffer-name b) name)
-	 (fn b) b))
-   (polyprim-vb p)))
-
-;(define polyprim-add-vb
-;  (lambda (p name item-size)
-;    (let ((p (polyprim-modify-vb
-;              p (cons (buffer name
-;                              (build-empty-buffer
-;                               (polyprim-size p)
-;                               item-size))
-;                      (polyprim-vb p)))))
-;;      (polyprim-connect-vb-to-shader p name)
-;      p)))
-
+  (pdata-update-vbo! gl (polyprim-pdata p)))
+  
 (define (polyprim-render p gl view-camera state tx)
-  (render-buffers p gl view-camera state tx
-		  (buffer-vb (list-ref (polyprim-vb p) 0))
-		  (buffer-vb (list-ref (polyprim-vb p) 1))
-		  (buffer-vb (list-ref (polyprim-vb p) 2))))
-
+  (pdata-render (polyprim-pdata p) gl view-camera state tx))
 

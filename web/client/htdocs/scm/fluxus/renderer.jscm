@@ -13,9 +13,7 @@
 ;;
 ;; You should have received a copy of the GNU Affero General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-(console.log "hello")
-
+ 
 (define (renderer gl)
   (list
    gl
@@ -99,6 +97,9 @@
    r (cons (scenegraph-find (renderer-scenegraph r) id)
 	   (renderer-grab-stack r))))
 
+(define (renderer-grabbed? r)
+  (> (length (renderer-grab-stack r)) 0))
+
 (define (renderer-grab-stack-pop r)
   (renderer-modify-grab-stack r (cdr (renderer-grab-stack r))))
 
@@ -137,60 +138,37 @@
       (scenegraph-render (renderer-scenegraph r) gl view-camera ident))
     (renderer-immediate-clear r)))
 
+(define (interleave-pdata a b c)
+  (js "var ret=[];")
+  (js "for (var i=0; i<a.length; i+=3) {") 
+  (js "ret.push(a[i]);")
+  (js "ret.push(a[i+1]);")
+  (js "ret.push(a[i+2]);")
+  (js "ret.push(b[i]);")
+  (js "ret.push(b[i+1]);")
+  (js "ret.push(b[i+2]);")
+  (js "ret.push(c[i]);")
+  (js "ret.push(c[i+1]);")
+  (js "ret.push(c[i+2]);")
+  (js "}")
+  ret)
+
+(define (assemble-polyprim gl vertices normals texcoords)
+  (primitive
+   'polyprim
+   (build-polyprim
+    gl
+    (make-pdata (list "p" "n" "t") (/ (length vertices) 3)
+		(interleave-pdata vertices normals texcoords))
+    )))
 
 (define (renderer-build-prefab r)
   (let ((gl (renderer-gl r)))
     (renderer-modify-prefab
      r
      (list
-      (primitive
-       'polyprim
-       (build-polyprim
-	gl
-	(length unit-cube-vertices)
-	(list
-	 (buffer gl "p" unit-cube-vertices 3)
-	 (buffer gl "n" unit-cube-normals 3)
-	 (buffer gl "t" unit-cube-texcoords 3)
-	 )))
-      (primitive
-       'polyprim
-       (build-polyprim
-	gl
-	(length sphere-vertices)
-	(list
-	 (buffer gl "p" sphere-vertices 3)
-	 (buffer gl "n" sphere-normals 3)
-	 (buffer gl "t" sphere-texcoords 3)
-	 )))
-      (primitive
-       'polyprim
-       (build-polyprim
-	gl
-	(length torus-vertices)
-	(list
-	 (buffer gl "p" torus-vertices 3)
-	 (buffer gl "n" torus-normals 3)
-	 (buffer gl "t" torus-texcoords 3)
-	 )))
-      (primitive
-       'polyprim
-       (build-polyprim
-	gl
-	(length wing-vertices)
-	(list
-	 (buffer gl "p" wing-vertices 3)
-	 (buffer gl "n" wing-normals 3)
-	 (buffer gl "t" wing-texcoords 3)
-	 )))
-      (primitive
-       'polyprim
-       (build-polyprim
-	gl
-	(length body-vertices)
-	(list
-	 (buffer gl "p" body-vertices 3)
-	 (buffer gl "n" body-normals 3)
-	 (buffer gl "t" body-texcoords 3)
-	 )))
+      (assemble-polyprim gl unit-cube-vertices unit-cube-normals unit-cube-texcoords)
+      (assemble-polyprim gl sphere-vertices sphere-normals sphere-texcoords)
+      (assemble-polyprim gl torus-vertices torus-normals torus-texcoords)
       ))))
+

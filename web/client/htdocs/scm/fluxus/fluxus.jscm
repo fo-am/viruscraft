@@ -14,6 +14,19 @@
 ;; You should have received a copy of the GNU Affero General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+(load "scm/fluxus/texture.jscm")
+(load "scm/fluxus/maths.jscm")
+(load "scm/fluxus/glsl.jscm")
+(load "scm/fluxus/shaders.jscm")
+(load "scm/fluxus/state.jscm")
+(load "scm/fluxus/pdata.jscm")
+(load "scm/fluxus/scenegraph.jscm")
+(load "scm/fluxus/primitive.jscm")
+(load "scm/fluxus/data.jscm")
+(load "scm/fluxus/renderer.jscm")
+(load "scm/fluxus/instanceprim.jscm")
+(load "scm/fluxus/polyprim.jscm")
+
 (define the-renderer 0)
 
 (define (time) (js "new Date().getTime()/1000;"))
@@ -81,9 +94,8 @@
 
                        0))))
 
-(define scale
-  (lambda (v)
-    (mat4.scale (renderer-current-tx r) v)))
+(define (scale v)
+  (mat4.scale (renderer-current-tx r) v))
 
 (define (load-texture name)
   (load-texture-impl!
@@ -145,16 +157,16 @@
 	      )))))))
 
 (define (set-hint! hint)
-  (set! the-renderer (renderer-modify-current-state
-           r
-           (lambda (state)
-             (state-modify-hints state (bitwise-or (state-hints state) hint))))))
+  (set! the-renderer 
+	(renderer-modify-current-state
+	 r (lambda (state)
+	     (state-modify-hints state (bitwise-or (state-hints state) hint))))))
 
 (define (clear-hints)
-  (set! the-renderer (renderer-modify-current-state
-           r
-           (lambda (state)
-             (state-modify-hints state 0)))))
+  (set! the-renderer 
+	(renderer-modify-current-state
+	 r (lambda (state)
+	     (state-modify-hints state 0)))))
 
 (define (hint-solid) (set-hint! FLX_HINT_SOLID))
 (define (hint-wire) (set-hint! FLX_HINT_WIRE))
@@ -168,14 +180,13 @@
     (add-to-scenegraph!     
      (primitive
       'polyprim
-      (build-polyprim
-       gl
-       (length (list-ref raw 0))
-       (list
-	(buffer gl "p" (list-ref raw 0) 3)
-	(buffer gl "n" (list-ref raw 1) 3)
-	(buffer gl "t" (list-ref raw 0) 3)
-	))))))
+      (build-polyprim gl raw)))))
+
+;; (list
+;; 	(buffer gl "p" (list-ref raw 0) 3)
+;; 	(buffer gl "n" (list-ref raw 1) 3)
+;; 	(buffer gl "t" (list-ref raw 0) 3)
+;; 	))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; retained mode
@@ -221,4 +232,54 @@
        (scenegraph-find 
 	(renderer-scenegraph r) 
 	polyref)))))))
+
+(define (pdata-map! fn name)
+  (when (renderer-grabbed? r)
+	(pdata-internal-map!
+	 (renderer-gl r) 
+	 ;; todo: check type is polyprim
+	 (polyprim-pdata 
+	  (primitive-inner
+	   (scenenode-primitive (renderer-grab-stack-top r))))
+	 fn name)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define t 0)
+(define stat-period 60)
+(define last-stat 0)
+
+(define (crank)
+  (set! t (+ t 0.1))
+  (requestAnimFrame crank)
+  (set! r (renderer-render r t))
   
+  (set! stat-period (- stat-period 1))            
+  (when (zero? stat-period)
+	(set! stat-period 60)
+	(set! current-fps (/ (* stat-period 1000) (- (Date.now) last-stat)))
+	(console.log (+ "FPS: " (trunc current-fps)))
+	(set! last-stat (Date.now)))   
+  
+  )))
+
+(define (startup)
+  (let ((canvas (document.getElementById "webgl-canvas")))
+    (let ((gl (canvas.getContext "experimental-webgl")))
+      (msg "starting up webgl")
+      (msg canvas.width)
+      (set! gl.viewportWidth canvas.width)
+      (set! gl.viewportHeight canvas.height)
+      (set! r (renderer gl))
+      ;; set up camera transform
+      (mat4.translate (renderer-camera r) (list 0 0 -20))
+      (set! r (renderer-build-prefab r))
+      (gl.clearColor 0.0 0.0 0.0 1.0)
+      (gl.enable gl.DEPTH_TEST)
+      (gl.disable gl.CULL_FACE)
+      ;; make sure the default texture is loaded
+      (load-texture "white.png")
+      (crank)
+      )))
+
+(startup)

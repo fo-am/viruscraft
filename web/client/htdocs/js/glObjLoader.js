@@ -11,8 +11,7 @@ function inner_load_obj(string) {
     var lines = string.split("\n");
     var positions = [];
     var normals = [];
-    var vp = [];
-    var vn = [];
+    var verts = [];
 
     for ( var i = 0 ; i < lines.length ; i++ ) {
         var parts = lines[i].trimRight().split(' ');
@@ -37,23 +36,34 @@ function inner_load_obj(string) {
 		var f2 = parts[2].split('/');
 		var f3 = parts[3].split('/');
 		Array.prototype.push.apply(
-                    vp, positions[parseInt(f1[0]) - 1]);
+                    verts, positions[parseInt(f1[0]) - 1]);
 		Array.prototype.push.apply(
-                    vn, normals[parseInt(f1[2]) - 1]);
+                    verts, normals[parseInt(f1[2]) - 1]);
+		// texture stand in
 		Array.prototype.push.apply(
-                    vp, positions[parseInt(f2[0]) - 1]);
+                    verts, positions[parseInt(f1[0]) - 1]);
+
 		Array.prototype.push.apply(
-                    vn, normals[parseInt(f2[2]) - 1]);
+                    verts, positions[parseInt(f2[0]) - 1]);
 		Array.prototype.push.apply(
-                    vp, positions[parseInt(f3[0]) - 1]);
+                    verts, normals[parseInt(f2[2]) - 1]);
+		// texture stand in
 		Array.prototype.push.apply(
-                    vn, normals[parseInt(f3[2]) - 1]);
+                    verts, positions[parseInt(f1[0]) - 1]);
+
+		Array.prototype.push.apply(
+                    verts, positions[parseInt(f3[0]) - 1]);
+		Array.prototype.push.apply(
+                    verts, normals[parseInt(f3[2]) - 1]);
+		// texture stand in
+		Array.prototype.push.apply(
+                    verts, positions[parseInt(f1[0]) - 1]);
 		break;
             }
             }
         }
     }
-    // returns raw data for building into a primitive later
-    return [vp,vn];
+    // returns fluxus vbo object (see vbo.jscm)
+    return [["p","n","t"], (verts.length/3)/3, verts, 0];
 }
 

@@ -1,5 +1,5 @@
 ;; -*- mode: scheme; -*-
-;; Planet Fluxus Copyright (C) 2013 Dave Griffiths
+;; Viruscraft (C) 2017 FoAM Kernow
 ;;
 ;; This program is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU Affero General Public License as
@@ -13,36 +13,6 @@
 ;;
 ;; You should have received a copy of the GNU Affero General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-(define (init-gl canvas)
-  (let ((gl (canvas.getContext "experimental-webgl")))
-    (set! gl.viewportWidth canvas.width)
-    (set! gl.viewportHeight canvas.height)
-    gl))
-
-;; vertex buffer primitives
-(define (build-buffer gl vertices item-size)
-  (let ((vb (gl.createBuffer)))
-    (gl.bindBuffer gl.ARRAY_BUFFER vb)
-    (gl.bufferData gl.ARRAY_BUFFER (js "new Float32Array(vertices)") gl.STATIC_DRAW)
-    (set! vb.itemSize item-size)
-    (set! vb.numItems (/ (length vertices) item-size))
-    vb))
-
-(define (build-empty-buffer gl size item-size)
-  (msg "building a buffer")
-  (let ((vb (gl.createBuffer)))
-    (gl.bindBuffer gl.ARRAY_BUFFER vb)
-    (gl.bufferData gl.ARRAY_BUFFER (js "new Float32Array(size)") gl.STATIC_DRAW)
-    (set! vb.itemSize item-size)
-    (set! vb.numItems (/ size item-size))
-    vb))
-
-(define (update-buffer! gl vb vertices)
-  (gl.bindBuffer gl.ARRAY_BUFFER vb)
-  (gl.bufferData gl.ARRAY_BUFFER (js "new Float32Array(vertices)") gl.STATIC_DRAW))
-
-;; shaders
 
 (define (compile-shader gl type code)
   (let ((shader (gl.createShader type)))
@@ -116,61 +86,3 @@
 		  (gl.getUniformLocation shader-program "LightPos")))
       
       shader-program)))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(define (buffer gl name data item-size)
-  (list name data
-	;; build empty buffers for testing
-	(build-empty-buffer gl (length data) item-size)))
-
-(define (buffer-name b) (list-ref b 0))
-(define (buffer-data b) (list-ref b 1))
-(define (buffer-modify-data b v) (list-replace b 1 v))
-(define (buffer-vb b) (list-ref b 2))
-
-(define (buffer-update! gl b)
-  (update-buffer! gl (buffer-vb b) (buffer-data b)))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(define (render-buffers  p gl view-camera state tx pvb nvb tvb)
-  (let ;; assumptions...
-      ((model-view (mat4.create))
-       (local (mat4.create))
-       (normal (mat4.create))
-       (shader (state-shader state))
-       (texture (state-texture state))
-       (colour (state-colour state))
-       (hints (state-hints state)))
-    (mat4.multiply tx (state-tx state) local)
-    (mat4.multiply view-camera local model-view)
-
-    (gl.useProgram shader)
-    (gl.bindBuffer gl.ARRAY_BUFFER pvb)
-    (gl.vertexAttribPointer shader.vertexPositionAttribute
-			    pvb.itemSize
-			    gl.FLOAT false 0 0)
-    (gl.bindBuffer gl.ARRAY_BUFFER nvb)
-    (gl.vertexAttribPointer shader.vertexNormalAttribute
-			    nvb.itemSize
-			    gl.FLOAT false 0 0)
-    (gl.bindBuffer gl.ARRAY_BUFFER tvb)
-    (gl.vertexAttribPointer shader.vertexTextureAttribute
-			    tvb.itemSize
-			    gl.FLOAT false 0 0)
-    (if (eq? texture "")
-	(bind-texture gl shader "white.png")
-	(bind-texture gl shader texture))
-    
-    (gl.uniformMatrix4fv shader.ModelViewMatrixUniform false model-view)
-    (mat4.toRotationMat local normal)
-    (gl.uniformMatrix4fv shader.NormalMatrixUniform false normal)
-
-    (gl.uniform3fv shader.DiffuseColour colour)
-    
-    (when (bitwise-and hints FLX_HINT_SOLID)
-	  (gl.drawArrays gl.TRIANGLES 0 pvb.numItems))
-    (when (bitwise-and hints FLX_HINT_WIRE)
-	  (gl.drawArrays gl.LINE_STRIP 0 pvb.numItems))
-    ))
