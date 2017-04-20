@@ -36,13 +36,11 @@
       (gl.useProgram shader-program)
       
       (when (not (eq? (gl.getAttribLocation shader-program "p") -1))
-	    (console.log "activating positions")
 	    (set! shader-program.vertexPositionAttribute
 		  (gl.getAttribLocation shader-program "p"))
 	    (gl.enableVertexAttribArray shader-program.vertexPositionAttribute))
       
       (when (not (eq? (gl.getAttribLocation shader-program "n") -1))
-	    (console.log "activating normals")
 	    (set! shader-program.vertexNormalAttribute
 		  (gl.getAttribLocation shader-program "n"))
 	    (gl.enableVertexAttribArray shader-program.vertexNormalAttribute))

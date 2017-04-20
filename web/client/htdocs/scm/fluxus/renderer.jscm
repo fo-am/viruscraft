@@ -77,7 +77,9 @@
   (let ((grabbed (renderer-grab-stack-top r)))
     ;; either modify the grabbed primitive or the stack top
     (if grabbed
-	(scenenode-modify-state! grabbed (fn (scenenode-state grabbed)))
+	(begin 
+	  (scenenode-modify-state! grabbed (fn (scenenode-state grabbed)))
+	  r) ;; need to return the unchanged renderer
 	(renderer-modify-stack
 	 r (cons (fn (car (renderer-stack r)))
 		 (cdr (renderer-stack r)))))))

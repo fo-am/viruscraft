@@ -30,7 +30,7 @@
 (define (pdata-vbo v) (list-ref v 3))
 
 (define (pdata-build-vbo gl v)
-  (msg (+ "building vbo of size " (length (pdata-interleaved-data v)) " floats"))
+  ;;(msg (+ "building vbo of size " (length (pdata-interleaved-data v)) " floats"))
   (let ((vb (gl.createBuffer)))
     (gl.bindBuffer gl.ARRAY_BUFFER vb)
     (gl.bufferData gl.ARRAY_BUFFER (new Float32Array (length (pdata-interleaved-data v))) gl.STATIC_DRAW)
@@ -54,7 +54,7 @@
 (define (pdata-internal-map! gl v fn name)
   (let ((offset (cond ((eq? name "p") 0)
 		      ((eq? name "n") 3)
-		      (else 6)))) ;; hmm ok for now... 
+		      (else 6)))) ;; hmm ok for now but FIX THIS... 
     (let ((stride (* (length (pdata-types v)) 3))) 
       (pdata-modify-interleaved-data!
        v (stride-map fn (pdata-interleaved-data v) stride offset))

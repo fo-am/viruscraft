@@ -514,7 +514,7 @@ ditto.core_forms = function(fn, args) {
 
     if (fn == "load") {
         var v=ditto.comp(ditto.car(args));
-        console.log("loading "+v);
+        //console.log("loading "+v);
         return ditto.load(v.substring(1,v.length-1));
     }
 
@@ -625,9 +625,7 @@ ditto.to_page = function(id,html)
     document.getElementById(id).appendChild(div);
 };
 
-
 function init(filenames) {
-
     jQuery(document).ready(function($) {
 
         // load and compile the syntax parser
@@ -644,48 +642,58 @@ function init(filenames) {
         var js=ditto.load("scm/base.jscm");
 
         filenames.forEach(function(filename) {
-            console.log("loading "+filename);
+            //console.log("loading "+filename);
             js+=ditto.load(filename);
         });
 
+	js+="crank()";
+
         try {
-            eval(js);
+            //eval(js);
+            setTimeout(js,0);
 	    //console.log(js);
         } catch (e) {
 	    //console.log(js);
             console.log(e);
             console.log(e.stack);
+            ditto.to_page("output", "Error: "+e);	
+            ditto.to_page("output", "Error: "+e.stack);	
         }
     });
-}
+};
 
-/**
- * Provides requestAnimationFrame in a cross browser way.
- */
- // var requestAnimFrame = 
- //    function(callback) {
- // 	window.setTimeout(callback, 1000/60);    
- //    };
+function scheme_eval(filenames,code) {
+    // load and compile the syntax parser
+    var syntax_parse=ditto.load_unparsed("scm/syntax.jscm");
+    try {
+        //console.log(syntax_parse);
+        do_syntax=eval(syntax_parse);
+    } catch (e) {
+        console.log("An error occured parsing (syntax) of "+syntax_parse);
+        console.log(e);
+        console.log(e.stack);
+        ditto.to_page("output", "An error occured parsing (syntax) of "+e);	
+        ditto.to_page("output", "Stack: "+e.stack);	
+    }
 
-// cycle : 
-// function()
-// {        
-//     var now = Date.now();        
-//     var elapsed = Math.min((now - this.lastCycle) / 1000,1/this.fpsMin);        
-//     this.lastCycle = now; // Triggering cycle only if not paused and with focus        
-//     if(!this.pause){            
-// 	try{                
-// 	    this.oncycle(elapsed);            
-// 	}catch(e){                
-// 	    console.log('Error: ' + e + ' - ');                
-// 	    throw e;            
-// 	}                        
-// 	// Calculating FPS            
-// 	this.framesUntilNextStat--;            
-// 	if(this.framesUntilNextStat <= 0){                
-// 	    this.framesUntilNextStat = 60; // Scheduling the next statistics                
-// 	    this.fps = ~~(60 * 1000 / (Date.now() - this.lastStat + elapsed));                
-// 	    this.lastStat = Date.now();            
-// 	}        
-//     }    
-// }
+    var js="try { cancelAnimationFrame(crank);\n";
+
+    js+=ditto.load("scm/base.jscm");
+
+    filenames.forEach(function(filename) {
+        //console.log("loading "+filename);
+        js+=ditto.load(filename);
+    });
+
+    js+="\n"+ditto.compile_code(code)+"\n";
+
+    js+="    } catch (e) {\
+        console.log(e);\
+        console.log(e.stack);\
+        ditto.to_page('output', 'Error: '+e);	\
+        ditto.to_page('output', 'Error: '+e.stack);	\
+        }";
+    
+    setTimeout(js,0);
+};
+

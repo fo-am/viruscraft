@@ -30,21 +30,21 @@
 (define the-renderer 0)
 
 (define (time) (js "new Date().getTime()/1000;"))
-(define (push) (set! the-renderer (renderer-stack-dup r)))
-(define (pop) (set! the-renderer (renderer-stack-pop r)))
+(define (push) (set! the-renderer (renderer-stack-dup the-renderer)))
+(define (pop) (set! the-renderer (renderer-stack-pop the-renderer)))
 (define (grab id) (set! the-renderer (renderer-grab-stack-push the-renderer id)))
-(define (ungrab) (set! the-renderer (renderer-grab-stack-pop r)))
+(define (ungrab) (set! the-renderer (renderer-grab-stack-pop the-renderer)))
 
 (define (identity)
-  (mat4.identity (renderer-current-tx r)))
+  (mat4.identity (renderer-current-tx the-renderer)))
 
 (define (translate v)
-  (mat4.translate (renderer-current-tx r) v))
+  (mat4.translate (renderer-current-tx the-renderer) v))
 
 (define (rotate v)
-  (mat4.rotate (renderer-current-tx r) (* (vx v) 0.0174532925) (list 1 0 0))
-  (mat4.rotate (renderer-current-tx r) (* (vy v) 0.0174532925) (list 0 1 0))
-  (mat4.rotate (renderer-current-tx r) (* (vz v) 0.0174532925) (list 0 0 1)))
+  (mat4.rotate (renderer-current-tx the-renderer) (* (vx v) 0.0174532925) (list 1 0 0))
+  (mat4.rotate (renderer-current-tx the-renderer) (* (vy v) 0.0174532925) (list 0 1 0))
+  (mat4.rotate (renderer-current-tx the-renderer) (* (vz v) 0.0174532925) (list 0 0 1)))
 
 (define aim-matrix (mat4.create))
 
@@ -73,52 +73,52 @@
     (js "aim_matrix[14]=0;")
     (js "aim_matrix[15]=1;")
 
-    (mat4.multiply (renderer-current-tx r) aim-matrix)))
+    (mat4.multiply (renderer-current-tx the-renderer) aim-matrix)))
 
 (define (camera-transform)
-  (renderer-camera r))
+  (renderer-camera the-renderer))
 
 (define (set-camera-transform tx)
   (set! the-renderer (renderer-modify-camera the-renderer tx)))
 
 (define (view-transform)
-  (renderer-view r))
+  (renderer-view the-renderer))
 
 ;; fudged to match canvas...
 (define (project-point p)
   (let ((ret (list (vx p) (vy p) (vz p) 1))
-        (gl (renderer-gl r)))
-    (mat4.multiplyVec4 (renderer-world-to-screen r) ret)
+        (gl (renderer-gl the-renderer)))
+    (mat4.multiplyVec4 (renderer-world-to-screen the-renderer) ret)
     (vec3.create (list (* (+ (/ (vx ret) (list-ref ret 3)) 1) gl.viewportWidth 0.6)
                        (* (+ (/ (- 0 (vy ret)) (list-ref ret 3)) 0.95) gl.viewportHeight 0.55)
 
                        0))))
 
 (define (scale v)
-  (mat4.scale (renderer-current-tx r) v))
+  (mat4.scale (renderer-current-tx the-renderer) v))
 
 (define (load-texture name)
   (load-texture-impl!
-   (renderer-gl r)
+   (renderer-gl the-renderer)
    (+ "textures/" name)))
 
 (define (texture name)
   (set! the-renderer (renderer-modify-current-state
-           r
+           the-renderer
            (lambda (state)
              (state-modify-texture state name)))))
 
 (define (shader vert frag)
   (set! the-renderer (renderer-modify-current-state
-           r
+           the-renderer
            (lambda (state)
              (state-modify-shader
               state
-              (build-shader (renderer-gl r) vert frag))))))
+              (build-shader (renderer-gl the-renderer) vert frag))))))
 
 (define (colour col)
   (set! the-renderer (renderer-modify-current-state
-           r
+           the-renderer
            (lambda (state)
              (state-modify-colour state col)))))
 
@@ -127,25 +127,25 @@
 
 (define (draw-cube)
   (set! the-renderer (renderer-immediate-add
-	   the-renderer (list-ref (renderer-prefab r) 0))))
+	   the-renderer (list-ref (renderer-prefab the-renderer) 0))))
 
 (define (draw-sphere)
   (set! the-renderer (renderer-immediate-add
-	   the-renderer (list-ref (renderer-prefab r) 1))))
+	   the-renderer (list-ref (renderer-prefab the-renderer) 1))))
 
 (define (draw-torus)
   (set! the-renderer (renderer-immediate-add
-	   the-renderer (list-ref (renderer-prefab r) 2))))
+	   the-renderer (list-ref (renderer-prefab the-renderer) 2))))
 
 (define (draw-obj obj)
   (set! the-renderer (renderer-immediate-add
-	   the-renderer (list-ref (renderer-prefab r) obj))))
+	   the-renderer (list-ref (renderer-prefab the-renderer) obj))))
 
 (define (build-polygons type count)
-  (let ((gl (renderer-gl r)))
-    (set! r
+  (let ((gl (renderer-gl the-renderer)))
+    (set! the-renderer
           (renderer-add
-           r
+           the-renderer
            (primitive
 	    'polyprim
 	    (build-polyprim
@@ -159,13 +159,13 @@
 (define (set-hint! hint)
   (set! the-renderer 
 	(renderer-modify-current-state
-	 r (lambda (state)
+	 the-renderer (lambda (state)
 	     (state-modify-hints state (bitwise-or (state-hints state) hint))))))
 
 (define (clear-hints)
   (set! the-renderer 
 	(renderer-modify-current-state
-	 r (lambda (state)
+	 the-renderer (lambda (state)
 	     (state-modify-hints state 0)))))
 
 (define (hint-solid) (set-hint! FLX_HINT_SOLID))
@@ -175,7 +175,7 @@
 ;; loading meshes
 
 (define (load-primitive url)
-  (let ((gl (renderer-gl r))
+  (let ((gl (renderer-gl the-renderer))
 	(raw (load-obj url)))
     (add-to-scenegraph!     
      (primitive
@@ -206,21 +206,18 @@
   (let ((id (new-id)))
     (set! the-renderer (renderer-modify-scenegraph
 	     the-renderer (scenegraph-add 
-		(renderer-scenegraph r) 
-		(state-parent (renderer-stack-top r)) ;; parent from state 
+		(renderer-scenegraph the-renderer) 
+		(state-parent (renderer-stack-top the-renderer)) ;; parent from state 
 		(scenenode
 		 id 
-		 (renderer-stack-top r) ;; stack
+		 (renderer-stack-top the-renderer) ;; stack
 		 prim
 		 '() ;; children
 		 ))))
     id))
 
-(define (clear)
-  (set! r (renderer-modify-scenegraph r ())))
-
 (define (build-cube)
-  (add-to-scenegraph! (list-ref (renderer-prefab r) 0)))
+  (add-to-scenegraph! (list-ref (renderer-prefab the-renderer) 0)))
 
 (define (build-instance polyref)
   (add-to-scenegraph! 
@@ -230,17 +227,17 @@
      (primitive-inner
       (scenenode-primitive 
        (scenegraph-find 
-	(renderer-scenegraph r) 
+	(renderer-scenegraph the-renderer) 
 	polyref)))))))
 
 (define (pdata-map! fn name)
-  (when (renderer-grabbed? r)
+  (when (renderer-grabbed? the-renderer)
 	(pdata-internal-map!
-	 (renderer-gl r) 
+	 (renderer-gl the-renderer) 
 	 ;; todo: check type is polyprim
 	 (polyprim-pdata 
 	  (primitive-inner
-	   (scenenode-primitive (renderer-grab-stack-top r))))
+	   (scenenode-primitive (renderer-grab-stack-top the-renderer))))
 	 fn name)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -251,35 +248,31 @@
 
 (define (crank)
   (set! t (+ t 0.1))
-  (requestAnimFrame crank)
-  (set! r (renderer-render r t))
+  (set! the-renderer (renderer-render the-renderer t))
   
-  (set! stat-period (- stat-period 1))            
+ ; (set! stat-period (- stat-period 1))            
   (when (zero? stat-period)
 	(set! stat-period 60)
 	(set! current-fps (/ (* stat-period 1000) (- (Date.now) last-stat)))
 	(console.log (+ "FPS: " (trunc current-fps)))
 	(set! last-stat (Date.now)))   
-  
-  )))
+  (requestAnimFrame crank))))
 
-(define (startup)
+(define (clear)
   (let ((canvas (document.getElementById "webgl-canvas")))
     (let ((gl (canvas.getContext "experimental-webgl")))
-      (msg "starting up webgl")
-      (msg canvas.width)
+      (msg "startup...")
       (set! gl.viewportWidth canvas.width)
       (set! gl.viewportHeight canvas.height)
-      (set! r (renderer gl))
+      (set! the-renderer (renderer gl))
       ;; set up camera transform
-      (mat4.translate (renderer-camera r) (list 0 0 -20))
-      (set! r (renderer-build-prefab r))
+      (mat4.translate (renderer-camera the-renderer) (list 0 0 -20))
+      (set! the-renderer (renderer-build-prefab the-renderer))
       (gl.clearColor 0.0 0.0 0.0 1.0)
       (gl.enable gl.DEPTH_TEST)
       (gl.disable gl.CULL_FACE)
       ;; make sure the default texture is loaded
-      (load-texture "white.png")
-      (crank)
-      )))
+      (texture (load-texture "white.png"))
+      ))))
 
-(startup)
+(clear)

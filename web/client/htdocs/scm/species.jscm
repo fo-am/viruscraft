@@ -1,18 +1,5 @@
 ;; -*- mode: scheme; -*-
 ;; Viruscraft Copyright (C) 2017 FoAM Kernow
-;;
-;; This program is free software: you can redistribute it and/or modify
-;; it under the terms of the GNU Affero General Public License as
-;; published by the Free Software Foundation, either version 3 of the
-;; License, or (at your option) any later version.
-;;
-;; This program is distributed in the hope that it will be useful,
-;; but WITHOUT ANY WARRANTY; without even the implied warranty of
-;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-;; GNU Affero General Public License for more details.
-;;
-;; You should have received a copy of the GNU Affero General Public License
-;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (load "scm/sirs-model.jscm")
@@ -156,13 +143,14 @@
      (plant-state p))))
     
 (define (plant-update p sirs-model plants insects)
-  (with-primitive 
-   (plant-prim p) 
-   (colour 
-    (cond 
-     ((eq? (plant-state p) 'susceptable) (vector 1 1 1))
-     ((eq? (plant-state p) 'infected) (vector 1 0 0))
-     (else (vector 0.2 1 0.2)))))
+   (with-primitive 
+    (plant-prim p) 
+    (colour 
+     (cond 
+      ((eq? (plant-state p) 'susceptable) (vector 1 1 1))
+      ((eq? (plant-state p) 'infected) (vector 1 0 0))
+      (else (vector 0.2 1 0.2)))))
+
   (make-plant
    (plant-id p)
    (plant-update-sirs-state p sirs-model plants insects)
@@ -226,49 +214,20 @@
   (set! plant-list (update-plants plant-list insect-list plant-sirs-model))
   (set-camera-transform (mat4.rotateY (camera-transform) 0.002)))
 
-
-(define (nightjar-intro c)
-  (every-frame (render))
-
-  (game-modify-mouse-hook
-   (lambda (e c) c)
-   (game-modify-render
-    (lambda (ctx)
-      (set! ctx.font "bold 50pt amatic")
-      ;;(wrap-shadow-text ctx (mtext-lookup "title") 0 380)
-      (set! ctx.font "bold 30pt amatic")
-      ;;(wrap-text ctx (mtext-lookup "splash") 0 430)
-      )
-    (game-modify-buttons
-     (list
-      
-      )
-     c))))
+(every-frame (render))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; startup
-(set! ctx.font "normal 10pt amatic")
-
-(load-images!
- (append
-  (list
-   "heliconius.png"
-   ))
- (lambda ()
-   (start-game canvas ctx)
-   ))
 
 (define (read-number id)
   (let ((w ($ (string-append "#" id))))
     (parseFloat (js "w[0].value"))))
-
 
 (set! rebuild 
       (lambda () 
 	(clear)
 	(set! insect-list (build-list 5 (lambda (i) (build-insect))))
 	(set! plant-list (plants-build-connections (build-list 30 (lambda (i) (build-plant i)))))))
-
 
 (set! update-params 
       (lambda ()
