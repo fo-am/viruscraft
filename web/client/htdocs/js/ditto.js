@@ -193,7 +193,12 @@ ditto.sublist = function(l,s,e) {
 ditto.infixify = function(jsfn, args) {
     var cargs = [];
     args.forEach(function(arg) { cargs.push(ditto.comp(arg)); });
-    return "("+cargs.join(" "+jsfn+" ")+")";
+    // check for -number
+    if (jsfn=="-" && args.length==1) {
+	return jsfn+cargs[0];
+    } else {
+	return "("+cargs.join(" "+jsfn+" ")+")";
+    }
 };
 
 ditto.check = function(fn,args,min,max) {

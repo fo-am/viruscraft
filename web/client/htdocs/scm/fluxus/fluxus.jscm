@@ -198,7 +198,7 @@
 
 (define (parent id)
   (set! the-renderer (renderer-modify-current-state
-           r
+           the-renderer
            (lambda (state)
              (state-modify-parent state id)))))
 

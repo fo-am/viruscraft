@@ -1,0 +1,22 @@
+;; trying to build virus capsid protein structures, and not doing very well
+(load "scm/lsys.jscm")
+
+(with-state
+ (rotate (vector 90 0 0))
+ (ls-build (ls-generate 
+	    6 "A" 
+	    ;; make a triangle with branches coming off
+	    (list (list "A" "^F++[--A]F++[--A]F++"))) 60 1))
+  
+; (ls-generate 2 "F+F+F+F+F" (list (list "F" "FF+F+F+F+F+FF"))) 72 1))
+
+(set-camera-transform 
+ (mat4.rotateY
+  (mat4.rotateX
+   (mat4.translate 
+    (mat4.identity (mat4.create))
+    (vector 0 0 -5))
+   0.6)
+  0.0))
+
+(every-frame (set-camera-transform (mat4.rotateY (camera-transform) 0.002))))

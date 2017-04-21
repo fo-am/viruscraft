@@ -50,6 +50,12 @@
 (define (string-length str)
   (js "str.length"))
 
+(define (string->list str)
+  (str.split ""))
+
+(define (string-ref str i)
+  (js "str[i]"))
+
 ;; replaced by underlying iterative version
 ;;(define foldl
 ;;  (lambda (fn v l)
