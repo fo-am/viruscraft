@@ -1,8 +1,9 @@
 /* BASICS */
+ @import url('https://fonts.googleapis.com/css?family=Inconsolata');
 
 .CodeMirror {
   /* Set height, width, borders, and global font properties here */
-  font-family: monospace;
+  font-family: 'Inconsolata', monospace;
   height: 440px;
   width: 960px;
   color: black;
