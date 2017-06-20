@@ -58,7 +58,6 @@
 
 (define (node-run node infect-matrix num-types immune-prob susceptible-prob)
   (let ((infected-types (node-infected-types node)))
-    (msg infected-types)
     (make-node
      (node-id node)
      (node-connections node)
@@ -200,7 +199,7 @@
 (define (world-step world)
   (world-print world)
   (display (world-stats world))(newline)
-  (world-run (world-move-organisms world 2) infect-matrix num-types 0 0))
+  (world-run (world-move-organisms world 2) infect-matrix num-types 10 2))
 
 (define (go w n)
   (when (not (zero? n))
