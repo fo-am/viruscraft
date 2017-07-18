@@ -26,3 +26,6 @@ Friday, April 14th, 2017 10:26:47am Started server at: Friday, April 14th, 2017
 Sunday, April 16th, 2017 9:56:16am Started server at: Sunday, April 16th, 2017
 Wednesday, April 19th, 2017 1:43:35pm Started server at: Wednesday, April 19th, 2017
 Thursday, April 27th, 2017 9:06:43am Started server at: Thursday, April 27th, 2017
+Friday, July 14th, 2017 12:07:06pm Started server at: Friday, July 14th, 2017
+Friday, July 14th, 2017 12:07:12pm Started server at: Friday, July 14th, 2017
+Tuesday, July 18th, 2017 10:24:49am Started server at: Tuesday, July 18th, 2017

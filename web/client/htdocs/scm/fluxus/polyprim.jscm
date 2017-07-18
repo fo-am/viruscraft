@@ -29,6 +29,21 @@
     (pdata-update-vbo! gl pdata)
     p))
 
+(define (build-empty-polyprim gl type size-verts)
+  ;; match load obj for the moment with points, 
+  ;; normals and texturecoords 
+  (let ((pdata (make-pdata 
+		(list "p" "n" "t")
+		size-verts
+		(build-list 
+		 (* (* size-verts 3) 3) ;; size faces???
+		 (lambda (_) (vec3.create (list 0 0 0)))))))
+    (let ((p (polyprim 
+	      size-verts type 
+	      (pdata-build-vbo gl pdata))))
+      (pdata-update-vbo! gl pdata)
+      p)))
+
 (define (polyprim-update-buffers! gl p)
   (pdata-update-vbo! gl (polyprim-pdata p)))
   

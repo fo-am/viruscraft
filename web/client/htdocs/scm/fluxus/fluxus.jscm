@@ -141,20 +141,12 @@
   (set! the-renderer (renderer-immediate-add
 	   the-renderer (list-ref (renderer-prefab the-renderer) obj))))
 
-(define (build-polygons type count)
+(define (build-polygons type size-verts)
   (let ((gl (renderer-gl the-renderer)))
-    (set! the-renderer
-          (renderer-add
-           the-renderer
-           (primitive
-	    'polyprim
-	    (build-polyprim
-	     gl
-	     (length unit-cube-vertices)
-	     (list
-	      (buffer gl "p" unit-cube-vertices 3)
-	      (buffer gl "n" unit-cube-normals 3)
-	      )))))))
+    (add-to-scenegraph!     
+     (primitive
+      'polyprim
+      (build-empty-polyprim gl type size-verts)))))
 
 (define (set-hint! hint)
   (set! the-renderer 
