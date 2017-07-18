@@ -61,6 +61,15 @@
       ;; might want to do this separately as it's potentially slow
       (pdata-update-vbo! gl v))))
 
+(define (pdata-internal-set! gl pdata name pos value)
+  (let ((offset (cond ((eq? name "p") 0)
+		      ((eq? name "n") 3)
+		      (else 6)))) ;; hmm ok for now but FIX THIS... 
+    (let ((stride (* (length (pdata-types pdata)) 3))) 
+      (js "pdata_interleaved_data(pdata)[offset+pos*stride]=value[0];")
+      (js "pdata_interleaved_data(pdata)[offset+pos*stride+1]=value[1];")
+      (js "pdata_interleaved_data(pdata)[offset+pos*stride+2]=value[2];"))))
+
 (define (pdata-render pdata gl view-camera state tx)
   (let ;; assumptions...
       ((model-view (mat4.create))

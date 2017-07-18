@@ -36,8 +36,8 @@
 		(list "p" "n" "t")
 		size-verts
 		(build-list 
-		 (* (* size-verts 3) 3) ;; size faces???
-		 (lambda (_) (vec3.create (list 0 0 0)))))))
+		 (* (* size-verts 3) 3) 
+		 (lambda (_) 0)))))
     (let ((p (polyprim 
 	      size-verts type 
 	      (pdata-build-vbo gl pdata))))

@@ -154,12 +154,13 @@
 	 the-renderer (lambda (state)
 	     (state-modify-hints state (bitwise-or (state-hints state) hint))))))
 
-(define (clear-hints)
+(define (clear-hints!)
   (set! the-renderer 
 	(renderer-modify-current-state
 	 the-renderer (lambda (state)
 	     (state-modify-hints state 0)))))
 
+(define (hint-none) (clear-hints!))
 (define (hint-solid) (set-hint! FLX_HINT_SOLID))
 (define (hint-wire) (set-hint! FLX_HINT_WIRE))
 
@@ -231,6 +232,27 @@
 	  (primitive-inner
 	   (scenenode-primitive (renderer-grab-stack-top the-renderer))))
 	 fn name)))
+
+(define (pdata-set! name pos value)
+  (when (renderer-grabbed? the-renderer)
+	(pdata-internal-set!
+	 (renderer-gl the-renderer) 
+	 ;; todo: check type is polyprim
+	 (polyprim-pdata 
+	  (primitive-inner
+	   (scenenode-primitive (renderer-grab-stack-top the-renderer))))
+	 name pos value)))
+
+;; new command to upload the vbo from the modified data - use for 
+;; pdata-set! (maybe pdata-map! in the future???)
+(define (pdata-upload!)
+  (let ((grabbed (renderer-grab-stack-top the-renderer)))
+    (when grabbed
+	  (pdata-update-vbo! 
+	   (renderer-gl the-renderer)
+	   (polyprim-pdata
+	    (primitive-inner
+	     (scenenode-primitive grabbed)))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
