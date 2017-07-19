@@ -26,11 +26,13 @@
    ((>= i (length l)) (list-ref l (- (length l) 1)))
    (else (list-ref l i))))
 
-(define (build-ring! vpos slice segments position depth radii)
+(define (build-ring! vpos slice segments position xoff1 xoff2 depth radii)
   (define (_ segment deg-per-seg)
     (when (< segment segments)
 	  (let ((anglea (* segment deg-per-seg))
-		(angleb (* (+ segment 1) deg-per-seg)))
+		(angleb (* (+ segment 1) deg-per-seg))
+		(off1 (vector xoff1 0 0))
+		(off2 (vector xoff2 0 0)))
 	    (let ((a (vector (sin anglea) 0 (cos anglea)))
 		  (b (vector (sin angleb) 0 (cos angleb))))
 	      (let ((pose (vadd (vmul a (safe-list-ref radii (- slice 1))) (vector 0 (- depth) 0))) ;; previous pos
@@ -49,10 +51,10 @@
 			(n4 (vnormalise (vcross cd (vsub posb posd)))))
 		  (build-face 
 		   (+ vpos (* segment 6))
-		   (vadd position posa)
-		   (vadd position posb)
-		   (vadd position posc)
-		   (vadd position posd)		   		   
+		   (vadd (vadd position posa) off1)
+		   (vadd (vadd position posb) off1)
+		   (vadd (vadd position posc) off2)
+		   (vadd (vadd position posd) off2)		   		   
 		   ;; smooth normals
 		   (vector (vx a) (vy n1) (vz a))
 		   (vector (vx b) (vy n2) (vz b))
@@ -63,12 +65,14 @@
   (_ 0 (/ two-pi segments))
   (pdata-upload!)) 
 
-(define (build-extrude! vpos segments position depth radii)
+(define (build-extrude! vpos segments position depth radii offsets)
   (define (_ vpos slice)
     (when (< slice (length radii))
 	  (build-ring! 
 	   vpos slice segments 
 	   (vadd position (vector 0 (* depth slice) 0))
+	   (list-ref offsets slice) 
+	   (safe-list-ref offsets (+ slice 1)) 
 	   depth 
 	   radii)
 	  (_ (+ vpos (* segments 6)) (+ slice 1))))
@@ -76,7 +80,7 @@
 
 (define (build-phylo id pos)
   (let ((p (with-state
-	    (translate (vector -10 -4 0))
+	    (translate (vector -10 -8 0))
 	    (translate pos)
 	    (build-polygons 0 2000)))
 	(r (rndf)))
@@ -87,17 +91,24 @@
       fragment-shader-two-light)
      (build-extrude! 0 8 (vector 0 0 0) 0.4
 		     (build-list 
-		      30 
+		      50 
 		      (lambda (i) 
-			(+ 0.1 (* (+ (cos (* i r)) 1.1) 0.5)
-			   (* (+ (sin (* i r 0.8)) 0.1) 0.2))))))
+			(+ 0.1 (* (+ (cos (* i r 0.4)) 1.1) 0.5)
+			   (* (+ (sin (* i r 0.8)) 0.1) 0.2))))
+		     (build-list
+		      50 (lambda (i) (* (sin (* i 0.6)) 0.5)))))
      p)))
 
-(build-list 8 (lambda (i) (build-phylo i (vector (* i 2.4) 0 0))))
+(define scene 
+  (build-list 
+   8 
+   (lambda (i) (build-phylo i (vector (* i 2.4) 0 0)))))
 
-   ;;(build-ring! 0 12 (vector 0 0 0) 1 2 3)))
-
-
+(every-frame 
+ (for-each 
+  (lambda (p) 
+    (with-primitive p (rotate (vector 0 1 0))))
+  scene))
   
 
 ;;
