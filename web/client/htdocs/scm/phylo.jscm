@@ -178,6 +178,9 @@
   
   (animate-visualisation vs (/ depth viz-step))
 
+  (when (zero? (world-count-organisms world))
+	(set! world (simple-world)))
+
   (set! frame (+ frame 1))
   )
 

@@ -236,6 +236,13 @@
       0
       world) (length world)))
   
+(define (world-count-organisms world)
+  (foldl
+   (lambda (node r)
+     (+ r (length (node-organisms node))))
+   0
+   world))
+
 (define (node-stats node)
   (list (length (node-organisms node))
         (foldl
