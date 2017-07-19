@@ -1,0 +1,212 @@
+;; -*- mode: scheme; -*-
+;; Viruscraft Copyright (C) 2017 FoAM Kernow
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(load "scm/extrude.jscm")
+(load "scm/species-model.jscm")
+
+(define (vspecies id prim vertex-pos pos radii offset colour)
+  (list id prim vertex-pos pos radii offset colour))
+
+(define (vspecies-id s) (list-ref s 0))
+(define (vspecies-prim s) (list-ref s 1))
+(define (vspecies-vertex-pos s) (list-ref s 2))
+(define (vspecies-pos s) (list-ref s 3))
+(define (vspecies-radii s) (list-ref s 4))
+(define (vspecies-offset s) (list-ref s 5))
+(define (vspecies-colour s) (list-ref s 6))
+
+(define (clamp-number n)
+  (cond
+   ((< n 0) 0)
+   ((> n 1) 1)
+   (else n)))
+
+(define (clamp-colour col)
+  (vector (clamp-number (vx col))
+	  (clamp-number (vy col))
+	  (clamp-number (vz col))))
+
+(define (mutate-colour col rate)
+  (clamp-colour 
+   (vector (+ (vx col) (* (crndf) rate))
+	   (+ (vy col) (* (crndf) rate))
+	   (+ (vz col) (* (crndf) rate)))))
+
+(define (build-vspecies id radius offset col)
+  (let ((p (with-state
+	    (colour col)
+	    (translate (vector 0 -7 5))
+	    (rotate (vector -35 0 180))
+	    (build-polygons 0 (* 1800 2)))))
+    (with-primitive 
+     p
+     (shader vertex-shader fragment-shader-two-light))
+    (vspecies id p 0 (vector 0 0 0) (list radius) offset col)))
+
+(define (list-trunc l s)
+  (cond
+   ((null? l) '())
+   ((zero? s) '())
+   (else 
+    (cons (car l) (list-trunc (cdr l) (- s 1))))))
+
+(define (vspecies-update v radius offset segments depth)
+  (with-primitive 
+   (vspecies-prim v)
+   ;;(translate (vector 0 (- depth) 0))
+   (extrude! 
+    (vspecies-vertex-pos v)
+    segments 
+    (vspecies-pos v) 
+    (vspecies-offset v)
+    offset
+    depth 
+    (vspecies-radii v)))
+  (vspecies 
+   (vspecies-id v)
+   (vspecies-prim v)
+   (+ (vspecies-vertex-pos v) (* segments 6))
+   (vadd (vspecies-pos v) (vector 0 depth 0))
+   (list-trunc (cons radius (vspecies-radii v)) 4)
+   offset
+   (vspecies-colour v)))
+
+(define (find-vspecies l id)
+  (cond
+   ((null? l) #f)
+   ((eq? id (vspecies-id (car l))) (car l))
+   (else (find-vspecies (cdr l) id))))
+
+(define (vspecies-force-direct vslist thisvs)
+  (+ (vspecies-offset thisvs)
+     (foldl
+      (lambda (s r)
+	(if (eq? (vspecies-id s) (vspecies-id thisvs))
+	    r
+	    (let ((dist (- (vspecies-offset thisvs)
+			   (vspecies-offset s))))
+	      (+ r (* (if (< dist 0) -1 1)
+		      0.1
+		      (car (vspecies-radii s)))))))
+      (* (- (vspecies-offset thisvs)) 0.02)
+      vslist)))
+
+(define (animate-visualisation vs depth)
+  (for-each
+   (lambda (v)
+     (with-primitive 
+      (vspecies-prim v)
+      (translate (vector 0 (- depth) 0))))
+   vs))
+      
+(define depth 0.3)
+
+(define (update-visualisation vs phylo)
+  (foldl
+   (lambda (species r)
+     (let ((v (find-vspecies vs (species-id species))))
+       (cons 
+	(cond
+	 (v (vspecies-update 
+	     v 
+	     (if (> (length (vspecies-radii v)) 0)
+		 (+ (* (car (vspecies-radii v)) 0.9)
+		    (* (species-pop species) 0.005))
+		 (* (species-pop species) 0.1))
+	     (vspecies-force-direct vs v)
+	     6 depth))
+	 (else
+	  (let ((parent (find-vspecies vs (species-parent species))))
+	    (build-vspecies 
+	     (species-id species) 
+	     0.01
+	     (if parent 
+		 (+ (vspecies-offset parent) 
+		    (if (> (rndf) 0.5)
+			(car (vspecies-radii parent))
+			(- (car (vspecies-radii parent)))))
+		 (rndf))
+	     (if parent
+		 (mutate-colour (vspecies-colour parent) 0.5)
+		 (rndvec))))))
+	r)))
+   '()
+   (filter
+    (lambda (species)
+      (cond
+       ((< (species-dead species) 98) #t)
+       (else
+	(msg (species-dead species))
+	(let ((v (find-vspecies vs (species-id species))))
+	  (destroy (vspecies-prim v))
+	  #f))))	  
+    phylo)))
+       
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define (simple-world)
+  (list (make-node 0 '(1) (build-list 4 (lambda (id) (new-organism))))
+        (make-node 1 '(0 2) (build-list 4 (lambda (id) (new-organism))))
+        (make-node 2 '(1) (build-list 4 (lambda (id) (new-organism))))))
+
+(define (world-step world)
+  (world-run 
+   (world-spawn-organisms 
+    (world-move-organisms 
+     (world-remove-organisms world) 2) 2 2.5)))
+
+(define (phylo-step phylo world)
+  (world->phylo phylo world))
+
+(define world (simple-world))
+(define phylo '())
+(define vs '())
+
+(define frame 0)
+(define viz-step 16)
+
+(define (run-sim)
+  ;;(msg (length phylo))
+  ;;(print-phylo phylo)
+  ;;(world-print world)
+  (set! world (world-step world))
+  (set! phylo (phylo-step phylo world))
+  (when (eq? (modulo frame viz-step) 0)
+   (set! vs (update-visualisation vs phylo))
+   (set! phylo (phylo-cull phylo)))
+  
+  (animate-visualisation vs (/ depth viz-step))
+
+  (set! frame (+ frame 1))
+  )
+
+(every-frame (run-sim))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; startup
+
+(define (read-number id)
+  (let ((w ($ (string-append "#" id))))
+    (parseFloat (js "w[0].value"))))
+
+(set! rebuild 
+      (lambda () 
+	(clear)
+	(set! insect-list (build-list 5 (lambda (i) (build-insect))))
+	(set! plant-list (plants-build-connections (build-list 30 (lambda (i) (build-plant i)))))))
+
+(set! update-params 
+      (lambda ()
+	(set! insect-sirs-model 
+	      (make-model
+	       (read-number "i-background")
+	       (read-number "i-infection")
+	       (read-number "i-recovery")
+	       (read-number "i-susceptability")))
+	(set! plant-sirs-model 
+	      (make-model
+	       (read-number "p-background")
+	       (read-number "p-infection")
+	       (read-number "p-recovery")
+	       (read-number "p-susceptability")))))

@@ -27,11 +27,9 @@
 (define (dbg a) (msg a) a)
 (define (error a) (msg a))
 
-(define (zero? n)
-  (js "n===0"))
-
-(define (eqv? a b)
-  (eq? a b))
+(define (zero? n) (js "n===0"))
+(define (eqv? a b) (eq? a b))
+(define (equal? a b) (eq? a b))
 
 (define (random n)
   (Math.floor (* (Math.random) n)))

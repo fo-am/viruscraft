@@ -1,0 +1,114 @@
+;; -*- mode: scheme; -*-
+;; Viruscraft Copyright (C) 2017 FoAM Kernow
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(load "scm/genetic-model.jscm")
+
+(define cur-phylo-id 0)
+(define (generate-species-id) (set! cur-phylo-id (+ cur-phylo-id 1)) cur-phylo-id)
+
+(define (make-species id pop parent genome organism-ids dead) 
+  (list id pop parent genome organism-ids dead))
+(define (species-id p) (list-ref p 0))
+(define (species-pop p) (list-ref p 1))
+(define (species-parent p) (list-ref p 2))
+(define (species-genome p) (list-ref p 3))
+(define (species-organism-ids p) (list-ref p 4))
+(define (species-dead p) (list-ref p 5))
+
+(define (print-phylo phylo)
+  (for-each 
+   (lambda (s)
+     (msg (+ (species-id s) ": " (species-pop s))))
+   phylo))
+
+(define (species-parent-search species-list id)
+  (cond
+    ((null? species-list) 0)
+    ((list-contains? (species-organism-ids (car species-list)) id)
+     (species-id (car species-list)))
+    (else (species-parent-search (cdr species-list) id))))
+
+(define (phylo-clear-pop species-list)
+  (map
+   (lambda (s)
+     (make-species 
+      (species-id s)
+      0
+      (species-parent s)
+      (species-genome s)
+      (species-organism-ids s)
+      (species-dead s)))
+   species-list))
+
+(define (phylo-cull species-list)
+  (filter
+   (lambda (s)
+     (< (species-dead s) 99))
+   (phylo-check-dead species-list)))
+
+(define (phylo-check-dead species-list)
+  (map
+   (lambda (s) 
+     (make-species 
+      (species-id s)
+      (species-pop s)
+      (species-parent s)
+      (species-genome s)
+      (species-organism-ids s)
+      (if (zero? (species-pop s))
+	  (+ (species-dead s) 1)
+	  -1)))
+   species-list))
+
+(define (build-phylo species-list organism)
+  (define (_ l)
+    (let ((genome (organism-genome organism)))
+      (cond
+        ((null? l)        
+         (list (make-species (generate-species-id)
+			     0
+                             (species-parent-search species-list (organism-parent organism))
+                             genome 
+			     (list (organism-id organism))
+			     -1)))
+        ((< (genome-distance (species-genome (car l)) genome) species-distance)
+         (cons (make-species (species-id (car l))
+			     (+ (species-pop (car l)) 1)
+                             (species-parent (car l))
+                             (species-genome (car l))
+                             (if (list-contains? (species-organism-ids (car l)) (organism-id organism))
+                                 (species-organism-ids (car l))
+                                 (cons (organism-id organism) (species-organism-ids (car l))))
+			     (species-dead (car l)))
+               (cdr l)))
+        (else
+         (cons (car l) (_ (cdr l)))))))
+  (_ species-list))
+
+(define (world->phylo phylo world)
+  (foldl
+   (lambda (node r)
+     (foldl
+      (lambda (o r)
+	(build-phylo r o))
+      r
+      (node-organisms node)))
+   (phylo-clear-pop phylo)
+   world))
+
+(define (printtrunc v) (/ (floor (* v 1000)) 1000))
+
+(define (phylo->fasta phylo)
+  (foldl
+   (lambda (species r)
+     (let* ((size (length (species-organism-ids species))))
+       (if (eq? size 1)
+           r
+           (string-append
+            r "> " (number->string (species-id species)) " "
+            (number->string (exact->inexact (genome-fitness (species-genome species)))) " "
+            (number->string size) "\n"
+            (apply string-append (species-genome species)) "\n"))))
+   ""
+   phylo))

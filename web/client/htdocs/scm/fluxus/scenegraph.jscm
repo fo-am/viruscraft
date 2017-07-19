@@ -59,7 +59,17 @@
 	   #f
 	   (scenenode-children sn)))))))
 
-(define (scenegraph-add sn parent-id node)
+(define (scenegraph-remove sn id)
+  (scenenode-modify-children
+   sn
+   (filter (lambda (sn)
+	     (not (eq? (scenenode-id sn) id)))
+	   (map
+	    (lambda (sn)
+	      (scenegraph-remove sn id))
+	    (scenenode-children sn)))))
+
+ (define (scenegraph-add sn parent-id node)
   (cond
    ((eq? (scenenode-id sn) parent-id) 
     (scenenode-modify-add-child sn node))

@@ -209,6 +209,13 @@
 		 ))))
     id))
 
+(define (destroy id)
+  (set! the-renderer 
+	(renderer-modify-scenegraph
+	 the-renderer (scenegraph-remove 
+		       (renderer-scenegraph the-renderer) 
+		       id))))
+
 (define (build-cube)
   (add-to-scenegraph! (list-ref (renderer-prefab the-renderer) 0)))
 
@@ -235,13 +242,13 @@
 
 (define (pdata-set! name pos value)
   (when (renderer-grabbed? the-renderer)
-	(pdata-internal-set!
-	 (renderer-gl the-renderer) 
 	 ;; todo: check type is polyprim
-	 (polyprim-pdata 
-	  (primitive-inner
-	   (scenenode-primitive (renderer-grab-stack-top the-renderer))))
-	 name pos value)))
+	(let ((pp (primitive-inner
+		   (scenenode-primitive (renderer-grab-stack-top the-renderer)))))
+	  (pdata-internal-set!
+	   (renderer-gl the-renderer) 
+	   (polyprim-pdata pp)
+	   name (modulo pos (polyprim-size pp)) value))))
 
 ;; new command to upload the vbo from the modified data - use for 
 ;; pdata-set! (maybe pdata-map! in the future???)

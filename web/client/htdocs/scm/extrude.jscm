@@ -1,0 +1,64 @@
+;; -*- mode: scheme; -*-
+;; Viruscraft Copyright (C) 2017 FoAM Kernow
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; general purpose procedural geometry extruder
+
+(define (build-face vpos p1 p2 p3 p4 n1 n2 n3 n4 depth)
+  ;; built out of triangles, so we need to dupe edges
+  (pdata-set! "p" vpos p1)
+  (pdata-set! "p" (+ vpos 1) p2)
+  (pdata-set! "p" (+ vpos 2) p4)
+  (pdata-set! "p" (+ vpos 3) p1)
+  (pdata-set! "p" (+ vpos 4) p4)
+  (pdata-set! "p" (+ vpos 5) p3)
+  (pdata-set! "n" vpos n1)
+  (pdata-set! "n" (+ vpos 1) n2)
+  (pdata-set! "n" (+ vpos 2) n4)
+  (pdata-set! "n" (+ vpos 3) n1)
+  (pdata-set! "n" (+ vpos 4) n4)
+  (pdata-set! "n" (+ vpos 5) n3)
+  )
+
+(define (safe-list-ref l i)
+  (cond
+   ((< i 0) (list-ref l 0))
+   ((>= i (length l)) (list-ref l (- (length l) 1)))
+   (else (list-ref l i))))
+
+(define (extrude! vpos segments position xoff1 xoff2 depth radii)
+  (define (_ segment deg-per-seg)
+    (when (< segment segments)
+	  (let ((anglea (* segment deg-per-seg))
+		(angleb (* (+ segment 1) deg-per-seg))
+		(off1 (vector xoff1 0 0))
+		(off2 (vector xoff2 0 0)))
+	    (let ((a (vector (sin anglea) 0 (cos anglea)))
+		  (b (vector (sin angleb) 0 (cos angleb))))
+	      (let ((pose (vadd (vmul a (safe-list-ref radii 2)) (vector 0 (- depth) 0))) ;; previous pos
+		    (posf (vadd (vmul b (safe-list-ref radii 2)) (vector 0 (- depth) 0)));; previous pos
+		    (posa (vmul a (safe-list-ref radii 1)))
+		    (posb (vmul b (safe-list-ref radii 1)))
+		    (posc (vadd (vmul a (safe-list-ref radii 0)) (vector 0 depth 0)))
+		    (posd (vadd (vmul b (safe-list-ref radii 0)) (vector 0 depth 0))))
+		(let ((ab (vsub posa posb))
+		      (cd (vsub posc posd)))		      
+		  (let ((n1 (vnormalise (vcross ab (vsub pose posa))))
+			(n2 (vnormalise (vcross ab (vsub posf posb))))
+			(n3 (vnormalise (vcross cd (vsub posa posc))))
+			(n4 (vnormalise (vcross cd (vsub posb posd)))))
+		  (build-face 
+		   (+ vpos (* segment 6))
+		   (vadd (vadd position posa) off1)
+		   (vadd (vadd position posb) off1)
+		   (vadd (vadd position posc) off2)
+		   (vadd (vadd position posd) off2)		   		   
+		   ;; smooth normals
+		   (vector (vx a) (vy n1) (vz a))
+		   (vector (vx b) (vy n2) (vz b))
+		   (vector (vx a) (vy n3) (vz a))
+		   (vector (vx b) (vy n4) (vz b))
+		   depth))))))
+	  (_ (+ segment 1) deg-per-seg)))
+  (_ 0 (/ two-pi segments))
+  (pdata-upload!)) 
