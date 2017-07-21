@@ -1,3 +1,4 @@
+;; -*- mode: scheme; -*-
 ;; Planet Fluxus Copyright (C) 2013 Dave Griffiths
 ;;
 ;; This program is free software: you can redistribute it and/or modify
@@ -30,7 +31,8 @@ void main()
 {
     P = p.xyz;
     T = t;
-    L = vec3(ModelViewMatrix*vec4((vec3(0,10,0)-p),1)); 
+    /*L = vec3(ModelViewMatrix*vec4((vec3(0,10,0)-p),1)); */
+    L = vec3(0,10,0); 
     N = normalize(vec3(NormalMatrix*vec4(n,1)));	
     V = -vec3(ModelViewMatrix*vec4(p,1.0));
      
@@ -56,8 +58,8 @@ void main()
     vec3 v = normalize(V);
     vec3 h = normalize(l+v);
     float diffuse = dot(l,n);
-/*    float specular = pow(max(0.0,dot(n,h)),1.0/0.2);  */
-
+    float specular = pow(max(0.0,dot(n,h)),1.0/0.2);  
+    
 /*    float Sharpness=0.9;
     float Roughness=0.5;
     float w = 0.18*(1.0-Sharpness);
@@ -65,8 +67,8 @@ void main()
 */
     gl_FragColor = vec4(AmbientColour +
      texture2D(texture, vec2(T.s, T.t)).xyz *
-                        DiffuseColour*diffuse, 
-			/*+ vec3(1.0,1.0,1.0)*specular,*/
+                        DiffuseColour*diffuse ,
+/*			+ vec3(1.0,1.0,1.0)*specular, */
 			1);
 }")
 

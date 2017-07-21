@@ -44,7 +44,7 @@
 (define (phylo-cull species-list)
   (filter
    (lambda (s)
-     (< (species-dead s) 99))
+     (< (species-dead s) 500))
    (phylo-check-dead species-list)))
 
 (define (phylo-check-dead species-list)
@@ -72,7 +72,8 @@
                              genome 
 			     (list (organism-id organism))
 			     -1)))
-        ((< (genome-distance (species-genome (car l)) genome) species-distance)
+        ((and (< (species-dead (car l)) 0) ;; don't add to dead species
+	      (< (genome-distance (species-genome (car l)) genome) species-distance))
          (cons (make-species (species-id (car l))
 			     (+ (species-pop (car l)) 1)
                              (species-parent (car l))
