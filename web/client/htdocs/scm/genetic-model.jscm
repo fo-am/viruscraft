@@ -12,8 +12,17 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define genome-size 40)
-(define species-distance 10)
+(define genome-size 20)
+(define species-distance 5)
+(define fitness-a 1)
+(define fitness-g 0)
+(define fitness-t 1)
+(define fitness-c 0)
+(define background-infection 0.5)
+(define infection-mul 1)
+(define fatality-mul 1)
+(define natural-death 0.3)
+(define max-organisms-in-node 50)
 
 (define genes (list "A" "T" "G" "C"))
 
@@ -33,35 +42,49 @@
      (+ r (if (eq? a b) 0 1)))
    0 a b))
 
+;; (define (genome-fitness genome)
+;;   (let ((count (foldl
+;;                 (lambda (g r)
+;;                   (list (+ (car r) (if (equal? g "A") 1 0))
+;;                         (+ (cadr r) (if (equal? g "T") 1 0))))
+;;                 (list 0 0)
+;;                 genome)))
+;;     (if (zero? (cadr count))
+;;         1
+;;         (/ (car count) (cadr count)))))
+
 (define (genome-fitness genome)
   (let ((count (foldl
                 (lambda (g r)
-                  (list (+ (car r) (if (equal? g "A") 1 0))
-                        (+ (cadr r) (if (equal? g "T") 1 0))))
-                (list 0 0)
-                genome)))
-    (if (zero? (cadr count))
-        1
-        (/ (car count) (cadr count)))))
+		  (+ r
+		     (cond 
+		      ((eq? g "A") fitness-a)
+		      ((eq? g "T") fitness-t)
+		      ((eq? g "G") fitness-g)
+		      (else fitness-c))))
+                0 genome)))
+    (max 0 (/ count (length genome)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define fitness-percent-mul 10)
+(define (flip percent) (< (random 1000) (* percent 10)))
 
 (define (run-model state genome infection-present)
-  (let ((fitness (* fitness-percent-mul (genome-fitness genome))))
+  (let ((fitness (* (genome-fitness genome) 100)))
+    (when (or (< fitness 0) (> fitness 100)) (msg "FITNESS ERROR") (msg fitness))
     (cond
       ((eq? state 'susceptible)
-       (if (< (random 1000) 3) 'dead ;; natural death
-           (if (or (< (random 1000) 5) ;; background infection
+       (if (flip natural-death) 'dead ;; natural death
+           (if (or (flip background-infection) ;; background infection
                    (and infection-present
-                        (< (random 100) fitness))) 'infected state)))
+                        (flip (* (- 100 fitness) infection-mul)))) 
+	       'infected 'susceptible)))
       ((eq? state 'infected)
-       (cond ((< (random 1000) fitness) 'dead)
-             ((< (random 1000) (- fitness-percent-mul fitness)) 'immune)
+       (cond ((flip (* (- 100 fitness) fatality-mul)) 'dead)
+             ((flip fitness) 'immune)
              (else state)))
       ((eq? state 'immune)
-       (if (< (random 1000) 1) 'dead 'immune)) ;; natural death
+       (if (flip natural-death) 'dead 'immune)) ;; natural death
       (else state))))
  
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -188,8 +211,6 @@
     (world-instructions-place
      (world-instructions-remove world instructions)
      instructions)))
-
-(define max-organisms-in-node 30)
 
 (define (world-spawn-organisms world spawn-prob mutation-rate)
   (map

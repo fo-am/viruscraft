@@ -60,5 +60,6 @@
 		   (vector (vx b) (vy n4) (vz b))
 		   depth))))))
 	  (_ (+ segment 1) deg-per-seg)))
-  (_ 0 (/ two-pi segments))
-  (pdata-upload!)) 
+  (when (> (car radii) 0.01)
+	(_ 0 (/ two-pi segments))
+	(pdata-upload!)))

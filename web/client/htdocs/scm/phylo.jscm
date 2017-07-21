@@ -41,7 +41,7 @@
 	    (build-polygons 0 (* 1800 2)))))
     (with-primitive 
      p
-     (shader vertex-shader fragment-shader-two-light))
+     (shader blinn-vertex-shader blinn-fragment-shader))
     (vspecies id p 0 (vector 0 0 0) (list radius) offset col)))
 
 (define (list-trunc l s)
@@ -111,11 +111,11 @@
 	 (v (vspecies-update 
 	     v 
 	     (if (> (length (vspecies-radii v)) 0)
-		 (+ (* (car (vspecies-radii v)) 0.9)
-		    (* (species-pop species) 0.005))
+		 (+ (* (car (vspecies-radii v)) 0.8)
+		    (* (species-pop species) 0.01))
 		 (* (species-pop species) 0.1))
 	     (vspecies-force-direct vs v)
-	     6 depth))
+	     5 depth))
 	 (else
 	  (let ((parent (find-vspecies vs (species-parent species))))
 	    (build-vspecies 
@@ -146,15 +146,21 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define (simple-world)
-  (list (make-node 0 '(1) (build-list 4 (lambda (id) (new-organism))))
-        (make-node 1 '(0 2) (build-list 4 (lambda (id) (new-organism))))
-        (make-node 2 '(1) (build-list 4 (lambda (id) (new-organism))))))
+  (list (make-node 0 '(1) (build-list 6 (lambda (id) (new-organism))))
+))
+;        (make-node 1 '(0 2) (build-list 4 (lambda (id) (new-organism))))
+;        (make-node 2 '(1) (build-list 4 (lambda (id) (new-organism))))))
+
+(define movement-rate 0) 
+(define spawn-rate 1)
+(define mutation-rate 1.5)
 
 (define (world-step world)
   (world-run 
    (world-spawn-organisms 
     (world-move-organisms 
-     (world-remove-organisms world) 2) 2 2.5)))
+     (world-remove-organisms world) movement-rate) 
+    spawn-rate mutation-rate)))
 
 (define (phylo-step phylo world)
   (world->phylo phylo world))
@@ -164,7 +170,40 @@
 (define vs '())
 
 (define frame 0)
-(define viz-step 16)
+(define viz-step 32)
+
+;;;; 2D ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define screen-width 960)
+(define screen-height 540)
+
+(define (update-hud)
+  (define canvas (document.getElementById "canvas2"))
+  (define ctx (canvas.getContext "2d"))
+  (set! ctx.fillStyle "#000")
+  (set! ctx.strokeStyle "#000")
+  (ctx.clearRect 0 0 screen-width screen-height)
+
+  (let ((y 10))
+    (for-each
+     (lambda (s)
+       (let ((genome (species-genome s)))
+	 (when (< (species-dead s) 0)
+	       (ctx.fillText (+ (genome.join "") 
+				" fit: " (genome-fitness (species-genome s))
+				" pop: " (species-pop s))
+			     10 y)
+	       (set! y (+ y 12)))))
+     phylo))
+
+  )
+
+(define canvas (document.getElementById "canvas2"))
+(define ctx (canvas.getContext "2d"))
+(requestAnimFrame update-hud ctx)
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define (run-sim)
   ;;(msg (length phylo))
@@ -173,13 +212,15 @@
   (set! world (world-step world))
   (set! phylo (phylo-step phylo world))
   (when (eq? (modulo frame viz-step) 0)
-   (set! vs (update-visualisation vs phylo))
-   (set! phylo (phylo-cull phylo)))
+	(set! vs (update-visualisation vs phylo))
+	(set! phylo (phylo-cull phylo)))
   
   (animate-visualisation vs (/ depth viz-step))
 
   (when (zero? (world-count-organisms world))
 	(set! world (simple-world)))
+
+  (update-hud)
 
   (set! frame (+ frame 1))
   )
@@ -193,23 +234,21 @@
   (let ((w ($ (string-append "#" id))))
     (parseFloat (js "w[0].value"))))
 
-(set! rebuild 
-      (lambda () 
-	(clear)
-	(set! insect-list (build-list 5 (lambda (i) (build-insect))))
-	(set! plant-list (plants-build-connections (build-list 30 (lambda (i) (build-plant i)))))))
-
 (set! update-params 
       (lambda ()
-	(set! insect-sirs-model 
-	      (make-model
-	       (read-number "i-background")
-	       (read-number "i-infection")
-	       (read-number "i-recovery")
-	       (read-number "i-susceptability")))
-	(set! plant-sirs-model 
-	      (make-model
-	       (read-number "p-background")
-	       (read-number "p-infection")
-	       (read-number "p-recovery")
-	       (read-number "p-susceptability")))))
+	(set! background-infection (read-number "background-infection"))
+	(set! natural-death (read-number "natural-death"))
+	(set! infection-mul (read-number "infection-mul"))
+	(set! fatality-mul (read-number "fatality-mul"))
+	(set! spawn-rate (read-number "spawn-rate"))
+	;;(set! movement-rate (read-number "movement-rate"))
+	(set! max-organisms-in-node (read-number "max-organisms-in-node"))
+	(set! mutation-rate (read-number "mutation-rate"))
+	(set! species-distance (read-number "species-distance"))
+	(set! genome-size (read-number "genome-size"))
+	(set! fitness-a (read-number "fitness-a"))
+	(set! fitness-g (read-number "fitness-g"))
+	(set! fitness-t (read-number "fitness-t"))
+	(set! fitness-c (read-number "fitness-c"))
+
+	))

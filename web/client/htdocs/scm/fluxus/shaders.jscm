@@ -21,21 +21,19 @@ varying vec3 P;
 varying vec3 V;
 varying vec3 L;
 varying vec3 T;
-uniform mat4 ViewMatrix;
-uniform mat4 CameraMatrix;
-uniform mat4 LocalMatrix;
+uniform mat4 ModelViewMatrix;
 uniform mat4 NormalMatrix;
 attribute vec3 p;
 attribute vec3 n;
 attribute vec3 t;
 void main()
 {
-    mat4 ModelViewMatrix = ViewMatrix * CameraMatrix * LocalMatrix;
-    N = vec3(NormalMatrix*normalize(vec4(n,1.0)));
     P = p.xyz;
     T = t;
+    L = vec3(ModelViewMatrix*vec4((vec3(0,10,0)-p),1)); 
+    N = normalize(vec3(NormalMatrix*vec4(n,1)));	
     V = -vec3(ModelViewMatrix*vec4(p,1.0));
-    L = vec3(ModelViewMatrix*vec4((LightPos-p),1));
+     
     gl_Position = ModelViewMatrix * vec4(p,1);
 }")
 
@@ -58,11 +56,18 @@ void main()
     vec3 v = normalize(V);
     vec3 h = normalize(l+v);
     float diffuse = dot(l,n);
-    float specular = pow(max(0.0,dot(n,h)),1.0/Roughness);
+/*    float specular = pow(max(0.0,dot(n,h)),1.0/0.2);  */
+
+/*    float Sharpness=0.9;
+    float Roughness=0.5;
+    float w = 0.18*(1.0-Sharpness);
+    float specular = smoothstep(0.72-w,0.72+w,pow(max(0.0,dot(n,h)),1.0/Roughness));
+*/
     gl_FragColor = vec4(AmbientColour +
      texture2D(texture, vec2(T.s, T.t)).xyz *
-                        DiffuseColour*diffuse +
-                        SpecularColour*specular,1);
+                        DiffuseColour*diffuse, 
+			/*+ vec3(1.0,1.0,1.0)*specular,*/
+			1);
 }")
 
 

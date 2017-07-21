@@ -32,3 +32,15 @@ input {
     width: 100%;
 }
 
+#webgl-canvas {
+}
+
+#canvas2 {
+    position: absolute;
+    left: 0px;
+    top: 0px;
+}
+
+input {
+    width: 3em;
+}

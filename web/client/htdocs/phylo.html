@@ -14,12 +14,52 @@
       <div class="container">
 	  <h2><a href="/">Viruscraft prototype:</a> Genetic Model & Phylogenetic Tree Viz</h2>
 	  <p>
-	    A pylogenetic tree generated from a simulation model of evolution.
+	    Running a genetic simulation of a host population
+	    exposed to a virus and generating a phylogenetic
+	    tree visualisation of the species that emerge. The
+	    purpose of this prototype is to balance the model
+	    parameters and see how fast it changes as we tweak
+	    the hosts immunity fitness function.
 	  </p>
 	  <button id="show-code-button" onclick="show_code();">Edit code</button>
 	  <div class="row">
+
+	    <div class="col-xs-12 col-sm-2">
+              <form id="params" action="." method="POST">
+		<b>Model params</b><br>
+		<table class="table table-striped">
+		  <tr><td>BG infection %</td><td><input type="number" id="background-infection" value='0.5'/></td></tr>
+		  <tr><td>Natural death %</td><td><input type="number" id="natural-death" value='0.3'/></td></tr>
+		  <tr><td>Infection multiplier</td><td><input type="number" id="infection-mul" value='1.0'/></td></tr>
+		  <tr><td>Fatality multiplier</td><td><input type="number" id="fatality-mul" value='1.0'/></td></tr>
+		  <tr><td>Spawn rate %</td><td><input type="number" id="spawn-rate" value='1'/></td></tr>
+<!--		  <tr><td>Movement rate %</td><td><input type="number" id="movement-rate" value='0'/></td></tr> -->
+		  <tr><td>Max organisms</td><td><input type="number" id="max-organisms-in-node" value='50'/></td></tr>
+		  <tr><td>Mutation rate %</td><td><input type="number" id="mutation-rate" value='1.5'/></td></tr>
+		</table>
+		<b>Species classifier</b><br>
+		<table class="table table-striped">
+		  <tr><td>Edit dist</td><td><input type="number" id="species-distance" value='5'/></td></tr>
+		  <tr><td>Genome size</td><td><input type="number" id="genome-size" value='20'/></td></tr>
+		</table>
+		<b>Fitness function</b><br>
+		<table class="table table-striped">
+		  <tr><td>A fitness</td><td><input type="number" id="fitness-a" value='1.0'/></td></tr>
+		  <tr><td>G fitness</td><td><input type="number" id="fitness-g" value='0.0'/></td></tr>
+		  <tr><td>T fitness</td><td><input type="number" id="fitness-t" value='1.0'/></td></tr>
+		  <tr><td>C fitness</td><td><input type="number" id="fitness-c" value='0.0'/></td></tr>
+		</table>
+	      </form>
+<!--	      <button onclick="update_params()">Update params</button> -->
+<!--	      <button onclick="rebuild();">Rebuild world</button><br> -->
+	      <a href="/">Back</a>
+	    </div>
+
 	    <div class="col-xs-12 col-sm-10">
-              <canvas class="canvas" id="webgl-canvas" width="960" height="540"></canvas>
+              <div>
+		<canvas class="canvas" id="webgl-canvas" width="960" height="540"></canvas>
+		<canvas class="canvas" id="canvas2" width="960" height="540"></canvas>
+	      </div>
 	      <div class="code-container" style="display: none;">
 		<button onclick="hide_code();">Hide code</button>
 		<button onclick="run_code();">Run me</button>
@@ -72,6 +112,14 @@
           });
 
           init(["scm/fluxus/fluxus.jscm","scm/phylo.jscm"]);    
+
+      $("input").keypress(function(event) {
+        if (event.which == 13) {
+          event.preventDefault();
+          update_params();
+          }
+      });
+
       });
     </script>
 </body>
