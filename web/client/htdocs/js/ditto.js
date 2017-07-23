@@ -391,6 +391,13 @@ ditto.core_forms = function(fn, args) {
             return "ditto.foldl_helper(["+ditto.list_map(ditto.comp,args).join(",")+"])";
     }
 
+    // iterative fold version for optimisation
+    if (fn == "list_contains_q") {
+        return "ditto.list_contains("+
+        ditto.comp(ditto.car(args))+","+
+        ditto.comp(ditto.cadr(args))+")";
+    }
+    
     if (fn == "list_q") {
         if (ditto.check(fn,args,1,1))
             return debug+"(Object.prototype.toString.call("+

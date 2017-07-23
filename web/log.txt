@@ -32,3 +32,5 @@ Tuesday, July 18th, 2017 10:24:49am Started server at: Tuesday, July 18th, 2017
 Wednesday, July 19th, 2017 8:03:51am Started server at: Wednesday, July 19th, 2017
 Wednesday, July 19th, 2017 11:57:40am Started server at: Wednesday, July 19th, 2017
 Friday, July 21st, 2017 6:17:42pm Started server at: Friday, July 21st, 2017
+Saturday, July 22nd, 2017 9:20:25am Started server at: Saturday, July 22nd, 2017
+Sunday, July 23rd, 2017 6:42:01am Started server at: Sunday, July 23rd, 2017

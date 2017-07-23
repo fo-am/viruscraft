@@ -61,6 +61,15 @@
 ;;     ((null? l) v)
 ;;     (else (foldl fn (fn (car l) v) (cdr l))))))
 
+
+;; replaced by underlying iterative version
+;; (define (list-contains? l v)
+;;   (cond
+;;     ((null? l) #f)
+;;     ((eq? (car l) v) #t)
+;;     (else (list-contains? (cdr l) v))))
+
+
 (define map
   (lambda (fn l)
     (foldl

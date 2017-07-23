@@ -2,13 +2,7 @@
 ;; Viruscraft Copyright (C) 2017 FoAM Kernow
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define (msg x) (display x)(newline))
 (define (choose l) (list-ref l (random (length l))))
-(define (list-contains? l v)
-  (cond
-    ((null? l) #f)
-    ((eq? (car l) v) #t)
-    (else (list-contains? (cdr l) v))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -22,7 +16,9 @@
 (define infection-mul 1)
 (define fatality-mul 1)
 (define natural-death 0.3)
-(define max-organisms-in-node 50)
+(define max-organisms-in-node 200)
+
+(define (flip percent) (< (random 1000) (* percent 10)))
 
 (define genes (list "A" "T" "G" "C"))
 
@@ -32,15 +28,21 @@
 (define (genome-mutate genome mutation-rate)
   (map
    (lambda (gene)
-     (if (< (random 100) mutation-rate)
+     (if (flip mutation-rate)
          (choose genes) gene))
    genome))
 
 (define (genome-distance a b)
-  (foldl
-   (lambda (a b r)
-     (+ r (if (eq? a b) 0 1)))
-   0 a b))
+  (js "var ret=0;")
+  (js "for (i=0; i<a.length; i++) {")
+  (js "if (!(a[i]===b[i])) ret++;")
+  (js "}")
+  ret))
+  
+;;  (foldl
+;;   (lambda (a b r)
+;;     (+ r (if (eq? a b) 0 1)))
+;;   0 a b))
 
 ;; (define (genome-fitness genome)
 ;;   (let ((count (foldl
@@ -67,10 +69,8 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define (flip percent) (< (random 1000) (* percent 10)))
-
-(define (run-model state genome infection-present)
-  (let ((fitness (* (genome-fitness genome) 100)))
+(define (run-model state fitness infection-present)
+  (let ((fitness (* fitness 100)))
     (when (or (< fitness 0) (> fitness 100)) (msg "FITNESS ERROR") (msg fitness))
     (cond
       ((eq? state 'susceptible)
@@ -101,19 +101,27 @@
 
 (define cur-organism-id 0)
 (define (generate-organism-id) (set! cur-organism-id (+ cur-organism-id 1)) cur-organism-id)
-(define (make-organism id genome state parent) (list id genome state parent))
+(define (make-organism id genome state parent fitness species) (list id genome state parent fitness species))
 (define (organism-id o) (list-ref o 0))
 (define (organism-genome o) (list-ref o 1))
 (define (organism-state o) (list-ref o 2))
 (define (organism-parent o) (list-ref o 3))
+(define (organism-fitness o) (list-ref o 4))
+(define (organism-species o) (list-ref o 5))
+(define (organism-update-species o v) (list-replace o 5 v))
 
-(define (new-organism) (make-organism (generate-organism-id) (random-genome) 'susceptible 0))
-
+(define (new-organism) 
+  (let ((genome (random-genome)))
+    (make-organism (generate-organism-id) genome 'susceptible 0 (genome-fitness genome) -1)))
+  
 (define (organism-spawn o mutation-rate)
-  (make-organism (generate-organism-id)
-                 (genome-mutate (organism-genome o) mutation-rate)
-                 'susceptible ;; all start as susceptible
-                 (organism-id o)))
+  (let ((genome (genome-mutate (organism-genome o) mutation-rate)))
+    (make-organism (generate-organism-id)
+		   genome
+		   'susceptible ;; all start as susceptible
+		   (organism-id o)
+		   (genome-fitness genome)
+		   -1)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -131,16 +139,38 @@
      (node-connections node)
      (map
       (lambda (o)
-        (make-organism (organism-id o)
-                       (organism-genome o) 
-                       (run-model (organism-state o) (organism-genome o) infection-present)
-                       (organism-parent o)))
+        (make-organism 
+	 (organism-id o)
+	 (organism-genome o) 
+	 (run-model (organism-state o) (organism-fitness o) infection-present)
+	 (organism-parent o)
+	 (organism-fitness o)
+	 (organism-species o)))
       (node-organisms node)))))
-        
+   
 (define (world-run world)
   (map
    (lambda (node)
      (node-run node))
+   world))
+
+(define (recalc-fitness world)
+  (map
+   (lambda (node)
+     (let ((infection-present (is-node-infected? node)))
+       (make-node
+	(node-id node)
+	(node-connections node)
+	(map
+	 (lambda (o)
+	   (make-organism 
+	    (organism-id o)
+	    (organism-genome o) 
+	    (organism-state o)
+	    (organism-parent o)
+	    (genome-fitness (organism-genome o))
+	    (organism-species o)))
+	 (node-organisms node)))))
    world))
 
 ;; instructions are (org src dst
@@ -212,22 +242,70 @@
      (world-instructions-remove world instructions)
      instructions)))
 
-(define (world-spawn-organisms world spawn-prob mutation-rate)
-  (map
-   (lambda (node)
-     (make-node
-      (node-id node)
-      (node-connections node)
-      (if (< (length (node-organisms node)) max-organisms-in-node)
-          (foldl
-           (lambda (o r)
-             (cons o
-                   (if (< (random 100) spawn-prob)
-                       (cons (organism-spawn o mutation-rate) r)
-                       r)))
-           '()
-           (node-organisms node))
-          (node-organisms node))))
+
+;; (define (world-spawn-organisms world spawn-prob mutation-rate phylo)
+;;   (map
+;;    (lambda (node r)
+;;      (make-node
+;;       (node-id node)
+;;       (node-connections node)
+;;       (if (< (length (node-organisms node)) max-organisms-in-node)
+;;           (foldl
+;;            (lambda (o r)
+;;              (cons o
+;;                    (if (< (random 100) spawn-prob)
+;;                        (cons (organism-spawn o mutation-rate) r)
+;;                        r)))
+;;            '()
+;;            (node-organisms node))
+;;           (node-organisms node))))
+;;    world))
+
+;; returns list containing new organism list and the updated
+;; phylo structure, doing them at the same time...
+(define (node-spawn-organisms node spawn-prob mutation-rate phylo)
+  (if (> (length (node-organisms node)) max-organisms-in-node)
+      (list (node-organisms node) phylo)
+      (foldl
+       (lambda (o r)
+	 (let ((new-orgs (car r))
+	       (phylo (cadr r)))
+	   (if (flip spawn-prob)
+	       (let ((new-org (organism-spawn o mutation-rate)))
+		 ;; update the phylo with this individual
+		 (let ((phylo (build-phylo phylo new-org)))
+		   (list
+		    (cons o ;; re-add parent 
+			  (cons 
+			   ;; update the species here
+			   (organism-update-species 
+			    new-org 
+			    (species-search phylo (organism-id new-org))) 
+			   new-orgs))
+		    phylo)))
+	       (list
+		(cons o new-orgs)
+		phylo))))
+       (list '() phylo)
+       (node-organisms node))))
+
+;; returns (world phylo)
+(define (world-spawn-organisms world spawn-prob mutation-rate phylo)
+  (foldl
+   (lambda (node world-phylo)
+     (let ((orgs-phylo 
+	    (node-spawn-organisms 
+	     node spawn-prob mutation-rate 
+	     (cadr world-phylo))))
+       (list 
+	(cons ;; update the world
+	 (make-node
+	  (node-id node)
+	  (node-connections node)
+	  (car orgs-phylo)) 
+	 (car world-phylo)) 
+	(cadr orgs-phylo)))) ;; update the phylo
+   (list '() phylo)
    world))
 
 ;; remove dead organisms

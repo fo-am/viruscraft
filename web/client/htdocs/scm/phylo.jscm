@@ -54,15 +54,15 @@
 (define (vspecies-update v radius offset segments depth dead)
   (when (< dead 0)
    (with-primitive 
-   (vspecies-prim v)
-   (extrude! 
-    (vspecies-vertex-pos v)
-    segments 
-    (vspecies-pos v) 
-    (vspecies-offset v)
-    offset
-    depth 
-    (map (lambda (r) (+ r 0.05)) (vspecies-radii v)))))
+    (vspecies-prim v)
+    (extrude! 
+     (vspecies-vertex-pos v)
+     segments 
+     (vspecies-pos v) 
+     (vspecies-offset v)
+     offset
+     depth 
+     (map (lambda (r) (+ r 0.05)) (vspecies-radii v)))))
   (vspecies 
    (vspecies-id v)
    (vspecies-prim v)
@@ -87,7 +87,7 @@
 	    (let ((dist (- (vspecies-offset thisvs)
 			   (vspecies-offset s))))
 	      (+ r (* (if (< dist 0) -1 1)
-		      0.3
+		      0.15
 		      (car (vspecies-radii s)))))))
       (* (- (vspecies-offset thisvs)) 0.02)
       vslist)))
@@ -98,6 +98,12 @@
      (with-primitive 
       (vspecies-prim v)
       (translate (vector 0 (- depth) 0))))
+   vs))
+
+(define (destroy-visualisation vs)
+  (for-each
+   (lambda (v)
+     (destroy (vspecies-prim v)))
    vs))
       
 (define depth 0.3)
@@ -112,7 +118,7 @@
 	  (vspecies-update 
 	   v 
 	   (+ (* (car (vspecies-radii v)) 0.9)
-	      (* (species-pop species) 0.002))
+	      (* (species-pop species) 0.001))
 	   (vspecies-force-direct vs v)
 	   5 depth
 	   (species-dead species)))
@@ -136,9 +142,8 @@
    (filter
     (lambda (species)
       (cond
-       ((< (species-dead species) 98) #t)
+       ((< (species-dead species) max-species-leftover-age) #t)
        (else
-	(msg (species-dead species))
 	(let ((v (find-vspecies vs (species-id species))))
 	  (destroy (vspecies-prim v))
 	  #f))))	  
@@ -156,15 +161,14 @@
 (define spawn-rate 1)
 (define mutation-rate 1.5)
 
-(define (world-step world)
-  (world-run 
-   (world-spawn-organisms 
-    (world-move-organisms 
-     (world-remove-organisms world) movement-rate) 
-    spawn-rate mutation-rate)))
-
-(define (phylo-step phylo world)
-  (world->phylo phylo world))
+(define (world-step world phylo)
+  (let ((phylo (phylo-remove-organisms phylo world)))
+    (let ((world-phylo
+	   (world-spawn-organisms 
+	    (world-move-organisms 
+	     (world-remove-organisms world) movement-rate) 
+	    spawn-rate mutation-rate phylo)))
+      (list (world-run (car world-phylo)) (cadr world-phylo)))))
 
 (define world (simple-world))
 (define phylo '())
@@ -199,19 +203,16 @@
 
   )
 
-(define canvas (document.getElementById "canvas2"))
-(define ctx (canvas.getContext "2d"))
-(requestAnimFrame update-hud ctx)
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define (run-sim)
   ;;(msg (length phylo))
   ;;(print-phylo phylo)
   ;;(world-print world)
-  (set! world (world-step world))
-  (set! phylo (phylo-step phylo world))
+  (let ((world-phylo (world-step world phylo)))
+    (set! world (car world-phylo))
+    (set! phylo (cadr world-phylo)))
+  
   (when (eq? (modulo frame viz-step) 0)
 	(set! vs (update-visualisation vs phylo))
 	(set! phylo (phylo-cull phylo)))
@@ -219,6 +220,9 @@
   (animate-visualisation vs (/ depth viz-step))
 
   (when (zero? (world-count-organisms world))
+	(destroy-visualisation vs)
+	(set! vs '())
+	(set! phylo '())
 	(set! world (simple-world)))
 
   (update-hud)
@@ -235,7 +239,11 @@
   (let ((w ($ (string-append "#" id))))
     (parseFloat (js "w[0].value"))))
 
-(set! rebuild (lambda () (set! world (simple-world))))
+(set! rebuild (lambda () 
+		(destroy-visualisation vs)
+		(set! vs '())
+		(set! phylo '())
+		(set! world (simple-world))))
 
 (set! update-params 
       (lambda ()
@@ -253,5 +261,7 @@
 	(set! fitness-g (read-number "fitness-g"))
 	(set! fitness-t (read-number "fitness-t"))
 	(set! fitness-c (read-number "fitness-c"))
+
+	(set! world (recalc-fitness world))
 
 	))

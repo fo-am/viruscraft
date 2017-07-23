@@ -26,6 +26,13 @@
 
 	    <div class="col-xs-12 col-sm-2">
               <form id="params" action="." method="POST">
+		<b>Fitness function</b><br>
+		<table class="table table-striped">
+		  <tr><td><small>A</small></td><td><input type="number" id="fitness-a" value='1.0'/></td></tr>
+		  <tr><td><small>G</small></td><td><input type="number" id="fitness-g" value='0.0'/></td></tr>
+		  <tr><td><small>T</small></td><td><input type="number" id="fitness-t" value='1.0'/></td></tr>
+		  <tr><td><small>C</small></td><td><input type="number" id="fitness-c" value='0.0'/></td></tr>
+		</table>
 		<b>Model params</b><br>
 		<table class="table table-striped">
 		  <tr><td><small>BG infection</small></td><td><input type="number" id="background-infection" value='0.5'/></td></tr>
@@ -34,20 +41,13 @@
 		  <tr><td><small>Fatality factor</small></td><td><input type="number" id="fatality-mul" value='1.0'/></td></tr>
 		  <tr><td><small>Spawn rate</small></td><td><input type="number" id="spawn-rate" value='1'/></td></tr>
 <!--		  <tr><td>Movement rate %</td><td><input type="number" id="movement-rate" value='0'/></td></tr> -->
-		  <tr><td><small>Max organisms</small></td><td><input type="number" id="max-organisms-in-node" value='50'/></td></tr>
+		  <tr><td><small>Max organisms</small></td><td><input type="number" id="max-organisms-in-node" value='200'/></td></tr>
 		  <tr><td><small>Mutation rate</small></td><td><input type="number" id="mutation-rate" value='1.5'/></td></tr>
 		</table>
 		<b>Species classifier</b><br>
 		<table class="table table-striped">
 		  <tr><td><small>Edit dist</small></td><td><input type="number" id="species-distance" value='5'/></td></tr>
 		  <tr><td><small>Genome size</small></td><td><input type="number" id="genome-size" value='20'/></td></tr>
-		</table>
-		<b>Fitness function</b><br>
-		<table class="table table-striped">
-		  <tr><td><small>A</small></td><td><input type="number" id="fitness-a" value='1.0'/></td></tr>
-		  <tr><td><small>G</small></td><td><input type="number" id="fitness-g" value='0.0'/></td></tr>
-		  <tr><td><small>T</small></td><td><input type="number" id="fitness-t" value='1.0'/></td></tr>
-		  <tr><td><small>C</small></td><td><input type="number" id="fitness-c" value='0.0'/></td></tr>
 		</table>
 	      </form>
 		<button onclick="rebuild();">Reset population</button><br>

@@ -4,6 +4,8 @@
 
 (load "scm/genetic-model.jscm")
 
+(define max-species-leftover-age 300)
+
 (define cur-phylo-id 0)
 (define (generate-species-id) (set! cur-phylo-id (+ cur-phylo-id 1)) cur-phylo-id)
 
@@ -11,9 +13,11 @@
   (list id pop parent genome organism-ids dead))
 (define (species-id p) (list-ref p 0))
 (define (species-pop p) (list-ref p 1))
+(define (species-modify-pop p v) (list-replace p 1 v))
 (define (species-parent p) (list-ref p 2))
 (define (species-genome p) (list-ref p 3))
 (define (species-organism-ids p) (list-ref p 4))
+(define (species-modify-organism-ids p v) (list-replace p 4 v))
 (define (species-dead p) (list-ref p 5))
 
 (define (print-phylo phylo)
@@ -22,29 +26,17 @@
      (msg (+ (species-id s) ": " (species-pop s))))
    phylo))
 
-(define (species-parent-search species-list id)
+(define (species-search species-list id)
   (cond
     ((null? species-list) 0)
     ((list-contains? (species-organism-ids (car species-list)) id)
      (species-id (car species-list)))
-    (else (species-parent-search (cdr species-list) id))))
-
-(define (phylo-clear-pop species-list)
-  (map
-   (lambda (s)
-     (make-species 
-      (species-id s)
-      0
-      (species-parent s)
-      (species-genome s)
-      (species-organism-ids s)
-      (species-dead s)))
-   species-list))
+    (else (species-search (cdr species-list) id))))
 
 (define (phylo-cull species-list)
   (filter
    (lambda (s)
-     (< (species-dead s) 500))
+     (< (species-dead s) max-species-leftover-age))
    (phylo-check-dead species-list)))
 
 (define (phylo-check-dead species-list)
@@ -61,41 +53,61 @@
 	  -1)))
    species-list))
 
+(define (phylo-make-new-species species-list organism)
+  (make-species 
+   (generate-species-id)
+   1
+   (species-search species-list (organism-parent organism))
+   (organism-genome organism)
+   (list (organism-id organism))
+   -1))
+
+(define (phylo-update-species species organism) 
+  (make-species 
+   (species-id species)
+   (+ (species-pop species) 1)
+   (species-parent species)
+   (species-genome species)
+   (if (list-contains? (species-organism-ids species) (organism-id organism))
+       (species-organism-ids species)
+       (cons (organism-id organism) (species-organism-ids species)))
+   (species-dead species)))
+              
 (define (build-phylo species-list organism)
-  (define (_ l)
+  (define (_build-phylo l)
     (let ((genome (organism-genome organism)))
       (cond
-        ((null? l)        
-         (list (make-species (generate-species-id)
-			     0
-                             (species-parent-search species-list (organism-parent organism))
-                             genome 
-			     (list (organism-id organism))
-			     -1)))
-        ((and (< (species-dead (car l)) 0) ;; don't add to dead species
-	      (< (genome-distance (species-genome (car l)) genome) species-distance))
-         (cons (make-species (species-id (car l))
-			     (+ (species-pop (car l)) 1)
-                             (species-parent (car l))
-                             (species-genome (car l))
-                             (if (list-contains? (species-organism-ids (car l)) (organism-id organism))
-                                 (species-organism-ids (car l))
-                                 (cons (organism-id organism) (species-organism-ids (car l))))
-			     (species-dead (car l)))
-               (cdr l)))
-        (else
-         (cons (car l) (_ (cdr l)))))))
-  (_ species-list))
+       ((null? l)        
+	(list (phylo-make-new-species species-list organism)))
+       ((and (< (species-dead (car l)) 0) ;; don't add to dead species
+	     (< (genome-distance (species-genome (car l)) genome) species-distance))
+	(cons (phylo-update-species (car l) organism) (cdr l)))
+       (else
+	(cons (car l) (_build-phylo (cdr l)))))))
+  (_build-phylo species-list))
 
-(define (world->phylo phylo world)
+(define (phylo-remove-organism phylo o)
+  (cond
+   ((null? phylo) '())
+   ((eq? (species-id (car phylo)) (organism-species o))
+    ;; todo: also remove from organism list
+    (cons (species-modify-pop 
+	   (car phylo) 
+	   (- (species-pop (car phylo)) 1)) (cdr phylo)))
+   (else
+    (cons (car phylo) (phylo-remove-organism (cdr phylo) o)))))
+
+(define (phylo-remove-organisms phylo world)
   (foldl
-   (lambda (node r)
-     (foldl
-      (lambda (o r)
-	(build-phylo r o))
-      r
-      (node-organisms node)))
-   (phylo-clear-pop phylo)
+   (lambda (node phylo)
+      (foldl
+       (lambda (o phylo)
+         (if (eq? (organism-state o) 'dead)
+	     (phylo-remove-organism phylo o)
+	     phylo))
+       phylo
+       (node-organisms node)))
+   phylo
    world))
 
 (define (printtrunc v) (/ (floor (* v 1000)) 1000))
