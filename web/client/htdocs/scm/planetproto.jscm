@@ -255,7 +255,7 @@
 			  (mat4.rotateY (camera-transform) 0.001) 
 			  0.00) (* -0.00123 (sin (* (time) 0.01))))))
 
-(clear-colour (vector 0 0 0 0))
+(clear-colour (vector 0 0 0 1))
 
 (every-frame (render))
 
