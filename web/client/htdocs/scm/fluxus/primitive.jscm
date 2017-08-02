@@ -20,11 +20,11 @@
 (define (primitive-type p) (list-ref p 0))
 (define (primitive-inner p) (list-ref p 1))
 
-(define (primitive-render p gl view-camera state tx)
+(define (primitive-render p gl view-camera camera-pos state tx)
   ;; dispatch
   (cond 
    ((eq? (primitive-type p) 'polyprim) 
-    (polyprim-render (primitive-inner p) gl view-camera state tx))
+    (polyprim-render (primitive-inner p) gl view-camera camera-pos state tx))
    ((eq? (primitive-type p) 'instanceprim) 
-    (instanceprim-render (primitive-inner p) gl view-camera state tx))
+    (instanceprim-render (primitive-inner p) gl view-camera camera-pos state tx))
    (else (msg "unknown primitive"))))

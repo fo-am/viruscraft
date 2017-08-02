@@ -40,7 +40,6 @@
    (with-state 
     (shader vertex-organism fragment-organism)
     (colour (vmul (vector 1 0.7 0.2) 2))
-    (texture (load-texture "white.png"))
     (build-cube))
    (+ 0.001 (* (rndf) 0.1))))
 
@@ -139,7 +138,6 @@
       (colour (vmul (vector 0.3 0.1 0.2) 2))
       (translate (spherical->cartesian pos))
       (scale (vector 0.15 0.15 0.15))
-      (texture (load-texture "white.png"))
       ;(build-cube)
       ;;(load-primitive "models/isotest.obj")
       (build-instance plant-poly)
@@ -220,7 +218,7 @@
    (colour (vector 1 1 1))
    (shader vertex-planet fragment-planet)
    (scale (vector 10 10 10))
-   (load-primitive "models/planet-test.obj")))
+   (load-primitive "models/planet-test-reduced.obj")))
 
 (with-state 0)
 (set-camera-transform 
@@ -236,6 +234,8 @@
 
 (define insect-sirs-model (make-model 0.0 1 0.008 0.0004))
 (define plant-sirs-model (make-model 0.00003 1 0.008 0.0008))
+
+;;(parent world)
 (define insect-list (build-list 100 (lambda (i) (build-insect))))
 (define plant-list 
   (plants-build-connections 
@@ -247,12 +247,15 @@
 (define (render)
   (set! insect-list (update-insects insect-list plant-list insect-sirs-model))
   (set! plant-list (update-plants plant-list insect-list plant-sirs-model))
+  
+  ;;(with-primitive world (rotate (vector 0 1 0)))
+
   (set-camera-transform (mat4.rotateX 
 			 (mat4.rotateZ 
-			  (mat4.rotateY (camera-transform) 0.0008) 
-			  0.00) (* -0.00223 (sin (* (time) 0.01))))))
+			  (mat4.rotateY (camera-transform) 0.001) 
+			  0.00) (* -0.00123 (sin (* (time) 0.01))))))
 
-(clear-colour (vector 0 0 0 1))
+(clear-colour (vector 0 0 0 0))
 
 (every-frame (render))
 

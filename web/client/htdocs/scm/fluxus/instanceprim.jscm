@@ -19,7 +19,7 @@
 
 (define (instanceprim-polyref p) (list-ref p 0))
 
-(define (instanceprim-render p gl view-camera state tx)
+(define (instanceprim-render p gl view-camera camera-pos state tx)
   (pdata-render 
    (polyprim-pdata (instanceprim-polyref p))
-   gl view-camera state tx))
+   gl view-camera camera-pos state tx))

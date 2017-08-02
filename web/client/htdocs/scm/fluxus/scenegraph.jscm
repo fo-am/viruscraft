@@ -81,16 +81,16 @@
 	(scenegraph-add sn parent-id node))
       (scenenode-children sn))))))
 
-(define (scenegraph-render sn gl view-camera tx)
+(define (scenegraph-render sn gl view-camera camera-pos tx)
   ;;(msg (scenenode-id sn))
   (when (not (zero? (scenenode-primitive sn)))
 	(primitive-render 
-	 (scenenode-primitive sn) gl view-camera 
+	 (scenenode-primitive sn) gl view-camera camera-pos 
 	 (scenenode-state sn)
 	 tx))
   ;;(msg (+ "len:" (length (scenenode-children sn))))
   (for-each 
    (lambda (child)
-     (scenegraph-render child gl view-camera 
+     (scenegraph-render child gl view-camera camera-pos
 			(state-tx (scenenode-state sn))))
    (scenenode-children sn)))

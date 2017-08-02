@@ -115,7 +115,8 @@
 (define (renderer-render r t)
   (let ((gl (renderer-gl r))
 	(hook (renderer-hook r))
-	(view-camera (mat4.create)))
+	(view-camera (mat4.create))
+	(camera-pos (vector 0 0 0)))
     
     (gl.viewport 0 0 gl.viewportWidth gl.viewportHeight)
     (gl.clearColor (vx (renderer-clear-colour r)) 
@@ -128,6 +129,7 @@
     ;; for scene inspection purposes...
     (mat4.multiply (renderer-view r) (renderer-camera r) (renderer-world-to-screen r))
     (mat4.multiply (renderer-view r) (renderer-camera r) view-camera)
+    (mat4.multiplyVec3 view-camera (vector 0 0 0) camera-pos)
 
     (mat4.identity (renderer-top-tx r))
 
@@ -139,11 +141,11 @@
        (lambda (p)
 	 (let ((state (car p))
 	       (prim (cadr p)))
-	   (primitive-render prim gl view-camera state ident)))
+	   (primitive-render prim gl view-camera camera-pos state ident)))
        (renderer-immediate-prims r))
       
       ;; retained mode
-      (scenegraph-render (renderer-scenegraph r) gl view-camera ident))
+      (scenegraph-render (renderer-scenegraph r) gl view-camera camera-pos ident))
     (renderer-immediate-clear r)))
 
 (define (interleave-pdata a b c)

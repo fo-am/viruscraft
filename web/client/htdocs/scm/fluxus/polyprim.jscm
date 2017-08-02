@@ -47,6 +47,6 @@
 (define (polyprim-update-buffers! gl p)
   (pdata-update-vbo! gl (polyprim-pdata p)))
   
-(define (polyprim-render p gl view-camera state tx)
-  (pdata-render (polyprim-pdata p) gl view-camera state tx))
+(define (polyprim-render p gl view-camera camera-pos state tx)
+  (pdata-render (polyprim-pdata p) gl view-camera camera-pos state tx))
 

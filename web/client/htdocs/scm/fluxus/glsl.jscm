@@ -34,7 +34,7 @@
       (when (not (gl.getProgramParameter shader-program gl.LINK_STATUS))
             (alert (gl.getShaderInfoLog shader)))
       (gl.useProgram shader-program)
-      
+
       (when (not (eq? (gl.getAttribLocation shader-program "p") -1))
 	    (set! shader-program.vertexPositionAttribute
 		  (gl.getAttribLocation shader-program "p"))
@@ -82,5 +82,8 @@
       (when (gl.getUniformLocation shader-program "LightPos")
 	    (set! shader-program.LightPos
 		  (gl.getUniformLocation shader-program "LightPos")))
+      (when (gl.getUniformLocation shader-program "CameraPos")
+	    (set! shader-program.CameraPos
+		  (gl.getUniformLocation shader-program "CameraPos")))
       
       shader-program)))

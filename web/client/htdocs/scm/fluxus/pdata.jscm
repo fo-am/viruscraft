@@ -70,18 +70,20 @@
       (js "pdata_interleaved_data(pdata)[offset+pos*stride+1]=value[1];")
       (js "pdata_interleaved_data(pdata)[offset+pos*stride+2]=value[2];"))))
 
-(define (pdata-render pdata gl view-camera state tx)
-  (let ;; assumptions...
-      ((model-view (mat4.create))
-       (local (mat4.create))
-       (normal (mat4.create))
-       (shader (state-shader state))
-       (texture (state-texture state))
-       (colour (state-colour state))
-       (hints (state-hints state)))
+;; stick em out here to avoid allocation all the time
+(define model-view (mat4.create))
+(define local (mat4.create))
+(define normal (mat4.create))
+
+(define (pdata-render pdata gl view-camera camera-pos state tx)
+  (let ((shader (state-shader state))
+	(texture (state-texture state))
+	(colour (state-colour state))
+	(hints (state-hints state)))
     (mat4.multiply tx (state-tx state) local)
     (mat4.multiply view-camera local model-view)
-
+    (mat4.toRotationMat local normal)
+    
     (gl.useProgram shader)
     
     (gl.bindBuffer gl.ARRAY_BUFFER (pdata-vbo pdata))
@@ -98,10 +100,10 @@
 	(bind-texture gl shader texture))
     
     (gl.uniformMatrix4fv shader.ModelViewMatrixUniform false model-view)
-    (mat4.toRotationMat local normal)
     (gl.uniformMatrix4fv shader.NormalMatrixUniform false normal)
 
     (gl.uniform3fv shader.DiffuseColour colour)
+    (gl.uniform3fv shader.CameraPos camera-pos)
 
     (when (bitwise-and hints FLX_HINT_SOLID)
 	  (gl.drawArrays gl.TRIANGLES 0 (pdata-size-verts pdata))) 
