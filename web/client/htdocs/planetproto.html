@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Viruscraft prototype</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+    <link href="css/style.css" rel="stylesheet" type="text/css">
+
+    <link rel="stylesheet" href="codemirror/codemirror.css">
+    <script src="codemirror/codemirror.js"></script>
+    <script src="codemirror/scheme/scheme.js"></script>
+    
+    <body style="color:#594430">
+      <div class="container">
+	<div class="row">
+	  <h2><a href="/">Viruscraft prototype:</a> Planet Prototype</h2>
+	  The <a href="species.html">multi species</a> disease model, with populations contrained by islands and continents.
+	  <div class="col-xs-12 col-sm-2">
+            <form id="params" action="." method="POST">
+	      <b>Insect probabilities:</b><br>
+	      <table>
+		<tr><td>Background infection</td><td><input type="number" id="i-background" value='0.0'/></td></tr>
+		<tr><td>Neighbour infection</td><td><input type="number" id="i-infection" value='1.0'/></td></tr>
+		<tr><td>Immunity</td><td><input type="number" id="i-recovery" value='0.008'/></td></tr>
+                <tr><td>Susceptability</td><td><input type="number" id="i-susceptability" value='0.0004'/></td></tr>
+	      </table>
+	      <b>Plant probabilities:</b><br>
+	      <table>
+		<tr><td>Background infection</td><td><input type="number" id="p-background" value='0.00003'/></td></tr>
+		<tr><td>Neighbour infection</td><td><input type="number" id="p-infection" value='1.0'/></td></tr>
+		<tr><td>Immunity</td><td><input type="number" id="p-recovery" value='0.008'/></td></tr>
+		<tr><td>Susceptability</td><td><input type="number" id="p-susceptability" value='0.0008'/></td></tr>
+	      </table>
+	    </form>
+	    <button onclick="update_params()">Update params</button></br>
+	    <a href="/">Back</a>
+	  </div>
+	  <div class="col-xs-12 col-sm-10">
+	      <button id="show-code-button" onclick="show_code();">Edit code</button>
+              <canvas class="zoomed-canvas" id="webgl-canvas" width="1366" height="768"></canvas>
+	      <div class="code-container" style="display: none;">
+		<button onclick="hide_code();">Hide code</button>
+		<button onclick="run_code();">Run me</button>
+		<textarea id="code"></textarea>
+		output
+		<pre><div id="output"></div></pre>
+	      </div>
+	  </div>
+	
+	</div>
+      </div>
+    </body>
+    <script src="js/jquery-1.9.1.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    <script src="js/glMatrix.js"></script>
+    <script src="js/glObjLoader.js"></script>
+    <script src="js/base.js"></script>
+    <script src="js/ditto.js"></script>
+
+    <script>
+      function show_code() {
+          $('.code-container').show(); 
+          $('#show-code-button').hide(); 
+          // Refresh CodeMirror
+          $('.CodeMirror').each(function(i, el){ 
+              el.CodeMirror.refresh(); 
+          });      
+      }
+
+      function hide_code() {
+          $('.code-container').hide(); 
+          $('#show-code-button').show();
+      }
+
+      var editor=0;
+
+      function run_code() {
+          scheme_eval(["scm/fluxus/fluxus.jscm"],editor.getValue());
+      }
+
+      $( document ).ready(function() {
+          var xmlHttp = new XMLHttpRequest();
+          xmlHttp.open( "GET", "scm/planetproto.jscm", false );
+          xmlHttp.overrideMimeType("script");
+          xmlHttp.send( null );
+          $('#code').html(xmlHttp.responseText);
+
+          editor = CodeMirror.fromTextArea($("#code")[0], {
+             mode: "scheme"
+          });
+
+          init(["scm/fluxus/fluxus.jscm","scm/planetproto.jscm"]);    
+      });
+    </script>
+</body>
+</html>

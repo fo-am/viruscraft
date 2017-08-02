@@ -1,0 +1,280 @@
+;; -*- mode: scheme; -*-
+;; Viruscraft Copyright (C) 2017 FoAM Kernow
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(load "scm/sirs-model.jscm")
+(load "scm/landpoints.jscm")
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; population stuff
+
+(define (make-insect state pos last-pos next-pos plant t prim speed)
+  (list state pos last-pos next-pos plant t prim speed))
+
+(define (sph-i v) (vx v))
+(define (sph-r v) (vy v))
+(define (sph-a v) (vz v))
+
+(define (sph-rnd r)
+  (vector
+   (* (rndf) pi)
+   r
+   (* (rndf) two-pi))) 
+
+(define (spherical->cartesian v)
+  (vector
+   (* (sph-r v) (sin (sph-i v)) (cos (sph-a v)))
+   (* (sph-r v) (sin (sph-i v)) (sin (sph-a v)))
+   (* (sph-r v) (cos (sph-i v)))))
+
+(define (cartesian->spherical v)
+  (let ((r (vmag v)))
+    (vector
+     (Math.acos (/ (vz v) r))
+     r
+     (Math.atan2 (vy v) (vx v)))))
+
+(define (build-insect)
+  (make-insect
+   'susceptable (vector 0 0 0) (vector 0 0 0) (vector 0 0 0) #f 0 
+   (with-state 
+    (shader vertex-organism fragment-organism)
+    (colour (vmul (vector 1 0.7 0.2) 2))
+    (texture (load-texture "white.png"))
+    (build-cube))
+   (+ 0.001 (* (rndf) 0.1))))
+
+(define (insect-state i) (list-ref i 0))
+(define (insect-pos i) (list-ref i 1))
+(define (insect-last-pos i) (list-ref i 2))
+(define (insect-next-pos i) (list-ref i 3))
+(define (insect-plant-id i) (list-ref i 4))
+(define (insect-t i) (list-ref i 5))
+(define (insect-prim i) (list-ref i 6))
+(define (insect-speed i) (list-ref i 7))
+
+(define (insect-update-sirs-state i sirs-model plants insects)
+  (model-update 
+   sirs-model 
+   (if (and (insect-plant-id i)
+	    (> (insect-t i) 1)
+	    (eq? (plant-state (list-ref plants (insect-plant-id i))) 'infected))
+       1 0)
+   (insect-state i)))
+
+(define (insect-choose-new-plant i plants)
+  ;; random plant first time
+  (if (not (insect-plant-id i)) 
+      (plant-id (choose plants))
+      (let ((current-plant (list-ref plants (insect-plant-id i))))
+	(cond
+	 ;; a disconnected plant
+	 ((null? (plant-connections current-plant))
+	  (plant-id current-plant))
+	 ;; connection
+	 (else (choose (plant-connections current-plant)))))))
+  
+(define (insect-update i sirs-model plants insects)
+  (with-primitive 
+   (insect-prim i) 
+   (when (< (insect-t i) 1)
+	 (identity)
+	 (translate (spherical->cartesian (insect-pos i)))
+	 (scale (vector 0.15 0.15 0.15)))
+   (colour 
+    (cond 
+     ((eq? (insect-state i) 'susceptable) (vector 0.5 0.5 0.5))
+     ((eq? (insect-state i) 'infected) (vector 1 0 0))
+     (else (vector 0.2 1 0.2)))))
+
+  (cond 
+   ((> (insect-t i) 1.5)
+    (let ((plant-id (insect-choose-new-plant i plants)))
+      (make-insect
+       (insect-update-sirs-state i sirs-model plants insects)
+       (insect-pos i)
+       (insect-next-pos i)
+       (vadd (plant-pos (list-ref plants plant-id)) (vector 0 0.5 0)) 
+       plant-id
+       0
+       (insect-prim i)
+       (insect-speed i))))
+   (else
+    (make-insect
+     (if (< (rndf) 0.5)
+	 (insect-update-sirs-state i sirs-model plants insects)
+	 (insect-state i))
+     (if (< (insect-t i) 1)
+	 (vlerp (insect-last-pos i) (insect-next-pos i) (insect-t i))
+	 (insect-t i))
+     (insect-last-pos i)
+     (insect-next-pos i)
+     (insect-plant-id i)
+     (+ (insect-t i) (insect-speed i))
+     (insect-prim i)
+     (insect-speed i)))))
+
+(define (update-insects insects plants sirs-model)
+  (map 
+   (lambda (i)
+     (insect-update i sirs-model plants insects))
+   insects))
+
+;;;;;;;;;;;;;;;;
+
+(define plant-poly (load-primitive "models/isotest.obj"))
+
+(define (make-plant id state connections pos prim)
+  (list id state connections pos prim))
+
+(define (build-plant id pos)
+;;  (let ((pos (sph-rnd 10.3)))
+    (make-plant 
+     id
+     'susceptable
+     '()
+     pos
+     (with-state 
+      (shader vertex-organism fragment-organism)
+      (colour (vmul (vector 0.3 0.1 0.2) 2))
+      (translate (spherical->cartesian pos))
+      (scale (vector 0.15 0.15 0.15))
+      (texture (load-texture "white.png"))
+      ;(build-cube)
+      ;;(load-primitive "models/isotest.obj")
+      (build-instance plant-poly)
+      )))
+;;)
+
+(define (plant-id p) (list-ref p 0))
+(define (plant-state p) (list-ref p 1))
+(define (plant-connections p) (list-ref p 2))
+(define (plant-pos p) (list-ref p 3))
+(define (plant-prim p) (list-ref p 4))
+
+(define (plant-find-insect p insects)
+  (foldl
+   (lambda (i r)
+     (if (and (not r) 
+	      (eq? (plant-id p) (insect-plant-id i))
+	      (> (insect-t i) 1))
+	 i r))
+   #f
+   insects))
+
+(define (plant-update-sirs-state p sirs-model plants insects)
+  (let ((insect (plant-find-insect p insects)))
+    (model-update 
+     sirs-model 
+     (if (and insect (eq? (insect-state insect) 'infected)) 1 0)
+     (plant-state p))))
+    
+(define (plant-update p sirs-model plants insects)
+   (with-primitive 
+    (plant-prim p) 
+    (colour 
+     (cond 
+      ((eq? (plant-state p) 'susceptable) (vector 0.5 0.5 0.5))
+      ((eq? (plant-state p) 'infected) (vector 1 0 0))
+      (else (vector 0.2 1 0.2)))))
+
+  (make-plant
+   (plant-id p)
+   (plant-update-sirs-state p sirs-model plants insects)
+   (plant-connections p)
+   (plant-pos p)
+   (plant-prim p)))
+
+(define (find-close-plants p plants threshold)
+  (foldl
+   (lambda (op r)
+     (if (and (not (eq? (plant-id p) (plant-id op)))
+	      (< (vdist (spherical->cartesian (plant-pos p))
+			(spherical->cartesian (plant-pos op))) threshold))
+	 (cons (plant-id op) r) r))
+   '()
+   plants))
+
+(define (plant-build-connections p plants)
+  (make-plant
+   (plant-id p)
+   (plant-state p)
+   (find-close-plants p plants 3)
+   (plant-pos p)
+   (plant-prim p)))
+
+(define (plants-build-connections plants)
+  (map (lambda (p) (plant-build-connections p plants)) plants))
+
+(define (update-plants plants insects sirs-model)
+  (map 
+   (lambda (p)
+     (if (< (rndf) 0.5) 
+	 (plant-update p sirs-model plants insects) p))
+   plants))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define world 
+  (with-state
+   (colour (vector 1 1 1))
+   (shader vertex-planet fragment-planet)
+   (scale (vector 10 10 10))
+   (load-primitive "models/planet-test.obj")))
+
+(with-state 0)
+(set-camera-transform 
+ (mat4.rotateY
+  (mat4.rotateX
+   (mat4.translate 
+    (mat4.identity (mat4.create))
+    (vector 0 0 -35))
+   0.6)
+  1.0))
+
+
+
+(define insect-sirs-model (make-model 0.0 1 0.008 0.0004))
+(define plant-sirs-model (make-model 0.00003 1 0.008 0.0008))
+(define insect-list (build-list 100 (lambda (i) (build-insect))))
+(define plant-list 
+  (plants-build-connections 
+   (index-map 
+    (lambda (i p)
+      (build-plant i (cartesian->spherical (vmul p 10)))) 
+    landpoints)))
+
+(define (render)
+  (set! insect-list (update-insects insect-list plant-list insect-sirs-model))
+  (set! plant-list (update-plants plant-list insect-list plant-sirs-model))
+  (set-camera-transform (mat4.rotateX 
+			 (mat4.rotateZ 
+			  (mat4.rotateY (camera-transform) 0.0008) 
+			  0.00) (* -0.00223 (sin (* (time) 0.01))))))
+
+(clear-colour (vector 0 0 0 1))
+
+(every-frame (render))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; startup
+
+(define (read-number id)
+  (let ((w ($ (string-append "#" id))))
+    (parseFloat (js "w[0].value"))))
+
+
+(set! update-params 
+      (lambda ()
+	(set! insect-sirs-model 
+	      (make-model
+	       (read-number "i-background")
+	       (read-number "i-infection")
+	       (read-number "i-recovery")
+	       (read-number "i-susceptability")))
+	(set! plant-sirs-model 
+	      (make-model
+	       (read-number "p-background")
+	       (read-number "p-infection")
+	       (read-number "p-recovery")
+	       (read-number "p-susceptability")))))

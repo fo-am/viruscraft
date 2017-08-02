@@ -26,7 +26,8 @@
    #f
    ()
    (scenenode 0 (state gl) 0 '())
-   ()))
+   ()
+   (vector 1 1 1 1)))
 
 (define (renderer-gl r) (list-ref r 0))
 (define (renderer-list r) (list-ref r 1))
@@ -47,6 +48,8 @@
 (define (renderer-modify-scenegraph r v) (list-replace r 9 v))
 (define (renderer-grab-stack r) (list-ref r 10))
 (define (renderer-modify-grab-stack r v) (list-replace r 10 v))
+(define (renderer-clear-colour r) (list-ref r 11))
+(define (renderer-modify-clear-colour r v) (list-replace r 11 v))
 
 (define (renderer-add r p)
   (renderer-modify-list r (cons p (renderer-list r))))
@@ -115,7 +118,10 @@
 	(view-camera (mat4.create)))
     
     (gl.viewport 0 0 gl.viewportWidth gl.viewportHeight)
-    (gl.clearColor 1 1 1 1)
+    (gl.clearColor (vx (renderer-clear-colour r)) 
+		   (vy (renderer-clear-colour r))
+		   (vz (renderer-clear-colour r))
+		   (list-ref (renderer-clear-colour r) 3))
     (gl.clear (js "gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT"))
     (mat4.perspective 45 (/ gl.viewportWidth gl.viewportHeight) 0.1 1000.0
 		      (renderer-view r))

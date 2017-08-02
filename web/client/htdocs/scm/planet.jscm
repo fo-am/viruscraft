@@ -1,0 +1,58 @@
+;; -*- mode: scheme; -*-
+;; Viruscraft Copyright (C) 2017 FoAM Kernow
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(load "scm/sirs-model.jscm")
+
+
+(define world 
+  (with-state
+   (colour (vector 1 1 1))
+   (shader vertex-planet fragment-planet)
+   (scale (vector 10 10 10))
+   (load-primitive "models/planet-test.obj")))
+
+(with-state 0)
+(set-camera-transform 
+ (mat4.rotateY
+  (mat4.rotateX
+   (mat4.translate 
+    (mat4.identity (mat4.create))
+    (vector 0 0 -35))
+   0.6)
+  1.0))
+
+(clear-colour (vector 0 0 0))
+
+(define (render)
+  (set-camera-transform (mat4.rotateY (camera-transform) 0.02)))
+
+(every-frame (render))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; startup
+
+(define (read-number id)
+  (let ((w ($ (string-append "#" id))))
+    (parseFloat (js "w[0].value"))))
+
+(set! rebuild 
+      (lambda () 
+	(clear)
+	(set! insect-list (build-list 5 (lambda (i) (build-insect))))
+	(set! plant-list (plants-build-connections (build-list 30 (lambda (i) (build-plant i)))))))
+
+(set! update-params 
+      (lambda ()
+	(set! insect-sirs-model 
+	      (make-model
+	       (read-number "i-background")
+	       (read-number "i-infection")
+	       (read-number "i-recovery")
+	       (read-number "i-susceptability")))
+	(set! plant-sirs-model 
+	      (make-model
+	       (read-number "p-background")
+	       (read-number "p-infection")
+	       (read-number "p-recovery")
+	       (read-number "p-susceptability")))))

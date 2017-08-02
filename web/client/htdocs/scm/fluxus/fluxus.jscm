@@ -81,6 +81,9 @@
 (define (set-camera-transform tx)
   (set! the-renderer (renderer-modify-camera the-renderer tx)))
 
+(define (clear-colour col)
+  (set! the-renderer (renderer-modify-clear-colour the-renderer col)))
+
 (define (view-transform)
   (renderer-view the-renderer))
 
