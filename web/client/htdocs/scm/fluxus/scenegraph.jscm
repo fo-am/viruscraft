@@ -23,6 +23,9 @@
 (define (scenenode-modify-children p v)  (list-replace p 3 v))
 ;;(define (scenenode-modify-add-child p child) (list-replace p 3 (cons child (scenenode-children p))))
 
+(define (scenenode-print p)
+  (msg (+ (scenenode-id p) " " (state-tx (scenenode-state p)))))
+
 ;; order children by id
 (define (scenenode-modify-add-child p child)
   (define (_ l v)
@@ -36,15 +39,21 @@
 (define (scenenode-search-child l id)
   (define (_ start end)
     (cond
-      ((null? l) #f)
-      (else
-       (let ((mid (trunc (+ start (/ (- end start) 2)))))
-         (cond
-           ((eq? id (car (list-ref l mid))) (list-ref l mid))
-           ((> (car (list-ref l mid)) id)
-            (_ start mid))
-           (else
-            (_ mid end)))))))
+     ;; no children
+     ((null? l) #f)
+     (else
+      (let ((mid (trunc (+ start (/ (- end start) 2)))))
+	(cond
+	 ;; not found
+	 ((< (- end start) 2) #f)
+	 ;; found
+	 ((eq? id (car (list-ref l mid))) (list-ref l mid))
+	 ;; search down
+	 ((> (car (list-ref l mid)) id)
+	  (_ start mid))
+	 ;; search up
+	 (else
+	  (_ mid end)))))))
   (_ 0 (length l)))
 
 (define (scenegraph-find sn id)
@@ -82,7 +91,6 @@
       (scenenode-children sn))))))
 
 (define (scenegraph-render sn gl view-camera camera-pos tx)
-  ;;(msg (scenenode-id sn))
   (when (not (zero? (scenenode-primitive sn)))
 	(primitive-render 
 	 (scenenode-primitive sn) gl view-camera camera-pos 
@@ -93,4 +101,11 @@
    (lambda (child)
      (scenegraph-render child gl view-camera camera-pos
 			(state-tx (scenenode-state sn))))
+   (scenenode-children sn)))
+
+(define (scenegraph-print sn depth)
+  (scenenode-print sn)
+  (for-each 
+   (lambda (child)
+     (scenegraph-print child (+ depth 1)))
    (scenenode-children sn)))

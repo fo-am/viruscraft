@@ -27,4 +27,7 @@
     (polyprim-render (primitive-inner p) gl view-camera camera-pos state tx))
    ((eq? (primitive-type p) 'instanceprim) 
     (instanceprim-render (primitive-inner p) gl view-camera camera-pos state tx))
+   ((eq? (primitive-type p) 'locatorprim)
+    ;; locator has no primitive (might want to change this for debugging)
+    0)
    (else (msg "unknown primitive"))))

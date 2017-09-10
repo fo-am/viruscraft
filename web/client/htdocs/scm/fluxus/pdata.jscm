@@ -80,6 +80,7 @@
 	(texture (state-texture state))
 	(colour (state-colour state))
 	(hints (state-hints state)))
+
     (mat4.multiply tx (state-tx state) local)
     (mat4.multiply view-camera local model-view)
     (mat4.toRotationMat local normal)

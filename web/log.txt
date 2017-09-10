@@ -37,3 +37,6 @@ Sunday, July 23rd, 2017 6:42:01am Started server at: Sunday, July 23rd, 2017
 Monday, July 31st, 2017 11:28:05am Started server at: Monday, July 31st, 2017
 Monday, July 31st, 2017 12:41:42pm Started server at: Monday, July 31st, 2017
 Wednesday, August 2nd, 2017 1:02:38pm Started server at: Wednesday, August 2nd, 2017
+Wednesday, September 6th, 2017 1:44:06pm Started server at: Wednesday, September 6th, 2017
+Friday, September 8th, 2017 8:29:54am Started server at: Friday, September 8th, 2017
+Saturday, September 9th, 2017 10:40:42am Started server at: Saturday, September 9th, 2017

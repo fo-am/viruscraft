@@ -98,10 +98,13 @@
   (renderer-modify-immediate-prims r ()))
 
 (define (renderer-grab-stack-push r id)
-  (renderer-modify-grab-stack
-   r (cons (scenegraph-find (renderer-scenegraph r) id)
-	   (renderer-grab-stack r))))
-
+  (let ((node (scenegraph-find (renderer-scenegraph r) id))) 
+    (if node
+	(renderer-modify-grab-stack
+	 r (cons node
+		 (renderer-grab-stack r)))
+	r)))
+    
 (define (renderer-grabbed? r)
   (> (length (renderer-grab-stack r)) 0))
 
@@ -109,7 +112,8 @@
   (renderer-modify-grab-stack r (cdr (renderer-grab-stack r))))
 
 (define (renderer-grab-stack-top r)
-  (if (null? (renderer-grab-stack r)) #f
+  (if (null? (renderer-grab-stack r))
+      #f
       (car (renderer-grab-stack r))))
 
 (define (renderer-render r t)
@@ -182,3 +186,5 @@
       (assemble-polyprim gl torus-vertices torus-normals torus-texcoords)
       ))))
 
+(define (renderer-print r)
+  (scenegraph-print (renderer-scenegraph r)))

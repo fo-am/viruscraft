@@ -1,0 +1,130 @@
+;; -*- mode: scheme; -*-
+;; Viruscraft Copyright (C) 2017 FoAM Kernow
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(load "scm/spherical.jscm")
+(load "scm/single-receptor.jscm")
+
+(define (build-disc pos size col)
+  (let ((p (with-state
+	    (shader vertex-disc fragment-disc)
+	    (colour (vector 1 1 1))
+	    (let ((pos (spherical->cartesian pos)))
+	      (translate pos)
+	      (maim (vnormalise pos) (vector 0 0 1))
+	      (build-locator)))))
+    (with-state
+     (shader vertex-disc fragment-disc)
+     (colour col)
+     (parent p)
+     (let ((size (* size 0.032)))
+       (scale (vector size size size)))
+     (load-primitive "models/disc3.obj"))))
+
+(define (make-circle2 host)
+  (list 
+   (host-id host)
+   (build-disc 
+    (vector (vx (host-location host)) 10 (vy (host-location host)))
+    (host-size host)
+    (vector 0 0 1))))
+
+(define (circle-id c) (list-ref c 0))
+(define (circle-disc c) (list-ref c 1))
+
+(define (circle-update! circle host)
+  (if (host-alive? host)
+      (with-primitive 
+       (circle-disc circle)
+       (identity)
+       (let ((size (* (host-size host) 0.032)))
+	 (scale (vector size size size)))   
+       (if (host-infected? host) 
+	   (colour (vector 1 0 0))
+	   (colour (vector 0 1 0))))
+      ;; remove the primitive as we have died
+      (destroy (circle-disc circle))))
+
+(define (circles-update circles host)
+  (cond
+   ((null? circles) 
+    (make-circle2 host))
+   ((eq? (circle-id (car circles)) (host-id host))
+    (circle-update! (car circles) host)
+    ;; no change
+    (car circles))
+   (else
+    (circles-update (cdr circles) host))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(clear-colour (vector 0.5 0.8 0.6))
+(set-camera-transform 
+ (mat4.translate
+  (mat4.rotateX (camera-transform) (* 0.5 Math.PI))
+  (vector 0 -10 0)))
+
+(define frame 1)
+
+(define virus (make-virus (list 'triangle 'circle 'square)))
+(define population (population-infect-one (make-random-population 50)))
+(define circles '())
+
+(define planet 
+  (with-state
+   (scale (vector 10 10 10))
+   (colour (vector 1 1 1))
+   (load-primitive "models/smooth-sphere.obj")))
+
+(define (render)
+  (when (zero? (modulo frame 1))
+	(set! population (population-update population virus))
+	(set! circles
+	      (foldl  
+	       (lambda (host r)
+		 (cons (circles-update circles host) r))
+	       '()
+	       population)))
+
+  (when (zero? (length population))
+	(set! population (population-infect-one (make-random-population 50))))
+
+  (when (zero? (population-num-infected population))
+	(set! population (population-infect-one population)))
+  
+;;  (set-camera-transform (mat4.rotateX (camera-transform) 0.01))
+  
+  (set! frame (+ frame 1))
+  )
+
+(every-frame (render))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; startup
+
+(define (read-number id)
+  (let ((w ($ (string-append "#" id))))
+    (parseFloat (js "w[0].value"))))
+
+(set! rebuild 
+      (lambda () 
+	(clear)
+	(set! insect-list (build-list 5 (lambda (i) (build-insect))))
+	(set! plant-list (plants-build-connections (build-list 30 (lambda (i) (build-plant i)))))))
+
+(set! update-params 
+      (lambda ()
+	(set! insect-sirs-model 
+	      (make-model
+	       (read-number "i-background")
+	       (read-number "i-infection")
+	       (read-number "i-recovery")
+	       (read-number "i-susceptability")))
+	(set! plant-sirs-model 
+	      (make-model
+	       (read-number "p-background")
+	       (read-number "p-infection")
+	       (read-number "p-recovery")
+	       (read-number "p-susceptability")))))
+
