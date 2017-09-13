@@ -6,45 +6,81 @@
 (load "scm/spherical.jscm")
 (load "scm/single-receptor.jscm")
 
-(define (build-disc pos size col)
-  (let ((p (with-state
-	    (shader vertex-disc fragment-disc)
-	    (colour (vector 1 1 1))
-	    (let ((pos (spherical->cartesian pos)))
-	      (translate pos)
-	      (maim (vnormalise pos) (vector 0 0 1))
-	      (build-locator)))))
-    (with-state
-     (shader vertex-disc fragment-disc)
-     (colour col)
-     (parent p)
-     (let ((size (* size 0.032)))
-       (scale (vector size size size)))
-     (load-primitive "models/disc3.obj"))))
+(define flag (load-primitive "models/flag.obj"))
+(with-primitive 
+ flag
+ (pdata-set! "t" 0 (vector 0 0 0))
+ (pdata-set! "t" 1 (vector 1 0 0))
+ (pdata-set! "t" 2 (vector 0 1 0))
+ (pdata-set! "t" 3 (vector 0 0 0))
+ (pdata-set! "t" 4 (vector 0 1 0))
+ (pdata-set! "t" 5 (vector 1 1 0))
+ (pdata-upload!))
+
+(define disc (load-primitive "models/disc3.obj"))
+(with-primitive 
+ disc
+ (pdata-map! (lambda (n) (vector 0 0 1)) "n")
+ (pdata-upload!))
+
+(define virus (with-state (translate (vector -10 0 0)) 
+			  (load-primitive "models/iso.obj")))
 
 (define (make-circle2 host)
-  (list 
-   (host-id host)
-   (build-disc 
-    (vector (vx (host-location host)) 10 (vy (host-location host)))
-    (host-size host)
-    (vector 0 0 1))))
+  (let ((locator (with-state
+		  (let ((pos (spherical->cartesian     
+			      (vector (vx (host-location host)) 10 
+				      (vy (host-location host))))))
+		    (translate pos)
+		    (maim (vnormalise pos) (vector 0 0 1))
+		    (build-locator)))))
+    (list 
+     (host-id host)
+     locator
+     ;; info flag
+     (with-state
+      (parent locator)
+      (colour (vector 1 1 1))
+      (scale (vector 0.3 0.3 0.3))
+      (translate (vector 2.5 0 0))
+      (rotate (vector 0 0 90))
+      (shader vertex-disc fragment-disc)
+      (texture (load-texture (+ "host-" (symbol->string (host-receptor host)) ".png")))
+      (build-instance flag))
+     ;; disc...
+     (with-state
+      (shader vertex-disc fragment-disc)
+      (parent locator)
+      (let ((size (* (host-size host) 0.032)))
+	(scale (vector size size size)))
+      (build-instance disc)))))
 
 (define (circle-id c) (list-ref c 0))
-(define (circle-disc c) (list-ref c 1))
+(define (circle-locator c) (list-ref c 1))
+(define (circle-flag c) (list-ref c 2))
+(define (circle-disc c) (list-ref c 3))
 
 (define (circle-update! circle host)
-  (if (host-alive? host)
-      (with-primitive 
-       (circle-disc circle)
-       (identity)
-       (let ((size (* (host-size host) 0.032)))
-	 (scale (vector size size size)))   
+  (cond 
+   ((host-alive? host)
+    (with-primitive 
+     (circle-flag circle)
        (if (host-infected? host) 
 	   (colour (vector 1 0 0))
 	   (colour (vector 0 1 0))))
-      ;; remove the primitive as we have died
-      (destroy (circle-disc circle))))
+    (with-primitive 
+     (circle-disc circle)
+     (identity)
+     (when (host-infected? host) 
+	   (translate (vector 0.1 0 0)))
+     (let ((size (* (host-size host) 0.032)))
+       (scale (vector size size size)))   
+     (if (host-infected? host) 
+	 (colour (vector 1 0 0))
+	 (colour (vector 0 1 0)))))
+   (else
+    ;; remove the primitive as we have died
+    (destroy (circle-locator circle)))))
 
 (define (circles-update circles host)
   (cond
@@ -57,44 +93,68 @@
    (else
     (circles-update (cdr circles) host))))
 
+(define (circles-destroy circles)
+  (for-each 
+   (lambda (circle)
+     (destroy (circle-locator circle)))
+   circles))
+
+(define (update-circles circles population)
+  (foldl  
+   (lambda (host r)
+     (cons (circles-update circles host) r))
+   '()
+   population))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(clear-colour (vector 0.5 0.8 0.6))
+(clear-colour (vector 0.5 0.8 1.0))
 (set-camera-transform 
- (mat4.translate
-  (mat4.rotateX (camera-transform) (* 0.5 Math.PI))
-  (vector 0 -10 0)))
+ (mat4.rotateX  
+  (mat4.translate (camera-transform) (vector 0 0 -7))
+  (* 0.5 Math.PI)))
 
 (define frame 1)
+(define infection-rate 10)
 
-(define virus (make-virus (list 'triangle 'circle 'square)))
-(define population (population-infect-one (make-random-population 50)))
+(define virus (make-virus (list 'circle 'triangle 'square)))
+(define population (population-infect (make-random-population 50) virus infection-rate))
 (define circles '())
 
 (define planet 
   (with-state
    (scale (vector 10 10 10))
-   (colour (vector 1 1 1))
+   (colour (vector 0.6 1 0.6))
    (load-primitive "models/smooth-sphere.obj")))
 
+(define score 0)
+
 (define (render)
+  (when (zero? (modulo frame 50))
+	(msg virus))
+
   (when (zero? (modulo frame 1))
 	(set! population (population-update population virus))
-	(set! circles
-	      (foldl  
-	       (lambda (host r)
-		 (cons (circles-update circles host) r))
-	       '()
-	       population)))
+	(set! circles (update-circles circles population)))
 
   (when (zero? (length population))
-	(set! population (population-infect-one (make-random-population 50))))
+	(when (> score 100)
+	      (alert (+ "The host is extinct! Your virus survived " score " million years")))
+	(set! score 0)
+	(set! population (population-infect (make-random-population 50) virus infection-rate)))
 
   (when (zero? (population-num-infected population))
-	(set! population (population-infect-one population)))
+	(when (> score 100)
+	      (alert (+ "Your virus is extinct! It survived " score " million years")))
+	(set! score 0)
+	(set! population (population-infect population virus infection-rate))
+	;(circles-destroy circles)
+	;(set! circles '())
+	;(set! circles (update-circles circles population))
+	)
   
-;;  (set-camera-transform (mat4.rotateX (camera-transform) 0.01))
-  
+  (set! score (+ score 1))
+;;  (set-camera-transform (mat4.rotateX (camera-transform) 0.01))  
   (set! frame (+ frame 1))
   )
 
@@ -107,24 +167,12 @@
   (let ((w ($ (string-append "#" id))))
     (parseFloat (js "w[0].value"))))
 
-(set! rebuild 
-      (lambda () 
-	(clear)
-	(set! insect-list (build-list 5 (lambda (i) (build-insect))))
-	(set! plant-list (plants-build-connections (build-list 30 (lambda (i) (build-plant i)))))))
-
 (set! update-params 
       (lambda ()
-	(set! insect-sirs-model 
-	      (make-model
-	       (read-number "i-background")
-	       (read-number "i-infection")
-	       (read-number "i-recovery")
-	       (read-number "i-susceptability")))
-	(set! plant-sirs-model 
-	      (make-model
-	       (read-number "p-background")
-	       (read-number "p-infection")
-	       (read-number "p-recovery")
-	       (read-number "p-susceptability")))))
+	(set! virus 
+	      (dbg (make-virus-freq
+		    (list (read-number "circle")
+			  (read-number "triangle")
+			  (read-number "square")
+			  (read-number "donut")))))))
 
