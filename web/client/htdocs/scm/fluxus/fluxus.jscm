@@ -80,6 +80,9 @@
 
     (mat4.multiply (renderer-current-tx the-renderer) aim-matrix)))
 
+(define (concat m)
+    (mat4.multiply (renderer-current-tx the-renderer) m))
+
 (define (get-transform)
   (renderer-current-tx the-renderer))
 

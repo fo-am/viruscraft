@@ -89,59 +89,31 @@
   (let ((a (* (rndf) 360)))
     (vector (* s (sin a)) (* s (cos a)) 0)))
 
-(define (quat x y z w) (list x y z w))
+;; steal quats from the gl library
 
-(define (qdot a b)
-  (+ (* (vx a) (vx b))
-     (* (vy a) (vy b))
-     (* (vz a) (vz b))
-     (* (vw a) (vw b))))
+(define (quat x y z w) (quat4.create (list x y z w)))
 
-(define (qadd a b)
-  (quat (+ (vx a) (vx b))
-	(+ (vy a) (vy b))
-	(+ (vz a) (vz b))
-	(+ (vw a) (vw b))))
+(define (qaxisangle axis angle)
+  (let ((angle (* angle 0.017453292)))
+    (let ((axis (vmul (vnormalise axis) (sin (/ angle 2)))))
+      (quat (vx axis) (vy axis) (vz axis) (cos (/ angle 2))))))
 
-(define (qsub a b)
-  (quat (- (vx a) (vx b))
-	(- (vy a) (vy b))
-	(- (vz a) (vz b))
-	(- (vw a) (vw b))))
+(define (qnormalise q)  (quat4.normalise q))
+(define (qmul a b) (quat4.multiply a b))
+(define (q->m q) (quat4.toMat4 q))
+(define (qslerp a b t) 
+  (let ((r (quat 0 0 0 0)))
+    (quat4.slerp a b t r)))
 
-(define (qmul a v)
-  (quat (* (vx a) v)
-	(* (vy a) v)
-	(* (vz a) v)
-	(* (vw a) v)))
+;; note - operations (and above) destructive but faster - todo: fix
 
-(define (qmulq a b)
-  (let ((x (vx a)) (y (vy a)) (z (vz a)) (w (vw a))
-	(xb (vx b)) (yb (vy b)) (zb (vz b)) (wb (vw b)))
-    (quat (- (+ (* w xb) (* x wb) (* y zb)) (* z yb))
-	  (- (+ (* w yb) (* y wb) (* z xb)) (* x zb))
-	  (- (+ (* w zb) (* z wb) (* x yb)) (* y xb))
-	  (- (+ (* w wb) (* x xb) (* y yb)) (* z zb)))))
+(define (midentity) (mat4.identity (mat4.create)))
+(define (minverse m) (mat4.inverse m))
+(define (mmul a b) (mat4.multiply a b))
+(define (mtransform m v) (mat4.multiplyVec3 m v))
+(define (mtranslate m v) (mat4.translate m v))
+(define (mscale m v) (mat4.scale m v))
+(define (mrotate m axis angle) (mat4.rotate m angle axis))
 
-(define (qrenorm a)
-  (let ((nq (/ 1 (+ (* (vx a) (vx b)) (* (vy a) (vy b)) (* (vz a) (vz b)) (* (vw a) (vw b)))))) 
-    (quat (* (vx a) nq)
-	  (* (vy a) nq)
-	  (* (vz a) nq)
-	  (* (vw a) nq))))
 
-;; (define (qtom44 q)
-;;   (let ((nq (+ (* (vx q) (vx q)) (* (vy q) (vy q)) (* (vz q) (vz q)) (* (vw q) (vw q)))))
-;;     (let ((s (if (> nq 0) (/ 2 nq) 0)))
-;;       (let ((xs (* (vx q) s))
-;; 	    (ys (* (vy q) s))
-;; 	    (zs (* (vz q) s)))
-;; 	(let ((wx = w*xs, wy = w*ys, wz = w*zs;
-;;   float xx = x*xs, xy = x*ys, xz = x*zs;
-;;   float yy = y*ys, yz = y*zs, zz = z*zs;
-;;   return 
-;;   dMatrix(1.0f - (yy + zz), xy - wz, xz + wy, 0,
-;; 			   xy + wz, 1.0f - (xx + zz), yz - wx, 0,
-;; 			   xz - wy, yz + wx, 1.0f - (xx + yy), 0, 
-;;                0, 0, 0, 1.0f);
-;; }
+

@@ -1488,7 +1488,7 @@ quat4.create = function(quat) {
 };
 
 /*
- * quat4.set
+ * quat.set
  * Copies the values of one quat4 to another
  *
  * Params:

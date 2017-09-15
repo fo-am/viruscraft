@@ -15,14 +15,16 @@
 	<div class="row">
 	  <h2><a href="/">Viruscraft prototype:</a> Playable Planet</h2>
 	  <div class="col-xs-12 col-sm-2">
-            <form id="params" action="." method="POST">
-	      <b>Virus Receptors</b><br>
-              <img src="textures/virus-circle.png" width="50%"><input type="number" id="circle" value="1"/><br>
-              <img src="textures/virus-triangle.png" width="50%"><input type="number" id="triangle" value="1"/><br>
-              <img src="textures/virus-square.png" width="50%"><input type="number" id="square" value="1"/><br>
-              <img src="textures/virus-donut.png" width="50%"><input type="number" id="donut" value="0"/><br>
-	    </form>
-	    <button onclick="update_params()">Update Virus</button></br>
+	    <b>Virus Builder</b><br>
+	    <button onclick="rotate_virus_left();"><<<</button>
+	    <button onclick="rotate_virus_right();">>>></button>
+            <button onclick="attach_virus_circle();"><img src="textures/virus-circle.png" width="50%"></button>
+            <button onclick="attach_virus_triangle();"><img src="textures/virus-triangle.png" width="50%"></button>
+            <button onclick="attach_virus_square();"><img src="textures/virus-square.png" width="50%"></button>
+            <button onclick="attach_virus_donut();"><img src="textures/virus-donut.png" width="50%"></button>
+            <button onclick="attach_virus_clear();">clear receptor</button>
+	    
+	  
 	    <a href="/">Back</a>
 	  </div>
 	  <div class="col-xs-12 col-sm-10">
