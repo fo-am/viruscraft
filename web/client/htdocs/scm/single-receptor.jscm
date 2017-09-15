@@ -25,7 +25,7 @@
 (define host-loc-lng-width (* Math.PI 0.5))
 
 (define new-species-likelihood 6)
-(define mutation-rate 15)
+(define mutation-rate 5)
 (define host-infection-factor 0.02)
 (define max-pop-size 50)
 
@@ -119,7 +119,7 @@
 	       (+ r (if (eq? key (host-receptor host)) 1 0)))
 	     0
 	     (virus-keys virus))
-	    10))) ;; over 10 receptors on the virus maxes out
+	    5))) ;; over 10 receptors on the virus maxes out
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; reproduction and death of host species

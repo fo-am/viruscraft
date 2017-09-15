@@ -9,9 +9,9 @@
 (define flag (load-primitive "models/flag.obj"))
 (with-primitive 
  flag
- (pdata-set! "t" 0 (vector 0 0 0))
- (pdata-set! "t" 1 (vector 1 0 0))
- (pdata-set! "t" 2 (vector 0 1 0))
+ (pdata-set! "t" 0 (vector 1 0 0))
+ (pdata-set! "t" 1 (vector 0 0 0))
+ (pdata-set! "t" 2 (vector 1 1 0))
  (pdata-set! "t" 3 (vector 0 0 0))
  (pdata-set! "t" 4 (vector 0 1 0))
  (pdata-set! "t" 5 (vector 1 1 0))
@@ -108,13 +108,13 @@
 (clear-colour (vector 0.5 0.8 1.0))
 (set-camera-transform 
  (mat4.rotateX  
-  (mat4.translate (camera-transform) (vector 0 0 -7))
+  (mat4.translate (camera-transform) (vector 5 0 -7))
   (* 0.5 Math.PI)))
 
 (define frame 1)
 (define infection-rate 10)
 
-(define virus (make-virus (list 'circle 'triangle 'square)))
+(define virus (make-virus (list)))
 (define population (population-infect (make-random-population 50) virus infection-rate))
 (define circles '())
 
@@ -125,6 +125,7 @@
    (load-primitive "models/smooth-sphere.obj")))
 
 (define score 0)
+(define hi-score 0)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; virus builder
@@ -155,11 +156,13 @@
 	(qaxisangle (vector (sin a) 0 (cos a)) 144))))))
   
 (define virus-builder (with-state 
-		       (translate (vector -15 0 0)) 
+		       (translate (vector -20 0 0)) 
 		       (scale (vector 3 3 3))
+		       (colour (vector 1 0 0))
 		       (load-primitive "models/ico.obj")))
 
 (define receptor-ids (build-list 20 (lambda (i) 0)))
+(define cur-receptor-types (build-list 20 (lambda (i) #f)))
 
 (define virus-q (car receptor-rotations))
 (define virus-t 0)
@@ -179,25 +182,70 @@
   (set! virus-dst (list-ref receptor-rotations virus-recep-id))
   (set! virus-t 0))
 
-(define (attach-virus-circle)
+(define (attach-virus instance type)
   (when (not (zero? (list-ref receptor-ids virus-recep-id)))
 	(destroy (list-ref receptor-ids virus-recep-id)))
+  (set! cur-receptor-types (list-replace cur-receptor-types virus-recep-id type))
   (set! receptor-ids
 	(list-replace 
 	 receptor-ids virus-recep-id
 	 (with-state
 	  (parent virus-builder)
 	  (concat (minverse (q->m (list-ref receptor-rotations virus-recep-id))))
-	  (translate (vector 0 1 0))
-	  (scale (vector 0.5 1 0.5))
+	  (translate (vector 0 0.8 0))
+	  (scale (vector 0.3 0.3 0.3))
 	  (colour (vector 1 0 0))
-	  (build-cube)))))
+	  (build-instance instance)))))
+
+(define receptor-circle (load-primitive "models/receptor-circle.obj"))
+(define receptor-triangle (load-primitive "models/receptor-triangle.obj"))
+(define receptor-square (load-primitive "models/receptor-square.obj"))
+(define receptor-donut (load-primitive "models/receptor-donut.obj"))
+
+(define (update-virus)
+  (set! virus (make-virus 
+	       (foldl 
+		(lambda (type r) 
+		  (if type (cons type r) r))
+		'()
+		cur-receptor-types))))
+
+(define (attach-virus-circle) (attach-virus receptor-circle 'circle) (update-virus))
+(define (attach-virus-triangle) (attach-virus receptor-triangle 'triangle) (update-virus))
+(define (attach-virus-square) (attach-virus receptor-square 'square) (update-virus))
+(define (attach-virus-donut) (attach-virus receptor-donut 'donut) (update-virus))
 
 (define (attach-virus-clear)
   (when (not (zero? (list-ref receptor-ids virus-recep-id)))
 	(destroy (list-ref receptor-ids virus-recep-id)))
   (set! receptor-ids
-	(list-replace receptor-ids virus-recep-id 0))) 
+	(list-replace receptor-ids virus-recep-id 0)) 
+  (set! cur-receptor-types
+	(list-replace cur-receptor-types virus-recep-id #f))
+  (update-virus))
+
+(define pointer (with-state
+		 (colour (vector 0 1 0))
+		 (rotate (vector -90 0 0))
+		 (translate (vector -17 6.5 0))
+		 (scale (vector 0.5 0.5 0.5))
+		 (load-primitive "models/pointer.obj")))
+
+(define virus-extinct-marker-t 0)
+(define virus-extinct-marker 
+  (with-state
+   (translate (vector -5 7 0))
+   (scale (vector 5 5 5))
+   (texture (load-texture "extinct.png"))
+   (build-instance flag)))
+
+(define host-extinct-marker-t 0)
+(define host-extinct-marker 
+  (with-state
+   (translate (vector -5 7 0))
+   (scale (vector 5 5 5))
+   (texture (load-texture "host-extinct.png"))
+   (build-instance flag)))
 
 (define (render)
   (when (zero? (modulo frame 1))
@@ -205,14 +253,14 @@
 	(set! circles (update-circles circles population)))
 
   (when (zero? (length population))
-;	(when (> score 100)
-;	      (alert (+ "The host is extinct! Your virus survived " score " million years")))
+	(when (> score 100)
+	      (set! host-extinct-marker-t 1))
 	(set! score 0)
 	(set! population (population-infect (make-random-population 50) virus infection-rate)))
 
   (when (zero? (population-num-infected population))
-;	(when (> score 100)
-;	      (alert (+ "Your virus is extinct! It survived " score " million years")))
+	(when (> score 100)
+	      (set! virus-extinct-marker-t 1))
 	(set! score 0)
 	(set! population (population-infect population virus infection-rate))
 	;(circles-destroy circles)
@@ -220,17 +268,48 @@
 	;(set! circles (update-circles circles population))
 	)
 
+  (with-primitive 
+   virus-extinct-marker 
+   (identity)
+   (if (> virus-extinct-marker-t 0)
+       (translate (vector -5 7 0))
+       (translate (vector -80 7 0)))
+   (scale (vector 5 5 5)))
+  (set! virus-extinct-marker-t (- virus-extinct-marker-t 0.01))
+
+  (with-primitive 
+   host-extinct-marker 
+   (identity)
+   (if (> host-extinct-marker-t 0)
+       (translate (vector -5 7 0))
+       (translate (vector -80 7 0)))
+   (scale (vector 5 5 5)))
+  (set! host-extinct-marker-t (- host-extinct-marker-t 0.01))
+
+
   (set! virus-q (qslerp virus-src virus-dst virus-t)) 
   (when (< virus-t 1) (set! virus-t (+ virus-t 0.05)))
 
   (with-primitive virus-builder
 		  (identity)
-		  (translate (vector -15 0 0)) 
+		  (translate (vector -17 0 0)) 
 		  (rotate (vector -80 0 -5))
 		  (scale (vector 3 3 3))
 		  (concat (q->m virus-q)))
+
+  (with-primitive pointer
+		  (translate 
+		   (vector 0 (* 0.1 (sin (* 3 (time)))) 0)))
+
+  (let ((el (document.getElementById "score")))
+    (set! el.innerHTML score))
+
+  (let ((el (document.getElementById "hi-score")))
+    (set! el.innerHTML hi-score))
   
   (set! score (+ score 1))
+  (when (> score hi-score) (set! hi-score score))
+
 ;;  (set-camera-transform (mat4.rotateX (camera-transform) 0.01))  
   (set! frame (+ frame 1))
   )
@@ -239,19 +318,4 @@
 
 (every-frame (render))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; startup
-
-(define (read-number id)
-  (let ((w ($ (string-append "#" id))))
-    (parseFloat (js "w[0].value"))))
-
-(set! update-params 
-      (lambda ()
-	(set! virus 
-	      (dbg (make-virus-freq
-		    (list (read-number "circle")
-			  (read-number "triangle")
-			  (read-number "square")
-			  (read-number "donut")))))))
 

@@ -112,6 +112,11 @@ void main() {
     vec3 l = normalize(L);
     vec3 n = normalize(N);
     float diffuse = dot(vec3(0,1,0),n);
+
+    if(texture2D(texture, vec2(T.s, T.t)).a != 1.0) {
+        discard;
+    }
+
     gl_FragColor = vec4(texture2D(texture, vec2(T.s, T.t)).xyz *
                             DiffuseColour*diffuse, 1.0);
 
