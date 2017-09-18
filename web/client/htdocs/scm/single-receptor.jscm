@@ -26,7 +26,7 @@
 
 (define new-species-likelihood 6)
 (define mutation-rate 5)
-(define host-infection-factor 0.02)
+(define host-infection-factor 0.04)
 (define max-pop-size 50)
 
 ;;;;;;;;;;;;;;;;;;;
