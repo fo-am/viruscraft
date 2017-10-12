@@ -6,7 +6,6 @@
 
 (define receptor-types (list 'circle 'triangle 'square 'donut))
 
-
 (define size-conv 0.003)
 
 ;; the host's spatial constants 
@@ -24,9 +23,11 @@
 (define host-loc-lng-start (* Math.PI 0.25))
 (define host-loc-lng-width (* Math.PI 0.5))
 
-(define new-species-likelihood 6)
+(define new-species-likelihood 3)
 (define mutation-rate 5)
-(define host-infection-factor 0.04)
+(define susceptibility-slope 2.5)
+(define susceptibility-max-receptors 20)
+;;(define susceptibility-prob-factor 0.2)
 (define max-pop-size 50)
 
 ;;;;;;;;;;;;;;;;;;;
@@ -110,17 +111,21 @@
 
 ;; returns the susceptibility of the host of infection to the supplied virus
 ;; susceptibility will range from 0..1 with 0 being completely immune
+;; pow give us a slope so that 1 is always 1 but we reduce the likelyhood
+;; with fewer receptors - not science
 (define (host-susceptibility host virus)
-  (min 1 (/ (foldl 
-	     (lambda (key r)
-	       ;; loop over the keys, counting the ones that match
-	       ;; we need to continously do this as the virus is being
-	       ;; mutated by the player
-	       (+ r (if (eq? key (host-receptor host)) 1 0)))
-	     0
-	     (virus-keys virus))
-	    5))) ;; over 10 receptors on the virus maxes out
-
+  (pow 
+   (/ (foldl 
+       (lambda (key r)
+	 ;; loop over the keys, counting the ones that match
+	 ;; we need to continously do this as the virus is being
+	 ;; mutated by the player
+	 (+ r (if (eq? key (host-receptor host)) 1 0)))
+       0
+       (virus-keys virus))
+      susceptibility-max-receptors)
+   susceptibility-slope))
+ 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; reproduction and death of host species
 
@@ -193,10 +198,11 @@
 (define (host-calculate-infection host susceptibility infection-present)
   (or (host-infected? host)
       (and infection-present
-           (< (rndf) (* susceptibility host-infection-factor)))))
+           (< (rndf) susceptibility))))
  
 (define (host-update host virus infection-present)
   (let ((susceptibility (host-susceptibility host virus)))
+    ;;(msg susceptibility)
     (make-host
      (host-id host)
      (host-receptor host) ;; doesn't change
@@ -211,7 +217,8 @@
     (make-host
      (host-id host)
      (host-receptor host) 
-     (host-calculate-infection host susceptibility #t)
+     (if (> susceptibility 0) #t #f)
+     ;;(host-calculate-infection host susceptibility #t)
      (host-location host)
      (host-size host)
      (host-age host))))

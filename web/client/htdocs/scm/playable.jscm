@@ -224,6 +224,12 @@
 	(list-replace cur-receptor-types virus-recep-id #f))
   (update-virus))
 
+(define (attach-virus-clear-all)
+  (for-each (lambda (receptor) (destroy receptor)) receptor-ids)
+  (set! receptor-ids '())
+  (set! cur-receptor-types (build-list 20 (lambda (i) #f)))
+  (update-virus))  
+
 (define pointer (with-state
 		 (colour (vector 0 1 0))
 		 (rotate (vector -90 0 0))
