@@ -21,8 +21,8 @@
 
 (define host-loc-lat-start (* Math.PI 0.25))
 (define host-loc-lat-width (* Math.PI 0.5))
-(define host-loc-lng-start (* Math.PI 0.25))
-(define host-loc-lng-width (* Math.PI 0.5))
+(define host-loc-lng-start (* Math.PI 0))
+(define host-loc-lng-width (* Math.PI 2))
 
 (define new-species-likelihood 3)
 (define mutation-rate 5)
@@ -116,8 +116,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; reproduction and death of host species
 
-
-;; returns an updated radius based on infection and within constraints
+;; returns an updated health based on infection and age constraints
 (define (host-calculate-health host susceptibility)
   (cond
    ;; old age

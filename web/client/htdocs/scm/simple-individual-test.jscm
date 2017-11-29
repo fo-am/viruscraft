@@ -17,66 +17,64 @@
  (pdata-set! "t" 5 (vector 1 1 0))
  (pdata-upload!))
 
-(define (make-circle2 host)
-  (let ((locator (with-state
-		  (let ((pos (spherical->cartesian     
-			      (vector (vx (host-location host)) 10 
-				      (vy (host-location host))))))
-		    (translate pos)
-		    (maim (vnormalise pos) (vector 0 0 1))
-		    (build-locator)))))
-    (list 
-     (host-id host)
-     locator
-     ;; info flag
-     (with-state
-      (parent locator)
-      (colour (vector 1 1 1))
-      (scale (vector 0.3 0.3 0.3))
-      (translate (vector 2.5 0 0))
-      (rotate (vector 0 0 90))
-      (shader vertex-disc fragment-disc)
-      (texture (load-texture (+ "host-" (symbol->string (host-receptor host)) ".png")))
-      (build-instance flag))
-     )))
+(define (make-organism root host)
+  (list 
+   (host-id host)
+   (with-state
+    (let ((pos (spherical->cartesian     
+		(vector (vx (host-location host)) 0.95
+			(vy (host-location host))))))
+      (translate pos)
+      (scale (vector 0.05 0.05 0.05))
+      (maim (vnormalise pos) (vector 0 0 1)))
+    (rotate (vector 0 0 -90))
+    (parent root)
+    
+    (colour (vector 1 1 1))
+    ;;(scale (vector 0.3 0.3 0.3))
+    ;;(translate (vector 2.5 0 0))
+    ;;(rotate (vector 0 0 90))
+    (shader vertex-disc fragment-disc)
+    (texture (load-texture (+ "host-" (symbol->string (host-receptor host)) ".png")))
+    (build-instance flag))
+   )))
 
-(define (circle-id c) (list-ref c 0))
-(define (circle-locator c) (list-ref c 1))
-(define (circle-flag c) (list-ref c 2))
+(define (organism-id c) (list-ref c 0))
+(define (organism-flag c) (list-ref c 1))
 
-(define (circle-update! circle host)
+(define (organism-update! organism host)
   (cond 
    ((host-alive? host)
     (with-primitive 
-     (circle-flag circle)
+     (organism-flag organism)
        (if (host-infected? host) 
 	   (colour (vector 1 0 0))
 	   (colour (vector 0 1 0)))))
    (else
     ;; remove the primitive as we have died
-    (destroy (circle-locator circle)))))
+    (destroy (organism-flag organism)))))
 
-(define (circles-update circles host)
+(define (organisms-update organisms host root)
   (cond
-   ((null? circles) 
-    (make-circle2 host))
-   ((eq? (circle-id (car circles)) (host-id host))
-    (circle-update! (car circles) host)
+   ((null? organisms) 
+    (make-organism root host))
+   ((eq? (organism-id (car organisms)) (host-id host))
+    (organism-update! (car organisms) host)
     ;; no change
-    (car circles))
+    (car organisms))
    (else
-    (circles-update (cdr circles) host))))
+    (organisms-update (cdr organisms) host root))))
 
-(define (circles-destroy circles)
+(define (organisms-destroy organisms)
   (for-each 
-   (lambda (circle)
-     (destroy (circle-locator circle)))
-   circles))
+   (lambda (organism)
+     (destroy (organism-flag organism)))
+   organisms))
 
-(define (update-circles circles population)
+(define (update-organisms organisms population root)
   (foldl  
    (lambda (host r)
-     (cons (circles-update circles host) r))
+     (cons (organisms-update organisms host root) r))
    '()
    population))
 
@@ -93,7 +91,7 @@
 
 (define virus (make-virus (list)))
 (define population (population-infect (make-random-population 50) virus infection-rate))
-(define circles '())
+(define organisms '())
 
 (define planet 
   (with-state
@@ -233,7 +231,7 @@
 (define (render)
   (when (zero? (modulo frame 1))
 	(set! population (population-update population virus))
-	(set! circles (update-circles circles population)))
+	(set! organisms (update-organisms organisms population planet)))
 
   (when (zero? (length population))
 	(when (> score 100)
@@ -246,9 +244,9 @@
 	      (set! virus-extinct-marker-t 1))
 	(set! score 0)
 	(set! population (population-infect population virus infection-rate))
-	;(circles-destroy circles)
-	;(set! circles '())
-	;(set! circles (update-circles circles population))
+	;(organisms-destroy organisms)
+	;(set! organisms '())
+	;(set! organisms (update-organisms organisms population))
 	)
 
   (with-primitive 
@@ -292,6 +290,8 @@
   
   (set! score (+ score 1))
   (when (> score hi-score) (set! hi-score score))
+
+  (with-primitive planet (rotate (vector 0 0 0.2)))
 
 ;;  (set-camera-transform (mat4.rotateX (camera-transform) 0.01))  
   (set! frame (+ frame 1))
