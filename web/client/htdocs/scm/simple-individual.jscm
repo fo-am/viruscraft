@@ -1,0 +1,301 @@
+;; -*- mode: scheme; -*-
+;; Viruscraft Copyright (C) 2017 FoAM Kernow
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+(define receptor-types (list 'circle 'triangle 'square 'donut))
+
+(define size-conv 0.003)
+
+;; the host's spatial constants 
+(define min-host-health 0)
+(define max-host-health 50)
+(define host-normal-growth 1) 
+(define host-infection-growth -0.1) ; not (* sus)
+(define host-health-start 10)
+(define host-decline-age 500)
+(define host-spawn-min-distance 0.05)
+(define spawn-dist 0.1)
+(define host-spawn-dist-tries 50)
+
+(define host-loc-lat-start (* Math.PI 0.25))
+(define host-loc-lat-width (* Math.PI 0.5))
+(define host-loc-lng-start (* Math.PI 0.25))
+(define host-loc-lng-width (* Math.PI 0.5))
+
+(define new-species-likelihood 3)
+(define mutation-rate 5)
+(define susceptibility-slope 2.5)
+(define susceptibility-max-receptors 20)
+;;(define susceptibility-prob-factor 0.2)
+(define max-pop-size 50)
+
+(define infection-distance 0.1)
+
+;;;;;;;;;;;;;;;;;;;
+;; minimal geometry
+
+
+(define (sq x) (* x x))
+(define (vec2-dist a b)
+  (sqrt (+ (sq (- (vx a) (vx b)))
+	   (sq (- (vy a) (vy b))))))
+
+(define two-pi (* 2 3.141))
+
+(define (random-point-nearby position)
+  (vector
+   (+ (vx position) (* spawn-dist (sin (* (rndf) two-pi))))
+   (+ (vy position) (* spawn-dist (cos (* (rndf) two-pi))))))
+
+;;;;;;;;;;;;;;;;;;;
+;; receptor types
+
+(define (pick-random-receptor-type)
+  (list-ref receptor-types (random (length receptor-types))))
+
+;;;;;;;;;;;;;;;;;;;
+;; virus
+;; our virus simply consists of a set of keys for receptors we lock on to
+
+(define (make-virus keys) (list keys))
+(define (virus-keys v) (list-ref v 0))
+
+(define (make-random-virus size)
+  (make-virus (build-list size (lambda (_) (pick-random-receptor-type)))))
+
+(define (make-virus-freq freq)
+  (let ((c -1))
+    (make-virus
+     (foldl
+      (lambda (f r)
+	(set! c (+ c 1))
+	(append (build-list f (lambda (_) (list-ref receptor-types c))) r))
+      '() freq))))
+  
+;;;;;;;;;;;;;;;;;;;
+;; host
+;; a host species, which may be susceptible to a virus
+
+(define current-host-id 0)
+(define (make-host-id) 
+  (set! current-host-id (+ current-host-id 1))
+  current-host-id)
+
+(define (make-host id receptor infected pos health age)
+  (list id receptor infected pos health age))
+
+(define (host-id h) (list-ref h 0))
+(define (host-receptor h) (list-ref h 1))
+(define (host-infected? h) (list-ref h 2))
+(define (host-location h) (list-ref h 3))
+(define (host-health h) (list-ref h 4))
+(define (host-age h) (list-ref h 5))
+
+;;;;;;;;;;;;;;;;;;;
+;; host model
+
+;; returns the susceptibility of the host of infection to the supplied virus
+;; susceptibility will range from 0..1 with 0 being completely immune
+;; pow give us a slope so that 1 is always 1 but we reduce the likelyhood
+;; with fewer receptors - not science
+(define (host-susceptibility host virus)
+  (pow 
+   (/ (foldl 
+       (lambda (key r)
+	 ;; loop over the keys, counting the ones that match
+	 ;; we need to continously do this as the virus is being
+	 ;; mutated by the player
+	 (+ r (if (eq? key (host-receptor host)) 1 0)))
+       0
+       (virus-keys virus))
+      susceptibility-max-receptors)
+   susceptibility-slope))
+ 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; reproduction and death of host species
+
+
+;; returns an updated radius based on infection and within constraints
+(define (host-calculate-health host susceptibility)
+  (cond
+   ;; old age
+   ((> (host-age host) host-decline-age) 
+    (max min-host-health (- (host-health host) host-normal-growth)))
+   ((host-infected? host) 
+    (max min-host-health (+ (host-health host) host-infection-growth))) ;; susceptibility
+   ((>= (host-health host) max-host-health) max-host-health)
+   (else (+ (host-health host) host-normal-growth))))
+
+(define (host-alive? host)
+  (> (host-health host) min-host-health))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; creating new species
+
+(define (host-can-branch-new-species? host)
+  (if (host-infected? host)
+      #f ;; infected hosts can't reproduce
+      (< (random 100) new-species-likelihood)))
+
+;; check if a point is within bounding box and 
+;; far enough away from other hosts
+(define (check-location location population threshold)
+  (if (and (> (vx location) host-loc-lat-start) 
+	   (< (vx location) (+ host-loc-lat-start host-loc-lat-width))
+	   (> (vy location) host-loc-lng-start) 
+	   (< (vy location) (+ host-loc-lng-start host-loc-lng-width)))
+      (foldl
+       (lambda (host r)
+	 (if (and r (> (vec2-dist (host-location host) location) 
+		       threshold))
+	     #t #f))
+       #t
+       population)
+      #f))
+
+;; find a space far enough away from other hosts, returns #f if 
+;; there are none present
+(define (find-free-location position population num-tries)
+  (let ((point (random-point-nearby position)))
+    (cond
+     ;; give up!!
+     ((< num-tries 1) (msg "spawn: over max tries") point)
+     ((check-location point population host-spawn-min-distance) point)
+     (else (find-free-location position population (- num-tries 1))))))
+
+;; returns a new, mutated host species
+(define (host-new-species host population)
+  (make-host
+   (make-host-id)
+   (if (< (random 100) mutation-rate)
+       (pick-random-receptor-type)
+       (host-receptor host))
+   #f ;; infected should always be false as infected
+      ;; species can't generate new species (at the moment)
+   ;; pick a new position on the edge of the parent species
+   (find-free-location (host-location host) population host-spawn-dist-tries)
+   host-health-start
+   0))
+
+;; calculate infection
+;; optimise by prechecking susceptibility before checking infection present
+(define (host-calculate-infection host susceptibility infection-present)
+  (or (host-infected? host)
+      (and infection-present
+           (< (rndf) susceptibility))))
+ 
+(define (host-update host virus infection-present)
+  (let ((susceptibility (host-susceptibility host virus)))
+    ;;(msg susceptibility)
+    (make-host
+     (host-id host)
+     (host-receptor host) ;; doesn't change
+     (host-calculate-infection host susceptibility infection-present)
+     (host-location host) ;; can't move
+     (host-calculate-health host susceptibility)
+     (+ (host-age host) 1))))
+
+;; background infection, only works if susceptible
+(define (host-infect host virus)
+  (let ((susceptibility (host-susceptibility host virus)))
+    (make-host
+     (host-id host)
+     (host-receptor host) 
+     (if (> susceptibility 0) #t #f)
+     ;;(host-calculate-infection host susceptibility #t)
+     (host-location host)
+     (host-health host)
+     (host-age host))))
+
+(define (make-random-host)
+  (make-host 
+   (make-host-id)
+   (pick-random-receptor-type)
+   #f
+   (vector (+ host-loc-lat-start (* (rndf) host-loc-lat-width))
+	   (+ host-loc-lng-start (* (rndf) host-loc-lng-width)))
+   (+ host-health-start (random (- max-host-health host-health-start)))
+   (random host-decline-age)))
+
+(define (make-grid-host i width)
+  (make-host 
+   (make-host-id)
+   (pick-random-receptor-type)
+   #f
+   (vector (* (quotient i 10) width) (* (modulo i 10) width))
+   host-health-start
+   (random host-decline-age)))
+
+(define (host-print host)
+  (when (host-infected? host) (display "X")(display " "))
+  (display (host-receptor host))(display " ")
+  (display (host-health host))(display " ")(display (host-location host))
+  (newline))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; main population
+
+(define (make-random-population size)
+  (build-list size (lambda (_) (make-random-host))))
+
+(define (make-grid-population size width)
+  (build-list size (lambda (i) (make-grid-host i width))))
+
+(define (population-collect-new-species population)
+  (foldl
+   (lambda (host r)
+     (if (host-can-branch-new-species? host)
+         (cons (host-new-species host population) r) r))
+   '()
+   population))
+
+(define (population-is-infection-present? host population)
+  (foldl
+   (lambda (other-host infection)
+     (if (and (not infection)
+              (host-infected? other-host)
+	      (< (vec2-dist (host-location host) (host-location other-host))
+		 infection-distance))
+	 #t infection))
+   #f
+   population))
+
+(define (population-update population virus)
+  (append
+   (if (< (length population) max-pop-size)
+       (population-collect-new-species population) ;; add new species
+       '())
+   (map
+    (lambda (host)
+      (host-update
+       host virus
+       (population-is-infection-present? host population))) ;; update species
+    (filter
+     host-alive? ;; remove dead host species
+     ;; do this before main update so we can detect dead ones 
+     ;; for the visualisation in order to remove them
+     population))))
+
+(define (population-print population)
+  (for-each
+   (lambda (host)
+     (host-print host))
+   population))
+
+(define (population-infect population virus infection-rate)
+  (map
+   (lambda (host)
+     (if (< (random 100) infection-rate)	 
+	 (host-infect host virus)
+	 host))
+   population))
+
+(define (population-num-infected population)
+  (foldl
+   (lambda (host r)
+     (if (host-infected? host) (+ r 1) r))
+   0
+   population))
+
