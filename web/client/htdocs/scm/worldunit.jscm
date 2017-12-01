@@ -1,0 +1,18 @@
+;; -*- mode: scheme; -*-
+;; Viruscraft Copyright (C) 2017 FoAM Kernow
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;(define unit-000 (load-primitive "models/world-unit-000.obj"))
+
+(define unit-000 (load-primitive "models/world-unit-000.obj")))
+(define unit-100 (load-primitive "models/world-unit-100.obj")))
+(define unit-110 (load-primitive "models/world-unit-110.obj")))
+(define unit-111 (load-primitive "models/world-unit-111.obj")))
+  
+
+;;(qslerp virus-src virus-dst virus-t))
+
+(every-frame (with-primitive unit-100 (rotate (vector 1 0 0))))
+
+

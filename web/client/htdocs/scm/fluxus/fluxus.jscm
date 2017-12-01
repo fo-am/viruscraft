@@ -180,6 +180,10 @@
 (define (hint-none) (clear-hints!))
 (define (hint-solid) (set-hint! FLX_HINT_SOLID))
 (define (hint-wire) (set-hint! FLX_HINT_WIRE))
+(define (hint-ignore-depth) (set-hint! FLX_HINT_IGNORE_DEPTH))
+(define (hint-nozwrite) (set-hint! FLX_HINT_NOZWRITE))
+(define (hint-cullface) (set-hint! FLX_HINT_CULL_FACE))
+(define (hint-cullccw) (set-hint! FLX_HINT_CULL_CCW))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; loading meshes
@@ -316,6 +320,9 @@
 	(console.log (+ "FPS: " (trunc current-fps)))
 	(set! last-stat (Date.now)))
   (window.requestAnimationFrame outer-render))
+
+(define (print-renderer-top)
+  (msg (renderer-stack-top the-renderer)))
 
 (define (clear)
   (let ((canvas (document.getElementById "webgl-canvas")))

@@ -92,10 +92,24 @@
 
 (define (scenegraph-render sn gl view-camera camera-pos tx)
   (when (not (zero? (scenenode-primitive sn)))
-	(primitive-render 
-	 (scenenode-primitive sn) gl view-camera camera-pos 
-	 (scenenode-state sn)
-	 tx))
+	(let ((hints (state-hints (scenenode-state sn))))
+	  ;; hints that affect all types of primitive
+	  (if (bitwise-and hints FLX_HINT_NOZWRITE)
+	      (gl.depthMask false)
+	      (gl.depthMask true))
+	  (if (bitwise-and hints FLX_HINT_CULL_FACE)
+	      (gl.enable gl.CULL_FACE)
+	      (gl.disable gl.CULL_FACE))
+	  (if (bitwise-and hints FLX_HINT_CULL_CCW) 
+	      (gl.frontFace gl.CW)
+	      (gl.frontFace gl.CCW))
+	  (if (bitwise-and hints FLX_HINT_IGNORE_DEPTH) 
+	      (gl.disable gl.DEPTH_TEST)
+	      (gl.enable gl.DEPTH_TEST))
+	  (primitive-render 
+	   (scenenode-primitive sn) gl view-camera camera-pos 
+	   (scenenode-state sn)
+	   tx)))
   ;;(msg (+ "len:" (length (scenenode-children sn))))
   (for-each 
    (lambda (child)

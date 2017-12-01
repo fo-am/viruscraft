@@ -130,6 +130,10 @@
     (gl.clear (js "gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT"))
     (mat4.perspective 45 (/ gl.viewportWidth gl.viewportHeight) 0.1 1000.0
 		      (renderer-view r))
+
+    (gl.enable gl.BLEND)
+    (gl.blendFunc gl.SRC_ALPHA gl.ONE_MINUS_SRC_ALPHA)
+
     ;; for scene inspection purposes...
     (mat4.multiply (renderer-view r) (renderer-camera r) (renderer-world-to-screen r))
     (mat4.multiply (renderer-view r) (renderer-camera r) view-camera)

@@ -10,30 +10,11 @@
     <script src="codemirror/codemirror.js"></script>
     <script src="codemirror/scheme/scheme.js"></script>
     
-    <body style="color:#594430; background:#000;">
+    <body>
       <div class="container">
 	<div class="row">
 	  <div class="col-xs-12 col-sm-12">
-	  <h2><a href="/">Viruscraft prototype:</a> Crafting a Virus</h2>
-	  A new virus crafting tool and a world that your virus can infect. Try to create a virus that lasts as long as possible...
-	  </div>
-	  <div class="col-xs-12 col-sm-2">
-	    <b>Virus Age (score)</b><br/>
-	    <span id="score" style="font-size:200%; background:#f00; color:#fff; padding:0.2em;">00</span><br/>
-	    Million years<br/>
-	    Best today: <span id="hi-score"style="background:#f00; color:#fff; padding:0.2em;">00</span><br/>
-	    <b>Virus Builder</b><br>
-	    <button onclick="rotate_virus_left();"><<<<</button>
-	    <button onclick="rotate_virus_right();">>>>></button>
-            <button onclick="attach_virus_circle();"><img src="textures/virus-circle.png" width="50%"></button>
-            <button onclick="attach_virus_triangle();"><img src="textures/virus-triangle.png" width="50%"></button>
-            <button onclick="attach_virus_square();"><img src="textures/virus-square.png" width="50%"></button>
-            <button onclick="attach_virus_donut();"><img src="textures/virus-donut.png" width="50%"></button>
-            <button onclick="attach_virus_clear();">clear receptor</button>
-            <button onclick="attach_virus_clear_all();">clear all</button></br>
-	    
-
-	    <a href="/">Back</a>
+	  <h2><a href="/">Viruscraft prototype:</a> World Units</h2>
 	  </div>
 	  <div class="col-xs-12 col-sm-10">
 	      <button id="show-code-button" onclick="show_code();">Edit code</button>
@@ -80,7 +61,7 @@
 
       $( document ).ready(function() {
           var xmlHttp = new XMLHttpRequest();
-          xmlHttp.open( "GET", "scm/simple-individual-test.jscm", false );
+          xmlHttp.open( "GET", "scm/worldunit.jscm", false );
           xmlHttp.overrideMimeType("script");
           xmlHttp.send( null );
           $('#code').html(xmlHttp.responseText);
@@ -89,7 +70,7 @@
              mode: "scheme"
           });
 
-          init(["scm/fluxus/fluxus.jscm","scm/simple-individual-test.jscm"]);    
+          init(["scm/fluxus/fluxus.jscm","scm/worldunit.jscm"]);    
       });
     </script>
 </body>

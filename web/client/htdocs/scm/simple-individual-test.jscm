@@ -7,6 +7,7 @@
 (load "scm/simple-individual.jscm")
 
 (define flag (load-primitive "models/flag.obj"))
+
 (with-primitive 
  flag
  (pdata-set! "t" 0 (vector 1 0 0))
@@ -24,18 +25,18 @@
     (let ((pos (spherical->cartesian     
 		(vector (vx (host-location host)) 0.95
 			(vy (host-location host))))))
+      ;;(scale (vector 0.5 0.5 0.5))
       (translate pos)
       (scale (vector 0.05 0.05 0.05))
       (maim (vnormalise pos) (vector 0 0 1)))
     (rotate (vector 0 0 -90))
     (parent root)
-    
     (colour (vector 1 1 1))
     ;;(scale (vector 0.3 0.3 0.3))
     ;;(translate (vector 2.5 0 0))
     ;;(rotate (vector 0 0 90))
-    (shader vertex-disc fragment-disc)
-    (texture (load-texture (+ "host-" (symbol->string (host-receptor host)) ".png")))
+    ;;    (shader vertex-disc fragment-disc)
+    (texture (load-texture (+ "host-" (symbol->string (host-receptor host)) "2.png")))
     (build-instance flag))
    )))
 
@@ -80,7 +81,8 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;;(clear-colour (vector 0.5 0.8 1.0 1.0))
+(clear-colour (vector 0.0 0.0 0.0 1.0))
+
 (set-camera-transform 
  (mat4.rotateX  
   (mat4.translate (camera-transform) (vector 5 0 -7))
@@ -93,11 +95,151 @@
 (define population (population-infect (make-random-population 50) virus infection-rate))
 (define organisms '())
 
+ (define vertex-planet
+  "
+precision mediump float;
+varying vec3 P;
+varying vec3 T;
+varying vec3 N;
+varying vec3 L;
+varying vec3 V;
+uniform mat4 ModelViewMatrix;
+uniform mat4 NormalMatrix;
+uniform vec3 CameraPos;
+attribute vec3 p;
+attribute vec3 t;
+attribute vec3 n;
+
+void main()
+{
+    P = p;
+    T = t;
+    L = vec3(6,12,-10)-p;
+    N = normalize(vec3(NormalMatrix*vec4(n,1.0))); 
+    gl_Position = ModelViewMatrix*vec4(p,1.0);
+    V = CameraPos-vec3(gl_Position); 
+}")
+
+(define fragment-planet
+  "
+precision mediump float;
+uniform sampler2D texture;
+uniform vec3 DiffuseColour;
+varying vec3 P;
+varying vec3 T;
+varying vec3 N;
+varying vec3 L;
+varying vec3 V;
+
+void main() {
+    vec3 l = normalize(L);
+    vec3 n = normalize(N);
+    vec3 v = normalize(V);
+    float diffuse = clamp(dot(n,l),0.0,1.0);
+    float specular = 0.0;
+    if (diffuse>0.0) {
+/*        specular = pow(max(0.0,dot(n,h)),16.0);  */
+        specular = max(0.0,pow(max(0.0, dot(reflect(-l, n), v)),16.0));
+    }
+    float height = length(P);
+    vec3 col = vec3(0.1,0.4,1.0);
+    if (height>1.0) {
+        specular=0.0;
+        col = vec3(0,0.5,0);
+        if (height>1.005) {
+            col = vec3(0.5,0.3,0.2);
+            if (height>1.02) {
+                col=vec3(1.0,1.0,1.0);
+            }
+        }
+    }    
+
+    gl_FragColor = vec4(texture2D(texture, vec2(T.s, T.t)).xyz *
+                        (col*diffuse)+specular,1.0);
+
+				
+}
+")
+
+ (define vertex-virus
+  "
+precision mediump float;
+varying vec3 P;
+varying vec3 T;
+varying vec3 N;
+varying vec3 L;
+varying vec3 V;
+uniform mat4 ModelViewMatrix;
+uniform mat4 NormalMatrix;
+uniform vec3 CameraPos;
+attribute vec3 p;
+attribute vec3 t;
+attribute vec3 n;
+
+void main()
+{
+    P = p;
+    T = t;
+    L = vec3(6,12,-10)-p;
+    N = normalize(vec3(NormalMatrix*vec4(n,1.0))); 
+    gl_Position = ModelViewMatrix*vec4(p,1.0);
+    V = CameraPos-vec3(gl_Position); 
+}")
+
+(define fragment-virus
+  "
+precision mediump float;
+uniform sampler2D texture;
+uniform vec3 DiffuseColour;
+varying vec3 P;
+varying vec3 T;
+varying vec3 N;
+varying vec3 L;
+varying vec3 V;
+
+void main() {
+    vec3 l = normalize(L);
+    vec3 n = normalize(N);
+    vec3 v = normalize(V);
+    float diffuse = clamp(dot(n,l),0.0,1.0);
+    float specular = 0.0;
+    if (diffuse>0.0) {
+        specular = max(0.0,pow(max(0.0, dot(reflect(-l, n), v)),6.0));
+    }
+    float height = length(P);
+    vec3 col = vec3(DiffuseColour);
+
+    gl_FragColor = vec4(texture2D(texture, vec2(T.s, T.t)).xyz *
+                        (col*diffuse)+specular,1.0);
+
+				
+}
+")
+
 (define planet 
   (with-state
+   (colour (vector 1 1 1))
+   (shader vertex-planet fragment-planet)
    (scale (vector 10 10 10))
-   (colour (vector 0.6 1 0.6))
-   (load-primitive "models/smooth-sphere.obj")))
+   (load-primitive "models/planet-test-reduced.obj")))
+
+(define cloud-shadow
+  (with-state
+   (rotate (vector 90 0 0))
+   (hint-nozwrite)
+   (texture (load-texture "cloud-shadow.png"))
+   (parent planet)
+   (scale (vector 1.05 1.05 1.05))
+   (load-primitive "models/smooth-sphere-tex.obj")))
+
+(define clouds
+  (with-state
+   (rotate (vector 90 0 0))
+   (hint-nozwrite)
+   (texture (load-texture "clouds.png"))
+   (parent planet)
+   (scale (vector 1.07 1.07 1.07))
+   (load-primitive "models/smooth-sphere-tex.obj")))
 
 (define score 0)
 (define hi-score 0)
@@ -131,6 +273,7 @@
 	(qaxisangle (vector (sin a) 0 (cos a)) 144))))))
   
 (define virus-builder (with-state 
+		       (shader vertex-virus fragment-virus)
 		       (translate (vector -20 0 0)) 
 		       (scale (vector 3 3 3))
 		       (colour (vector 1 0 0))
@@ -165,6 +308,7 @@
 	(list-replace 
 	 receptor-ids virus-recep-id
 	 (with-state
+	  (shader vertex-virus fragment-virus)
 	  (parent virus-builder)
 	  (concat (minverse (q->m (list-ref receptor-rotations virus-recep-id))))
 	  (translate (vector 0 0.8 0))
@@ -292,6 +436,8 @@
   (when (> score hi-score) (set! hi-score score))
 
   (with-primitive planet (rotate (vector 0 0 0.2)))
+  (with-primitive clouds (rotate (vector 0 0.1 0)))
+  (with-primitive cloud-shadow (rotate (vector 0 0.1 0)))
 
 ;;  (set-camera-transform (mat4.rotateX (camera-transform) 0.01))  
   (set! frame (+ frame 1))

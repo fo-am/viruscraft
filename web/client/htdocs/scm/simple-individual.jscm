@@ -29,7 +29,7 @@
 (define susceptibility-slope 2.5)
 (define susceptibility-max-receptors 20)
 ;;(define susceptibility-prob-factor 0.2)
-(define max-pop-size 50)
+(define max-pop-size 100)
 
 (define infection-distance 0.1)
 

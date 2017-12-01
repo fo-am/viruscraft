@@ -14,8 +14,27 @@
 ;; You should have received a copy of the GNU Affero General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-(define FLX_HINT_SOLID 0x1)
-(define FLX_HINT_WIRE 0x2)
+(define FLX_HINT_NONE           0x00000000)
+(define FLX_HINT_SOLID          0x00000001)
+(define FLX_HINT_WIRE           0x00000002)
+(define FLX_HINT_NORMAL         0x00000004)
+(define FLX_HINT_POINTS         0x00000008)
+(define FLX_HINT_AALIAS         0x00000010)
+(define FLX_HINT_BOUND          0x00000020)
+(define FLX_HINT_UNLIT          0x00000040)
+(define FLX_HINT_VERTCOLS       0x00000080)
+(define FLX_HINT_ORIGIN         0x00000100)
+(define FLX_HINT_CAST_SHADOW    0x00000200)
+(define FLX_HINT_IGNORE_DEPTH   0x00000400)
+(define FLX_HINT_DEPTH_SORT     0x00000800)
+(define FLX_HINT_LAZY_PARENT    0x00001000)
+(define FLX_HINT_CULL_FACE      0x00002000)
+(define FLX_HINT_CULL_CCW       0x00004000) ;; was something else
+(define FLX_HINT_SPHERE_MAP     0x00008000)
+(define FLX_HINT_FRUSTUM_CULL   0x00010000)
+(define FLX_HINT_NORMALISE      0x00020000)
+(define FLX_HINT_NOBLEND        0x00040000)
+(define FLX_HINT_NOZWRITE       0x00080000)
 
 (define (state gl)
   (let ((shader (build-shader gl vertex-shader fragment-shader)))
