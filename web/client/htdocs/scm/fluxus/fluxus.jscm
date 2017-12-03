@@ -225,7 +225,7 @@
 	      (state-parent (renderer-stack-top the-renderer)) ;; parent from state 
 	      (scenenode
 	       id 
-	       (renderer-stack-top the-renderer) ;; stack
+	       (state-clone (renderer-stack-top the-renderer)) ;; stack
 	       prim
 	       '() ;; children
 	       ))))
@@ -285,6 +285,16 @@
 	   (renderer-gl the-renderer) 
 	   (polyprim-pdata pp)
 	   name (modulo pos (polyprim-size pp)) value))))
+
+(define (pdata-ref name pos)
+  (when (renderer-grabbed? the-renderer)
+	 ;; todo: check type is polyprim
+	(let ((pp (primitive-inner
+		   (scenenode-primitive (renderer-grab-stack-top the-renderer)))))
+	  (pdata-internal-ref
+	   (renderer-gl the-renderer) 
+	   (polyprim-pdata pp)
+	   name (modulo pos (polyprim-size pp))))))
 
 ;; new command to upload the vbo from the modified data - use for 
 ;; pdata-set! (maybe pdata-map! in the future???)

@@ -91,6 +91,7 @@
     (vector (* s (sin a)) (* s (cos a)) 0)))
 
 ;; steal quats from the gl library
+(define rad-conv 0.017453292)
 
 (define (quat x y z w) (quat4.create (list x y z w)))
 
@@ -116,5 +117,34 @@
 (define (mscale m v) (mat4.scale m v))
 (define (mrotate m axis angle) (mat4.rotate m angle axis))
 
+
+(define (maim2 m v up)
+  (let ((l (vector 0 0 0))
+	(u (vector 0 0 0))
+        (aim-matrix (mat4.create)))
+    (vec3.cross v up l)
+    (vec3.cross v l u)
+
+    (js "aim_matrix[0]=vx(v);")
+    (js "aim_matrix[1]=vy(v);")
+    (js "aim_matrix[2]=vz(v);")
+    (js "aim_matrix[3]=0;")
+
+    (js "aim_matrix[4]=vx(l);")
+    (js "aim_matrix[5]=vy(l);")
+    (js "aim_matrix[6]=vz(l);")
+    (js "aim_matrix[7]=0;")
+
+    (js "aim_matrix[8]=vx(u);")
+    (js "aim_matrix[9]=vy(u);")
+    (js "aim_matrix[10]=vz(u);")
+    (js "aim_matrix[11]=0;")
+
+    (js "aim_matrix[12]=0;")
+    (js "aim_matrix[13]=0;")
+    (js "aim_matrix[14]=0;")
+    (js "aim_matrix[15]=1;")
+
+    (mat4.multiply m aim-matrix))
 
 

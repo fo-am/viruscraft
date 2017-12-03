@@ -87,23 +87,37 @@
 ;; (foldl (lambda (f v) (string-append v (face->dot f))) "" (list-ref connect 4))
 ;; (foldl (lambda (f v) (string-append v (face->dot f))) "" (list-ref connect 5))))
 
-(define values
-  (list
-   (build-list 5 (lambda (i) (random 2)))
-   (build-list 15 (lambda (i) (random 2)))
-   (build-list 20 (lambda (i) (random 2)))
-   (build-list 20 (lambda (i) (random 2)))
-   (build-list 15 (lambda (i) (random 2)))
-   (build-list 5 (lambda (i) (random 2)))))
-
 (define (find-face connect loc)
   (list-ref
    (list-ref connect (vec2-x loc))
    (vec2-y loc)))
 
+(define values
+  (list
+   (build-list 5 (lambda (i) (list (vec2 0 i) (random 2))))
+   (build-list 15 (lambda (i) (list (vec2 1 i) (random 2))))
+   (build-list 20 (lambda (i) (list (vec2 2 i) (random 2))))
+   (build-list 20 (lambda (i) (list (vec2 3 i) (random 2))))
+   (build-list 15 (lambda (i) (list (vec2 4 i) (random 2))))
+   (build-list 5 (lambda (i) (list (vec2 5 i) (random 2))))))
+
+(define (build-units connect values)
+  (map
+   (lambda (row)
+     (map
+      (lambda (value)
+        (let ((loc (car value))
+              (v (cadr value)))
+          (let ((face (find-face connect loc))) ;; connectivity face
+            (string-append
+             ;;(number->string v)
+             (number->string (cadr (find-face values (face-a face))))
+             (number->string (cadr (find-face values (face-b face))))
+             (number->string (cadr (find-face values (face-c face))))))))
+      row))
+   values))
 
 
 
-
-(find-face connect (vec2 2 3))
+(build-units connect values)
 

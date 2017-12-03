@@ -130,8 +130,6 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; virus builder
 
-(define rad-conv 0.017453292)
-
 (define receptor-rotations
   (append
    (build-list 

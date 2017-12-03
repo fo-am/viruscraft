@@ -70,6 +70,16 @@
       (js "pdata_interleaved_data(pdata)[offset+pos*stride+1]=value[1];")
       (js "pdata_interleaved_data(pdata)[offset+pos*stride+2]=value[2];"))))
 
+(define (pdata-internal-ref gl pdata name pos)
+  (let ((offset (cond ((eq? name "p") 0)
+		      ((eq? name "n") 3)
+		      (else 6)))) ;; hmm ok for now but FIX THIS... 
+    (let ((stride (* (length (pdata-types pdata)) 3))) 
+      (vector
+       (js "pdata_interleaved_data(pdata)[offset+pos*stride]")
+       (js "pdata_interleaved_data(pdata)[offset+pos*stride+1]")
+       (js "pdata_interleaved_data(pdata)[offset+pos*stride+2]")))))
+
 ;; stick em out here to avoid allocation all the time
 (define model-view (mat4.create))
 (define local (mat4.create))

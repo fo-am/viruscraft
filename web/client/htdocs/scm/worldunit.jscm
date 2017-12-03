@@ -3,16 +3,107 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(load "scm/pentakis-dodecahedron.jscm")
+
 ;(define unit-000 (load-primitive "models/world-unit-000.obj"))
 
 (define unit-000 (load-primitive "models/world-unit-000.obj")))
 (define unit-100 (load-primitive "models/world-unit-100.obj")))
 (define unit-110 (load-primitive "models/world-unit-110.obj")))
-(define unit-111 (load-primitive "models/world-unit-111.obj")))
+(define unit-111 (load-primitive "models/world-unit-111b.obj")))
+
+(define values (pentakis-build-values 50))
+(define units (pentakis-build-units values))
+
+(define pentakis 
+  (with-state
+   (hint-none)
+   (hint-wire)
+   (scale (vector 8 8 8))
+   (load-primitive "models/pentakis2.obj")))
+
+(define (longest a b c)
+  (if (> (vmag a) (vmag b)) 
+      (if (> (vmag a) (vmag c)) a c)
+      (if (> (vmag b) (vmag c)) b c)))
+
+(define (shortest a b c)
+  (if (< (vmag a) (vmag b)) 
+      (if (< (vmag a) (vmag c)) a c)
+      (if (< (vmag b) (vmag c)) b c)))
+
+(define (get-face-transforms face-num)
+  (let ((centre 
+	 (vdiv 
+	  (vadd
+	   (vadd 
+	    (pdata-ref "p" (* face-num 3)) 
+	    (pdata-ref "p" (+ (* face-num 3) 1)))
+	   (pdata-ref "p" (+ (* face-num 3) 2))) 3)))
+    (msg (+ "--------" face-num))
+    (msg (vmag (vsub (pdata-ref "p" (* face-num 3))
+		     (pdata-ref "p" (+ (* face-num 3) 1)))))
+    (msg (vmag (vsub (pdata-ref "p" (* face-num 3))
+		     (pdata-ref "p" (+ (* face-num 3) 2)))))
+    (msg (vmag (vsub (pdata-ref "p" (+ (* face-num 3) 1))
+		     (pdata-ref "p" (+ (* face-num 3) 2)))))
+    
+    (let ((a1 (vsub centre (pdata-ref "p" (* face-num 3))))
+	  (a2 (vsub centre (pdata-ref "p" (+ (* face-num 3) 1))))
+	  (a3 (vsub centre (pdata-ref "p" (+ (* face-num 3) 2))))
+	  (x1 (vsub (pdata-ref "p" (* face-num 3))
+		    (pdata-ref "p" (+ (* face-num 3) 1))))
+	  (x2 (vsub (pdata-ref "p" (* face-num 3))
+		    (pdata-ref "p" (+ (* face-num 3) 2))))
+	  (x3 (vsub (pdata-ref "p" (+ (* face-num 3) 1))
+		    (pdata-ref "p" (+ (* face-num 3) 2)))))
+      
+      (let ((a (longest a1 a2 a3))
+	    (b (shortest a1 a2 a3)))
+	
+	(list
+	 (mtranslate (midentity) centre)
+	 (maim2 (midentity) a (vcross a1 a2)))))))
+
+;;(define unit-transforms (with-primitive pentakis (get-face-transforms 80)))
   
+(define root (build-locator))
 
-;;(qslerp virus-src virus-dst virus-t))
+     ;;(when (list-contains? (list 5 8 11 14) i)
 
-(every-frame (with-primitive unit-100 (rotate (vector 1 0 0))))
+(define face-ids (build-list 80 (lambda (i) i)))
+;;(( 21 24 27) i)  6 bad
+(with-state
+  (parent root)
+  (scale (vector 8 8 8))
+  (index-for-each
+   (lambda (i face-id)
+     (when (list-contains? (list 54 6) i) 
+	   (let ((tx (with-primitive pentakis (get-face-transforms face-id))))
+	     (let ((trans-tx (car tx))
+		   (rot-tx (cadr tx)))
+	       (with-state
+		(concat trans-tx)
+		(concat rot-tx)
+
+		(rotate (vector 90 0 0))
+		(scale (vector 1 -30 9))
+		(rotate (vector 0 -30 0))
+
+		;;(scale (vector 0.5 2.2 2.2))
+		;;(rotate (vector -90 180 0))
+		;;(rotate (vector 0 -30 0))
+					; (build-cube)
+		(build-instance unit-000))))
+	   ))
+   face-ids))
+
+
+
+;(every-frame 
+; (begin
+;   (with-primitive root (rotate (vector 0.1 0.2 0.4)))
+;   (with-primitive pentakis (rotate (vector 0.1 0.2 0.4)))))
+
 
 
