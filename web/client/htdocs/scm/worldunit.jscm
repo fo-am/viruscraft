@@ -7,19 +7,26 @@
 
 ;(define unit-000 (load-primitive "models/world-unit-000.obj"))
 
-(define unit-000 (load-primitive "models/world-unit-000.obj")))
-(define unit-100 (load-primitive "models/world-unit-100.obj")))
-(define unit-110 (load-primitive "models/world-unit-110.obj")))
-(define unit-111 (load-primitive "models/world-unit-111b.obj")))
+(define unit-models (list (load-primitive "models/world-unit-000.obj")
+			  (load-primitive "models/world-unit-100.obj")
+			  (load-primitive "models/world-unit-110.obj")
+			  (load-primitive "models/world-unit-111b.obj")))
+
+(with-primitive (cadr unit-models)
+		(translate (vector -10 0 0))
+		(rotate (vector 45 45 0))
+		(scale (vector 3 3 3)))
+
+(define (choose l) (list-ref l 3)) ;;(random (length l))))
 
 (define values (pentakis-build-values 50))
 (define units (pentakis-build-units values))
 
 (define pentakis 
   (with-state
-   (hint-none)
-   (hint-wire)
-   (scale (vector 8 8 8))
+;   (hint-none)
+;   (hint-wire)
+   (scale (vector 6.9 6.9 6.9))
    (load-primitive "models/pentakis2.obj")))
 
 (define (longest a b c)
@@ -48,15 +55,15 @@
        ((eq? (longest x1 x2 x3) 2)	  
 	(list
 	 (mtranslate (midentity) centre)
-	 (maim2 (midentity) x3 (vcross x1 x2))))
+	 (maim2 (midentity) x3 (vcross x2 x1))))
        ((eq? (longest x1 x2 x3) 1)	  
 	(list
 	 (mtranslate (midentity) centre)
-	 (maim2 (midentity) (vneg x2) (vcross x1 x3))))
+	 (maim2 (midentity) (vneg x2) (vcross x3 x1))))
        (else
 	(list
 	 (mtranslate (midentity) centre)
-	 (maim2 (midentity) x1 (vcross x2 x3)))))))))
+	 (maim2 (midentity) x1 (vcross x3 x2)))))))))
 
 ;;(define unit-transforms (with-primitive pentakis (get-face-transforms 80)))
   
@@ -65,32 +72,34 @@
      ;;(when (list-contains? (list 5 8 11 14) i)
 
 (define face-ids (build-list 80 (lambda (i) i)))
-;;(( 21 24 27) i)  6 bad
+
 (with-state
-  (parent root)
-  (scale (vector 8 8 8))
-  (index-for-each
-   (lambda (i face-id)
-;     (when (list-contains? (list 54 6 55) i) 
-	   (let ((tx (with-primitive pentakis (get-face-transforms face-id))))
+ (parent root)
+ (scale (vector 7 7 7))
+ (index-for-each
+  (lambda (i face-id)
+    (let ((tx (with-primitive pentakis (get-face-transforms face-id))))
 	     (let ((trans-tx (car tx))
 		   (rot-tx (cadr tx)))
 	       (with-state
 		(concat trans-tx)
 		(concat rot-tx)
-		(rotate (vector 90 0 0))
+		(rotate (vector -90 0 0))
 		(scale (vector 0.58 -3 1.75))
-		(build-instance unit-111))))
-;	   )
-   )
-   face-ids))
+		(let ((sc (vmag (mtransform (get-transform) (vector 0 1 0)))))
+		  (msg sc)
+		  (scale (vector 1 (* 10 (/ 1 sc)) 1)))
+		(build-instance (choose unit-models))))))
+  face-ids))
 
 
 
 (every-frame 
  (begin
    (with-primitive root (rotate (vector 0.1 0.2 0.4)))
-   (with-primitive pentakis (rotate (vector 0.1 0.2 0.4)))))
+   (with-primitive pentakis (rotate (vector 0.1 0.2 0.4)))
+   (with-primitive (cadr unit-models)
+		   (rotate (vector 0.1 0.2 0.4)))))
 
 
 
