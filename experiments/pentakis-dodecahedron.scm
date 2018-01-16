@@ -87,6 +87,8 @@
 ;; (foldl (lambda (f v) (string-append v (face->dot f))) "" (list-ref connect 4))
 ;; (foldl (lambda (f v) (string-append v (face->dot f))) "" (list-ref connect 5))))
 
+connect
+
 (define (find-face connect loc)
   (list-ref
    (list-ref connect (vec2-x loc))

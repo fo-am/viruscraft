@@ -156,7 +156,7 @@
       (scenegraph-render (renderer-scenegraph r) gl view-camera camera-pos ident))
     (renderer-immediate-clear r)))
 
-(define (interleave-pdata a b c)
+(define (interleave-pdata a b c d)
   (js "var ret=[];")
   (js "for (var i=0; i<a.length; i+=3) {") 
   (js "ret.push(a[i]);")
@@ -168,6 +168,9 @@
   (js "ret.push(c[i]);")
   (js "ret.push(c[i+1]);")
   (js "ret.push(c[i+2]);")
+  (js "ret.push(d[i]);")
+  (js "ret.push(d[i+1]);")
+  (js "ret.push(d[i+2]);")
   (js "}")
   ret)
 
@@ -176,8 +179,8 @@
    'polyprim
    (build-polyprim
     gl
-    (make-pdata (list "p" "n" "t") (/ (length vertices) 3)
-		(interleave-pdata vertices normals texcoords))
+    (make-pdata (list "p" "n" "t" "c") (/ (length vertices) 3)
+		(interleave-pdata vertices normals texcoords (build-list (length vertices) (lambda (_) (vector 1 1 1)))))
     )))
 
 (define (renderer-build-prefab r)

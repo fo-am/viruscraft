@@ -49,6 +49,11 @@
 	    (set! shader-program.vertexTextureAttribute
 		  (gl.getAttribLocation shader-program "t"))
 	    (gl.enableVertexAttribArray shader-program.vertexTextureAttribute))
+
+      (when (not (eq? (gl.getAttribLocation shader-program "c") -1))
+	    (set! shader-program.vertexColorAttribute
+		  (gl.getAttribLocation shader-program "c"))
+	    (gl.enableVertexAttribArray shader-program.vertexColorAttribute))
       
       (when (gl.getUniformLocation shader-program "ModelViewMatrix")
 	    (set! shader-program.ModelViewMatrixUniform

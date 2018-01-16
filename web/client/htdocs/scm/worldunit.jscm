@@ -5,29 +5,39 @@
 
 (load "scm/pentakis-dodecahedron.jscm")
 
-;(define unit-000 (load-primitive "models/world-unit-000.obj"))
+(define unit-models 
+  (with-state (translate (vector 1000 0 0)) 
+	      (list (load-ply-primitive "models/world-unit-mod-000.ply")
+		    (load-ply-primitive "models/world-unit-mod-001.ply")
+		    (load-ply-primitive "models/world-unit-mod-010.ply")
+		    (load-ply-primitive "models/world-unit-mod-011.ply")
+		    (load-ply-primitive "models/world-unit-mod-100.ply")
+		    (load-ply-primitive "models/world-unit-mod-101.ply")
+		    (load-ply-primitive "models/world-unit-mod-110.ply")
+		    (load-ply-primitive "models/world-unit-mod-111.ply"))))
 
-(define unit-models (list (load-primitive "models/world-unit-000.obj")
-			  (load-primitive "models/world-unit-100.obj")
-			  (load-primitive "models/world-unit-110.obj")
-			  (load-primitive "models/world-unit-111b.obj")))
+(define (unit->model unit models)
+  (list-ref
+   models
+   (cond
+    ((eq? unit "000") 0)
+    ((eq? unit "010") 1)
+    ((eq? unit "001") 2)
+    ((eq? unit "011") 3)
+    ((eq? unit "100") 4)
+    ((eq? unit "110") 5)
+    ((eq? unit "101") 6)
+    (else 7))))
 
-(with-primitive (cadr unit-models)
-		(translate (vector -10 0 0))
-		(rotate (vector 45 45 0))
-		(scale (vector 3 3 3)))
-
-(define (choose l) (list-ref l 3)) ;;(random (length l))))
-
-(define values (pentakis-build-values 50))
-(define units (pentakis-build-units values))
+(define (choose l) (list-ref l (random (length l))))
 
 (define pentakis 
   (with-state
-;   (hint-none)
-;   (hint-wire)
+   (hint-none)
+   (hint-wire)
    (scale (vector 6.9 6.9 6.9))
-   (load-primitive "models/pentakis2.obj")))
+   (translate (vector 1000 0 0))
+   (load-ply-primitive "models/pentakis-rings.ply")))
 
 (define (longest a b c)
   (if (> (vmag a) (vmag b)) 
@@ -41,65 +51,70 @@
 	   (vadd 
 	    (pdata-ref "p" (* face-num 3)) 
 	    (pdata-ref "p" (+ (* face-num 3) 1)))
-	   (pdata-ref "p" (+ (* face-num 3) 2))) 3)))
-    
+	   (pdata-ref "p" (+ (* face-num 3) 2))) 3)))    
     (let ((x1 (vsub (pdata-ref "p" (* face-num 3))
 		    (pdata-ref "p" (+ (* face-num 3) 1))))
 	  (x2 (vsub (pdata-ref "p" (* face-num 3))
 		    (pdata-ref "p" (+ (* face-num 3) 2))))
 	  (x3 (vsub (pdata-ref "p" (+ (* face-num 3) 1))
 		    (pdata-ref "p" (+ (* face-num 3) 2)))))      
+      (let ((tx (mtranslate (midentity) centre)))
+	(cond 
+	 ((eq? (longest x1 x2 x3) 2) (list 0 (maim2 tx x3 (vcross x2 x1))))
+	 ((eq? (longest x1 x2 x3) 1) (list 1 (maim2 tx (vneg x2) (vcross x3 x1))))
+	 (else (list 2 (maim2 tx x1 (vcross x3 x2)))))))))
 
-      ;; x3 should be the longest (or equal)
-      (cond 
-       ((eq? (longest x1 x2 x3) 2)	  
-	(list
-	 (mtranslate (midentity) centre)
-	 (maim2 (midentity) x3 (vcross x2 x1))))
-       ((eq? (longest x1 x2 x3) 1)	  
-	(list
-	 (mtranslate (midentity) centre)
-	 (maim2 (midentity) (vneg x2) (vcross x3 x1))))
-       (else
-	(list
-	 (mtranslate (midentity) centre)
-	 (maim2 (midentity) x1 (vcross x3 x2)))))))))
-
-;;(define unit-transforms (with-primitive pentakis (get-face-transforms 80)))
   
 (define root (build-locator))
-
-     ;;(when (list-contains? (list 5 8 11 14) i)
-
 (define face-ids (build-list 80 (lambda (i) i)))
 
-(with-state
- (parent root)
- (scale (vector 7 7 7))
- (index-for-each
-  (lambda (i face-id)
-    (let ((tx (with-primitive pentakis (get-face-transforms face-id))))
-	     (let ((trans-tx (car tx))
-		   (rot-tx (cadr tx)))
-	       (with-state
-		(concat trans-tx)
-		(concat rot-tx)
-		(rotate (vector -90 0 0))
-		(scale (vector 0.58 -3 1.75))
-		(let ((sc (vmag (mtransform (get-transform) (vector 0 1 0)))))
-		  (msg sc)
-		  (scale (vector 1 (* 10 (/ 1 sc)) 1)))
-		(build-instance (choose unit-models))))))
-  face-ids))
+(define (build units)
+  (with-state
+   (parent root)
+   (scale (vector 7 7 7))
+   (index-for-each
+    (lambda (i face-id)
+      (let ((tx (with-primitive pentakis (get-face-transforms face-id)))
+	    (loc (face-id->loc pent-ori face-id)))
+	(let ((ori (cadr (find-face pent-ori loc)))
+	      (unit (find-face units loc)))
+	  (with-state	      
+	   (concat (cadr tx))
+	   (rotate (vector -90 0 0))
+	   (scale (vector 0.58 -1 1.75))
+	   (let ((sc (vmag (mtransform (get-transform) (vector 0 1 0)))))
+	     (scale (vector 1 (* 20 (/ 1 sc)) 1)))
+	   
+	   (cond 
+	    ((eq? (car tx) 0) (rotate (vector 0 120 0)))
+	    ((eq? (car tx) 1) (rotate (vector 0 -120 0)))
+	    (else (rotate (vector 0 0 0))))
+	   
+	   (when (eq? ori 4) 
+		 (rotate (vector 0 120 0))
+		 (scale (vector -1 1 1)))
+	   
+	   (when (eq? ori 0) 
+		 (rotate (vector 0 -120 0))
+		 (scale (vector -1 1 1)))
+	   
+	   (rotate (vector -90 0 0))
+	   (when (not (eq? unit "000"))
+		 (msg "-----")
+		 (msg loc)
+		 (msg unit)
+		 (msg ori))
+	   (build-instance (unit->model unit unit-models))))))
+    face-ids)))
 
+(define values (pentakis-build-values 20))
+(define units (pentakis-build-units values))
 
+(begin 
+  (build units)
+  ;;(msg (car units))
+  (with-primitive root (rotate (vector -45 180 0))))
 
 (every-frame 
- (begin
-   (with-primitive root (rotate (vector 0.1 0.2 0.4)))
-   (with-primitive pentakis (rotate (vector 0.1 0.2 0.4)))
-   (with-primitive (cadr unit-models)
-		   (rotate (vector 0.1 0.2 0.4)))))
-
-
+ (with-primitive root (rotate (vector 0.1 0.2 0.4))))
 

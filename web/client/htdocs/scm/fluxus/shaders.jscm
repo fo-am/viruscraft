@@ -80,6 +80,7 @@ void main()
 precision mediump float;
 varying vec3 P;
 varying vec3 T;
+varying vec3 C;
 varying vec3 N;
 varying vec3 L;
 uniform mat4 ModelViewMatrix;
@@ -88,11 +89,13 @@ uniform vec3 CameraPos;
 attribute vec3 p;
 attribute vec3 t;
 attribute vec3 n;
+attribute vec3 c;
 
 void main()
 {
     P = p.xyz;
     T = t;
+    C = c;
     L = vec3(0,0,1); /* vec3(ModelViewMatrix*vec4((vec3(0,10,0)-p),1)); */
     N = normalize(vec3(NormalMatrix*vec4(n,1)));	
     gl_Position = ModelViewMatrix * vec4(p,1);
@@ -105,20 +108,21 @@ uniform sampler2D texture;
 uniform vec3 DiffuseColour;
 varying vec3 P;
 varying vec3 T;
+varying vec3 C;
 varying vec3 N;
 varying vec3 L;
 
 void main() {
     vec3 l = normalize(L);
     vec3 n = normalize(N);
-    float diffuse = dot(vec3(0,0,-1),n);
+    float diffuse = dot(vec3(0,0,1),n);
 
     if(texture2D(texture, vec2(T.s, T.t)).a == 0.0) {
         discard;
     }
 
     gl_FragColor = vec4(texture2D(texture, vec2(T.s, T.t)).xyz *
-                            DiffuseColour*diffuse, 
+                            DiffuseColour*C*diffuse, 
                         texture2D(texture, vec2(T.s, T.t)).a);
 }
 ")

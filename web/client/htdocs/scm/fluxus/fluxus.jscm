@@ -196,6 +196,14 @@
       'polyprim
       (build-polyprim gl raw)))))
 
+(define (load-ply-primitive url)
+  (let ((gl (renderer-gl the-renderer))
+	(raw (LoadPLY url)))
+    (add-to-scenegraph!     
+     (primitive
+      'polyprim
+      (build-polyprim gl raw)))))
+
 ;; (list
 ;; 	(buffer gl "p" (list-ref raw 0) 3)
 ;; 	(buffer gl "n" (list-ref raw 1) 3)
@@ -275,6 +283,14 @@
 	  (primitive-inner
 	   (scenenode-primitive (renderer-grab-stack-top the-renderer))))
 	 fn name)))
+
+(define (pdata-size)
+  (when (renderer-grabbed? the-renderer)
+	;; todo: check type is polyprim
+	(let ((pp (primitive-inner
+		   (scenenode-primitive (renderer-grab-stack-top the-renderer)))))
+	  (pdata-size-verts  
+	   (polyprim-pdata pp)))))
 
 (define (pdata-set! name pos value)
   (when (renderer-grabbed? the-renderer)

@@ -57,6 +57,9 @@ function inner_load_obj(string) {
 		    Array.prototype.push.apply(
 			verts, tex[parseInt(f1[1]) - 1]);
 		}
+		// colours
+		Array.prototype.push.apply(
+		    verts, positions[parseInt(f1[0]) - 1]);
 
 		Array.prototype.push.apply(
                     verts, positions[parseInt(f2[0]) - 1]);
@@ -69,6 +72,9 @@ function inner_load_obj(string) {
 		    Array.prototype.push.apply(
 			verts, tex[parseInt(f2[1]) - 1]);
 		}
+		// colours
+		Array.prototype.push.apply(
+		    verts, positions[parseInt(f2[0]) - 1]);
 
 		Array.prototype.push.apply(
                     verts, positions[parseInt(f3[0]) - 1]);
@@ -81,11 +87,14 @@ function inner_load_obj(string) {
 		    Array.prototype.push.apply(
 			verts, tex[parseInt(f3[1]) - 1]);
 		}
+		// colours
+		Array.prototype.push.apply(
+		    verts, positions[parseInt(f3[0]) - 1]);
             }
             }
         }
     }
     // returns fluxus vbo object (see vbo.jscm)
-    return [["p","n","t"], (verts.length/3)/3, verts, 0];
+    return [["p","n","t","c"], (verts.length/3)/4, verts, 0];
 }
 

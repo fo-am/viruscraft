@@ -51,10 +51,15 @@
   (js "};")
   interleaved)
 
+(define (pdata-offset name)
+  ;; hmm ok for now but FIX THIS...
+  (cond ((eq? name "p") 0)
+	((eq? name "n") 3)
+	((eq? name "t") 6)
+	(else 9)))
+
 (define (pdata-internal-map! gl v fn name)
-  (let ((offset (cond ((eq? name "p") 0)
-		      ((eq? name "n") 3)
-		      (else 6)))) ;; hmm ok for now but FIX THIS... 
+  (let ((offset (pdata-offset name)))  
     (let ((stride (* (length (pdata-types v)) 3))) 
       (pdata-modify-interleaved-data!
        v (stride-map fn (pdata-interleaved-data v) stride offset))
@@ -62,18 +67,14 @@
       (pdata-update-vbo! gl v))))
 
 (define (pdata-internal-set! gl pdata name pos value)
-  (let ((offset (cond ((eq? name "p") 0)
-		      ((eq? name "n") 3)
-		      (else 6)))) ;; hmm ok for now but FIX THIS... 
+  (let ((offset (pdata-offset name)))  
     (let ((stride (* (length (pdata-types pdata)) 3))) 
       (js "pdata_interleaved_data(pdata)[offset+pos*stride]=value[0];")
       (js "pdata_interleaved_data(pdata)[offset+pos*stride+1]=value[1];")
       (js "pdata_interleaved_data(pdata)[offset+pos*stride+2]=value[2];"))))
 
 (define (pdata-internal-ref gl pdata name pos)
-  (let ((offset (cond ((eq? name "p") 0)
-		      ((eq? name "n") 3)
-		      (else 6)))) ;; hmm ok for now but FIX THIS... 
+  (let ((offset (pdata-offset name)))  
     (let ((stride (* (length (pdata-types pdata)) 3))) 
       (vector
        (js "pdata_interleaved_data(pdata)[offset+pos*stride]")
@@ -99,12 +100,15 @@
     
     (gl.bindBuffer gl.ARRAY_BUFFER (pdata-vbo pdata))
 
+    ;; 12 bytes for 3 floats...
     (gl.vertexAttribPointer 
-     shader.vertexPositionAttribute 3 gl.FLOAT false 36 0)
+     shader.vertexPositionAttribute 3 gl.FLOAT false 48 0)
     (gl.vertexAttribPointer 
-     shader.vertexNormalAttribute 3 gl.FLOAT false 36 12)
+     shader.vertexNormalAttribute 3 gl.FLOAT false 48 12)
     (gl.vertexAttribPointer 
-     shader.vertexTextureAttribute 3 gl.FLOAT false 36 24)
+     shader.vertexTextureAttribute 3 gl.FLOAT false 48 24)
+    (gl.vertexAttribPointer 
+     shader.vertexColorAttribute 3 gl.FLOAT false 48 36)
 
     (if (eq? texture "")
 	(bind-texture gl shader "white.png")
