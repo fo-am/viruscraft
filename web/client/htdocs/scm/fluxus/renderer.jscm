@@ -179,10 +179,15 @@
    'polyprim
    (build-polyprim
     gl
-    (make-pdata (list "p" "n" "t" "c") (/ (length vertices) 3)
-		(interleave-pdata vertices normals texcoords (build-list (length vertices) (lambda (_) (vector 1 1 1)))))
+    (make-pdata 
+     (list "p" "n" "t" "c") 
+     (/ (length vertices) 4)
+     (interleave-pdata 
+      vertices normals texcoords 
+      (build-list (* (length vertices) 3) (lambda (_) 1))))
     )))
 
+;; todo - probably replace these with the import code path to simplify things...
 (define (renderer-build-prefab r)
   (let ((gl (renderer-gl r)))
     (renderer-modify-prefab

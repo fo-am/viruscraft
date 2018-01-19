@@ -48,3 +48,5 @@ Friday, December 1st, 2017 4:07:46pm Started server at: Friday, December 1st, 20
 Monday, December 11th, 2017 5:49:31pm Started server at: Monday, December 11th, 2017
 Friday, January 12th, 2018 10:01:43pm Started server at: Friday, January 12th, 2018
 Monday, January 15th, 2018 12:59:03pm Started server at: Monday, January 15th, 2018
+Thursday, January 18th, 2018 2:44:49pm Started server at: Thursday, January 18th, 2018
+Friday, January 19th, 2018 10:07:53am Started server at: Friday, January 19th, 2018

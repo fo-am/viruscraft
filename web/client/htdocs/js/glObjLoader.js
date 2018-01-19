@@ -59,7 +59,7 @@ function inner_load_obj(string) {
 		}
 		// colours
 		Array.prototype.push.apply(
-		    verts, positions[parseInt(f1[0]) - 1]);
+		    verts, [1,1,1]);
 
 		Array.prototype.push.apply(
                     verts, positions[parseInt(f2[0]) - 1]);
@@ -74,7 +74,7 @@ function inner_load_obj(string) {
 		}
 		// colours
 		Array.prototype.push.apply(
-		    verts, positions[parseInt(f2[0]) - 1]);
+		    verts,[1,1,1]);
 
 		Array.prototype.push.apply(
                     verts, positions[parseInt(f3[0]) - 1]);
@@ -89,7 +89,7 @@ function inner_load_obj(string) {
 		}
 		// colours
 		Array.prototype.push.apply(
-		    verts, positions[parseInt(f3[0]) - 1]);
+		    verts, [1,1,1]);
             }
             }
         }

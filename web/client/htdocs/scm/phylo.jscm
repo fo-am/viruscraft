@@ -41,7 +41,9 @@
 	    (build-polygons 0 (* 1800 3)))))
     (with-primitive 
      p
-     (shader blinn-vertex-shader blinn-fragment-shader))
+     (pdata-map! (lambda (c) (vector 1 1 1)) "c")
+     ;;(shader blinn-vertex-shader blinn-fragment-shader)
+     )
     (vspecies id p 0 (vector 0 0 0) (list radius) offset col)))
 
 (define (list-trunc l s)
