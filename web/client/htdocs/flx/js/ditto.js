@@ -16,6 +16,10 @@
 
 // a scheme compiler for javascript
 
+// "Ditto rearranges its cell structure to transform itself into other
+// shapes. However, if it tries to transform itself into something by
+// relying on its memory, this Pokémon manages to get details wrong."
+
 var ditto = {};
 
 ditto.symbols = [];
@@ -641,7 +645,7 @@ function init(filenames) {
     jQuery(document).ready(function($) {
 
         // load and compile the syntax parser
-        var syntax_parse=ditto.load_unparsed("scm/syntax.jscm");
+        var syntax_parse=ditto.load_unparsed("flx/scm/syntax.jscm");
         try {
             //console.log(syntax_parse);
             do_syntax=eval(syntax_parse);
@@ -651,7 +655,7 @@ function init(filenames) {
             console.log(e.stack);
         }
 
-        var js=ditto.load("scm/base.jscm");
+        var js=ditto.load("flx/scm/base.jscm");
 
         filenames.forEach(function(filename) {
             //console.log("loading "+filename);
@@ -676,7 +680,7 @@ function init(filenames) {
 
 function scheme_eval(filenames,code) {
     // load and compile the syntax parser
-    var syntax_parse=ditto.load_unparsed("scm/syntax.jscm");
+    var syntax_parse=ditto.load_unparsed("flx/scm/syntax.jscm");
     try {
         //console.log(syntax_parse);
         do_syntax=eval(syntax_parse);
@@ -690,7 +694,7 @@ function scheme_eval(filenames,code) {
 
     var js="try { cancelAnimationFrame(crank);\n";
 
-    js+=ditto.load("scm/base.jscm");
+    js+=ditto.load("flx/scm/base.jscm");
 
     filenames.forEach(function(filename) {
         //console.log("loading "+filename);

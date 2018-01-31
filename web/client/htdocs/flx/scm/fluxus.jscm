@@ -14,18 +14,18 @@
 ;; You should have received a copy of the GNU Affero General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-(load "scm/fluxus/texture.jscm")
-(load "scm/fluxus/maths.jscm")
-(load "scm/fluxus/glsl.jscm")
-(load "scm/fluxus/shaders.jscm")
-(load "scm/fluxus/state.jscm")
-(load "scm/fluxus/pdata.jscm")
-(load "scm/fluxus/scenegraph.jscm")
-(load "scm/fluxus/primitive.jscm")
-(load "scm/fluxus/data.jscm")
-(load "scm/fluxus/renderer.jscm")
-(load "scm/fluxus/instanceprim.jscm")
-(load "scm/fluxus/polyprim.jscm")
+(load "flx/scm/texture.jscm")
+(load "flx/scm/maths.jscm")
+(load "flx/scm/glsl.jscm")
+(load "flx/scm/shaders.jscm")
+(load "flx/scm/state.jscm")
+(load "flx/scm/pdata.jscm")
+(load "flx/scm/scenegraph.jscm")
+(load "flx/scm/primitive.jscm")
+(load "flx/scm/data.jscm")
+(load "flx/scm/renderer.jscm")
+(load "flx/scm/instanceprim.jscm")
+(load "flx/scm/polyprim.jscm")
 
 (define the-renderer 0)
 
