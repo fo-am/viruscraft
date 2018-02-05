@@ -1,0 +1,115 @@
+;; -*- mode: scheme; -*-
+;; Viruscraft Copyright (C) 2017 FoAM Kernow
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; virus builder
+
+(define rad-conv 0.017453292)
+
+(define receptor-rotations
+  (append
+   (build-list 
+    5
+    (lambda (i)
+      (let ((a (* rad-conv (* i (/ 360 5)))))
+	(qaxisangle (vector (sin a) 0 (cos a)) 36))))
+   (build-list 
+    5
+    (lambda (i)
+      (let ((a (* rad-conv (* i (/ 360 5)))))
+	(qaxisangle (vector (sin a) 0 (cos a)) 82))))
+   (build-list 
+    5
+    (lambda (i)
+      (let ((a (* rad-conv (+ 36 (* i (/ 360 5))))))
+	(qaxisangle (vector (sin a) 0 (cos a)) 100))))
+   (build-list 
+    5
+    (lambda (i)
+      (let ((a (* rad-conv (+ 36 (* i (/ 360 5))))))
+	(qaxisangle (vector (sin a) 0 (cos a)) 144))))))
+  
+(define virus-builder (with-state 
+		       (shader vertex-virus fragment-virus)
+		       (translate (vector -20 0 0)) 
+		       (scale (vector 3 3 3))
+		       (colour (vector 1 0 0))
+		       (load-primitive "models/ico.obj")))
+
+(define receptor-ids (build-list 20 (lambda (i) 0)))
+(define cur-receptor-types (build-list 20 (lambda (i) #f)))
+
+(define virus-q (car receptor-rotations))
+(define virus-t 0)
+(define virus-src (car receptor-rotations))
+(define virus-dst (cadr receptor-rotations))
+(define virus-recep-id 1)
+
+(define (rotate-virus-left)
+  (set! virus-recep-id (modulo (+ virus-recep-id 1) 20))
+  (set! virus-src virus-q)
+  (set! virus-dst (list-ref receptor-rotations virus-recep-id))
+  (set! virus-t 0))
+
+(define (rotate-virus-right)
+  (set! virus-recep-id (modulo (- virus-recep-id 1) 20))
+  (set! virus-src virus-q)
+  (set! virus-dst (list-ref receptor-rotations virus-recep-id))
+  (set! virus-t 0))
+
+(define (attach-virus instance type)
+  (when (not (zero? (list-ref receptor-ids virus-recep-id)))
+	(destroy (list-ref receptor-ids virus-recep-id)))
+  (set! cur-receptor-types (list-replace cur-receptor-types virus-recep-id type))
+  (set! receptor-ids
+	(list-replace 
+	 receptor-ids virus-recep-id
+	 (with-state
+	  (shader vertex-virus fragment-virus)
+	  (parent virus-builder)
+	  (concat (minverse (q->m (list-ref receptor-rotations virus-recep-id))))
+	  (translate (vector 0 0.8 0))
+	  (scale (vector 0.3 0.3 0.3))
+	  (colour (vector 1 0 0))
+	  (build-instance instance)))))
+
+(define receptor-circle (load-primitive "models/receptor-circle.obj"))
+(define receptor-triangle (load-primitive "models/receptor-triangle.obj"))
+(define receptor-square (load-primitive "models/receptor-square.obj"))
+(define receptor-donut (load-primitive "models/receptor-donut.obj"))
+
+(define (update-virus)
+  (set! virus (make-virus 
+	       (foldl 
+		(lambda (type r) 
+		  (if type (cons type r) r))
+		'()
+		cur-receptor-types))))
+
+(define (attach-virus-circle) (attach-virus receptor-circle 'circle) (update-virus))
+(define (attach-virus-triangle) (attach-virus receptor-triangle 'triangle) (update-virus))
+(define (attach-virus-square) (attach-virus receptor-square 'square) (update-virus))
+(define (attach-virus-donut) (attach-virus receptor-donut 'donut) (update-virus))
+
+(define (attach-virus-clear)
+  (when (not (zero? (list-ref receptor-ids virus-recep-id)))
+	(destroy (list-ref receptor-ids virus-recep-id)))
+  (set! receptor-ids
+	(list-replace receptor-ids virus-recep-id 0)) 
+  (set! cur-receptor-types
+	(list-replace cur-receptor-types virus-recep-id #f))
+  (update-virus))
+
+(define (attach-virus-clear-all)
+  (for-each (lambda (receptor) (destroy receptor)) receptor-ids)
+  (set! receptor-ids '())
+  (set! cur-receptor-types (build-list 20 (lambda (i) #f)))
+  (update-virus))  
+
+(define pointer (with-state
+		 (colour (vector 0 1 0))
+		 (rotate (vector -90 0 0))
+		 (translate (vector -17 6.5 0))
+		 (scale (vector 0.5 0.5 0.5))
+		 (load-primitive "models/pointer.obj")))
+

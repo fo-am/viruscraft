@@ -1,0 +1,26 @@
+;; -*- mode: scheme; -*-
+;; Viruscraft Copyright (C) 2017 FoAM Kernow
+
+(define (sph-i v) (vx v))
+(define (sph-r v) (vy v))
+(define (sph-a v) (vz v))
+
+(define (sph-rnd r)
+  (vector
+   (* (rndf) pi)
+   r
+   (* (rndf) two-pi))) 
+
+(define (spherical->cartesian v)
+  (vector
+   (* (sph-r v) (sin (sph-i v)) (cos (sph-a v)))
+   (* (sph-r v) (sin (sph-i v)) (sin (sph-a v)))
+   (* (sph-r v) (cos (sph-i v)))))
+
+(define (cartesian->spherical v)
+  (let ((r (vmag v)))
+    (vector
+     (Math.acos (/ (vz v) r))
+     r
+     (Math.atan2 (vy v) (vx v)))))
+

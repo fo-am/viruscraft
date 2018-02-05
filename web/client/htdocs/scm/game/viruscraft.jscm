@@ -1,0 +1,159 @@
+;; -*- mode: scheme; -*-
+;; Viruscraft Copyright (C) 2017 FoAM Kernow
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(load "scm/game/spherical.jscm")
+(load "scm/game/infection-model.jscm")
+(load "scm/game/shaders.jscm")
+(load "scm/game/host-organism.jscm")
+(load "scm/game/worldunit.jscm")
+(load "scm/game/virus-builder.jscm")
+
+(define flag (load-primitive "models/flag.obj"))
+
+(with-primitive 
+ flag
+ (pdata-set! "t" 0 (vector 1 0 0))
+ (pdata-set! "t" 1 (vector 0 0 0))
+ (pdata-set! "t" 2 (vector 1 1 0))
+ (pdata-set! "t" 3 (vector 0 0 0))
+ (pdata-set! "t" 4 (vector 0 1 0))
+ (pdata-set! "t" 5 (vector 1 1 0))
+ (pdata-upload!))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(clear-colour (vector 0.0 0.0 0.0 1.0))
+
+(set-camera-transform 
+ (mat4.rotateX  
+  (mat4.translate (camera-transform) (vector 5 0 -7))
+  (* 0.5 Math.PI)))
+
+(define frame 1)
+(define infection-rate 10)
+
+(define virus (make-virus (list)))
+(define population (population-infect (make-random-population 50) virus infection-rate))
+(define organisms '())
+
+(define values (pentakis-build-values 20))
+(define units (pentakis-build-units values))
+(build-world values units)
+
+(define cloud-shadow
+  (with-state
+   (rotate (vector 90 0 0))
+   (hint-nozwrite)
+   (texture (load-texture "cloud-shadow.png"))
+   (parent world-root)
+   (scale (vector 1.05 1.05 1.05))
+   (scale (vector 6 6 6))
+   (load-primitive "models/smooth-sphere-tex.obj")))
+
+(define clouds
+  (with-state
+   (rotate (vector 90 0 0))
+   (hint-nozwrite)
+   (texture (load-texture "clouds.png"))
+   (parent world-root)
+   (scale (vector 1.07 1.07 1.07))
+   (scale (vector 10 10 10))
+   (load-primitive "models/smooth-sphere-tex.obj")))
+
+(define score 0)
+(define hi-score 0)
+
+(define virus-extinct-marker-t 0)
+(define virus-extinct-marker 
+  (with-state
+   (translate (vector -5 7 0))
+   (scale (vector 5 5 5))
+   (texture (load-texture "extinct.png"))
+   (build-instance flag)))
+
+(define host-extinct-marker-t 0)
+(define host-extinct-marker 
+  (with-state
+   (translate (vector -5 7 0))
+   (scale (vector 5 5 5))
+   (texture (load-texture "host-extinct.png"))
+   (build-instance flag)))
+
+(define (render)
+  (when (zero? (modulo frame 1))
+	(set! population (population-update population virus))
+	(set! organisms (update-organisms organisms population world-root)))
+
+  (when (zero? (length population))
+	(when (> score 100)
+	      (set! host-extinct-marker-t 1))
+	(set! score 0)
+	(set! population (population-infect (make-random-population 50) virus infection-rate)))
+
+  (when (zero? (population-num-infected population))
+	(when (> score 100)
+	      (set! virus-extinct-marker-t 1))
+	(set! score 0)
+	(set! population (population-infect population virus infection-rate))
+	;(organisms-destroy organisms)
+	;(set! organisms '())
+	;(set! organisms (update-organisms organisms population))
+	)
+
+  (with-primitive 
+   virus-extinct-marker 
+   (identity)
+   (if (> virus-extinct-marker-t 0)
+       (translate (vector -5 7 0))
+       (translate (vector -80 7 0)))
+   (scale (vector 5 5 5)))
+  (set! virus-extinct-marker-t (- virus-extinct-marker-t 0.01))
+
+  (with-primitive 
+   host-extinct-marker 
+   (identity)
+   (if (> host-extinct-marker-t 0)
+       (translate (vector -5 7 0))
+       (translate (vector -80 7 0)))
+   (scale (vector 5 5 5)))
+  (set! host-extinct-marker-t (- host-extinct-marker-t 0.01))
+
+
+  (set! virus-q (qslerp virus-src virus-dst virus-t)) 
+  (when (< virus-t 1) (set! virus-t (+ virus-t 0.05)))
+
+  (with-primitive virus-builder
+		  (identity)
+		  (translate (vector -17 0 0)) 
+		  (rotate (vector -80 0 -5))
+		  (scale (vector 3 3 3))
+		  (concat (q->m virus-q)))
+
+  (with-primitive pointer
+		  (translate 
+		   (vector 0 (* 0.1 (sin (* 3 (time)))) 0)))
+
+  (let ((el (document.getElementById "score")))
+    (set! el.innerHTML score))
+
+  (let ((el (document.getElementById "hi-score")))
+    (set! el.innerHTML hi-score))
+  
+  (set! score (+ score 1))
+  (when (> score hi-score) (set! hi-score score))
+
+  (with-primitive world-root (rotate (vector 0 0 0.2)))
+  (with-primitive clouds (rotate (vector 0 0.1 0)))
+  (with-primitive cloud-shadow (rotate (vector 0 0.1 0)))
+
+;;  (set-camera-transform (mat4.rotateX (camera-transform) 0.01))  
+  (set! frame (+ frame 1))
+  )
+
+;;(qslerp virus-src virus-dst virus-t))
+
+(every-frame (render))
+
+

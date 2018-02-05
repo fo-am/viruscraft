@@ -1,0 +1,416 @@
+;; -*- mode: scheme; -*-
+;; Viruscraft Copyright (C) 2017 FoAM Kernow
+
+
+;;      0     -     0     -     0     -     0     -     0     -    5  0
+;;      |           |           |           |           |
+;;  0 - 0 - 0 - 0 - 0 - 0 - 0 - 0 - 0 - 0 - 0 - 0 - 0 - 0 - 0 -   15  1
+;;  |       |   |       |   |       |   |       |   |       |
+;;  0 - 0 - 0-0-0 - 0 - 0-0-0 - 0 - 0-0-0 - 0 - 0-0-0 - 0 - 0-0-  20  2
+;;      |     |     |     |     |     |     |     |     |     |
+;;  0 - 0 - 0-0-0 - 0 - 0-0-0 - 0 - 0-0-0 - 0 - 0-0-0 - 0 - 0-0-  20  3
+;;  |       |   |       |   |       |   |       |   |       |
+;;  0 - 0 - 0 - 0 - 0 - 0 - 0 - 0 - 0 - 0 - 0 - 0 - 0 - 0 - 0 -   15  4
+;;      |           |           |           |           |
+;;      0     -     0     -     0     -     0     -     0     -    5  5
+
+;;      0     -     0     -     0     -     0     -     0     -    5  0
+;;      |           |           |           |           |
+;;  0 - 0 - 0 - 0 - 0 - 0 - 0 - 0 - 0 - 0 - 0 - 0 - 0 - 0 - 0 -   15  1
+;;  |       |   |       |   |       |   |       |   |       |
+;;  0 - 0 - 0-0-0 - 0 - 0-0-0 - 0 - 0-0-0 - 0 - 0-0-0 - 0 - 0-0-  20  2
+;;      |     |     |     |     |     |     |     |     |     |
+;;  0 - 0 - 0-0-0 - 0 - 0-0-0 - 0 - 0-0-0 - 0 - 0-0-0 - 0 - 0-0-  20  3
+;;  |       |   |       |   |       |   |       |   |       |
+;;  0   -   0 0 0   -   0 0 0   -   0 0 0   -   0 0 0   -   0 0   15  4
+;;            |           |           |           |           |
+;;            0     -     0     -     0     -     0     -     0   5  5
+
+
+(define topology 
+  ;; 0 r/b : 1 r/g : 2 b/g
+  (list (list (list (list 0 0) (list 0 4) (list 0 1) (list 1 1))
+	      (list (list 0 1) (list 0 0) (list 0 2) (list 1 4))
+	      (list (list 0 2) (list 0 1) (list 0 3) (list 1 7))
+	      (list (list 0 3) (list 0 2) (list 0 4) (list 1 10))
+	      (list (list 0 4) (list 0 3) (list 0 0) (list 1 13)))
+	;; 0 r/b : 1 r/g : 2 b/g
+	(list (list (list 1 0) (list 1 14) (list 1 1) (list 2 0))
+	      (list (list 1 1) (list 1 0) (list 1 2) (list 0 0))
+	      (list (list 1 2) (list 1 1) (list 1 3) (list 2 2))
+	      (list (list 1 3) (list 1 2) (list 1 4) (list 2 4))
+	      (list (list 1 4) (list 1 3) (list 1 5) (list 0 1))
+	      (list (list 1 5) (list 1 4) (list 1 6) (list 2 6))
+	      (list (list 1 6) (list 1 5) (list 1 7) (list 2 8))
+	      (list (list 1 7) (list 1 6) (list 1 8) (list 0 2))
+	      (list (list 1 8) (list 1 7) (list 1 9) (list 2 10))
+	      (list (list 1 9) (list 1 8) (list 1 10) (list 2 12))
+	      (list (list 1 10) (list 1 9) (list 1 11) (list 0 3))
+	      (list (list 1 11) (list 1 10) (list 1 12) (list 2 14))
+	      (list (list 1 12) (list 1 11) (list 1 13) (list 2 16))
+	      (list (list 1 13) (list 1 12) (list 1 14) (list 0 4))
+	      (list (list 1 14) (list 1 13) (list 1 0) (list 2 18)))
+	(list (list (list 2 0) (list 2 19) (list 2 1) (list 1 0))
+	      (list (list 2 1) (list 2 0) (list 2 2) (list 3 1))
+	      (list (list 2 2) (list 2 1) (list 2 3) (list 1 2))
+	      (list (list 2 3) (list 2 2) (list 2 4) (list 3 3))
+	      (list (list 2 4) (list 2 3) (list 2 5) (list 1 3))
+	      (list (list 2 5) (list 2 4) (list 2 6) (list 3 5))
+	      (list (list 2 6) (list 2 5) (list 2 7) (list 1 5))
+	      (list (list 2 7) (list 2 6) (list 2 8) (list 3 7))
+	      (list (list 2 8) (list 2 7) (list 2 9) (list 1 6))
+	      (list (list 2 9) (list 2 8) (list 2 10) (list 3 9))
+	      (list (list 2 10) (list 2 9) (list 2 11) (list 1 8))
+	      (list (list 2 11) (list 2 10) (list 2 12) (list 3 11))
+	      (list (list 2 12) (list 2 11) (list 2 13) (list 1 9))
+	      (list (list 2 13) (list 2 12) (list 2 14) (list 3 13))
+	      (list (list 2 14) (list 2 13) (list 2 15) (list 1 11))
+	      (list (list 2 15) (list 2 14) (list 2 16) (list 3 15))
+	      (list (list 2 16) (list 2 15) (list 2 17) (list 1 12))
+	      (list (list 2 17) (list 2 16) (list 2 18) (list 3 17))
+	      (list (list 2 18) (list 2 17) (list 2 19) (list 1 14))
+	      (list (list 2 19) (list 2 18) (list 2 0) (list 3 19)))
+	(list (list (list 3 0) (list 3 19) (list 3 1) (list 4 0))
+	      (list (list 3 1) (list 3 0) (list 3 2) (list 2 1))
+	      (list (list 3 2) (list 3 1) (list 3 3) (list 4 1))
+	      (list (list 3 3) (list 3 2) (list 3 4) (list 2 3))
+	      (list (list 3 4) (list 3 3) (list 3 5) (list 4 3))
+	      (list (list 3 5) (list 3 4) (list 3 6) (list 2 5))
+	      (list (list 3 6) (list 3 5) (list 3 7) (list 4 4))
+	      (list (list 3 7) (list 3 6) (list 3 8) (list 2 7))
+	      (list (list 3 8) (list 3 7) (list 3 9) (list 4 6))
+	      (list (list 3 9) (list 3 8) (list 3 10) (list 2 9))
+	      (list (list 3 10) (list 3 9) (list 3 11) (list 4 7))
+	      (list (list 3 11) (list 3 10) (list 3 12) (list 2 11))
+	      (list (list 3 12) (list 3 11) (list 3 13) (list 4 9))
+	      (list (list 3 13) (list 3 12) (list 3 14) (list 2 13))
+	      (list (list 3 14) (list 3 13) (list 3 15) (list 4 10))
+	      (list (list 3 15) (list 3 14) (list 3 16) (list 2 15))
+	      (list (list 3 16) (list 3 15) (list 3 17) (list 4 12))
+	      (list (list 3 17) (list 3 16) (list 3 18) (list 2 17))
+	      (list (list 3 18) (list 3 17) (list 3 19) (list 4 13))
+	      (list (list 3 19) (list 3 18) (list 3 0) (list 2 19)))
+ 	(list (list (list 4 0) (list 4 14) (list 4 1) (list 3 0))
+	      (list (list 4 1) (list 4 0) (list 4 2) (list 3 2))
+	      (list (list 4 2) (list 4 1) (list 4 3) (list 5 0))
+	      (list (list 4 3) (list 4 2) (list 4 4) (list 3 4))
+	      (list (list 4 4) (list 4 3) (list 4 5) (list 3 6))
+	      (list (list 4 5) (list 4 4) (list 4 6) (list 5 1))
+	      (list (list 4 6) (list 4 5) (list 4 7) (list 3 8))
+	      (list (list 4 7) (list 4 6) (list 4 8) (list 3 10))
+	      (list (list 4 8) (list 4 7) (list 4 9) (list 5 2))
+	      (list (list 4 9) (list 4 8) (list 4 10) (list 3 12))
+	      (list (list 4 10) (list 4 9) (list 4 11) (list 3 14))
+	      (list (list 4 11) (list 4 10) (list 4 12) (list 5 3))
+	      (list (list 4 12) (list 4 11) (list 4 13) (list 3 16))
+	      (list (list 4 13) (list 4 12) (list 4 14) (list 3 18))
+	      (list (list 4 14) (list 4 13) (list 4 0) (list 5 4)))
+	(list (list (list 5 0) (list 5 4) (list 5 1) (list 4 2))
+	      (list (list 5 1) (list 5 0) (list 5 2) (list 4 5))
+	      (list (list 5 2) (list 5 1) (list 5 3) (list 4 8))
+	      (list (list 5 3) (list 5 2) (list 5 4) (list 4 11))
+	      (list (list 5 4) (list 5 3) (list 5 0) (list 4 14)))))
+
+
+	;; (list (list (list 3 0) (list 3 19) (list 3 1) (list 4 0))
+	;;       (list (list 3 1) (list 3 0) (list 3 2) (list 2 1))
+	;;       (list (list 3 2) (list 3 1) (list 3 3) (list 4 2))
+	;;       (list (list 3 3) (list 3 2) (list 3 4) (list 2 3))
+	;;       (list (list 3 4) (list 3 3) (list 3 5) (list 4 3))
+	;;       (list (list 3 5) (list 3 4) (list 3 6) (list 2 5))
+	;;       (list (list 3 6) (list 3 5) (list 3 7) (list 4 5))
+	;;       (list (list 3 7) (list 3 6) (list 3 8) (list 2 7))
+	;;       (list (list 3 8) (list 3 7) (list 3 9) (list 4 6))
+	;;       (list (list 3 9) (list 3 8) (list 3 10) (list 2 9))
+	;;       (list (list 3 10) (list 3 9) (list 3 11) (list 4 8))
+	;;       (list (list 3 11) (list 3 10) (list 3 12) (list 2 11))
+	;;       (list (list 3 12) (list 3 11) (list 3 13) (list 4 9))
+	;;       (list (list 3 13) (list 3 12) (list 3 14) (list 2 13))
+	;;       (list (list 3 14) (list 3 13) (list 3 15) (list 4 11))
+	;;       (list (list 3 15) (list 3 14) (list 3 16) (list 2 15))
+	;;       (list (list 3 16) (list 3 15) (list 3 17) (list 4 12))
+	;;       (list (list 3 17) (list 3 16) (list 3 18) (list 2 17))
+	;;       (list (list 3 18) (list 3 17) (list 3 19) (list 4 14))
+	;;       (list (list 3 19) (list 3 18) (list 3 0) (list 2 19)))
+ 	;; (list (list (list 4 0) (list 4 14) (list 4 1) (list 3 0))
+	;;       (list (list 4 1) (list 4 0) (list 4 2) (list 5 0))
+	;;       (list (list 4 2) (list 4 1) (list 4 3) (list 3 2))
+	;;       (list (list 4 3) (list 4 2) (list 4 4) (list 3 4))
+	;;       (list (list 4 4) (list 4 3) (list 4 5) (list 5 1))
+	;;       (list (list 4 5) (list 4 4) (list 4 6) (list 3 6))
+	;;       (list (list 4 6) (list 4 5) (list 4 7) (list 3 8))
+	;;       (list (list 4 7) (list 4 6) (list 4 8) (list 5 2))
+	;;       (list (list 4 8) (list 4 7) (list 4 9) (list 3 10))
+	;;       (list (list 4 9) (list 4 8) (list 4 10) (list 3 12))
+	;;       (list (list 4 10) (list 4 9) (list 4 11) (list 5 3))
+	;;       (list (list 4 11) (list 4 10) (list 4 12) (list 3 14))
+	;;       (list (list 4 12) (list 4 11) (list 4 13) (list 3 16))
+	;;       (list (list 4 13) (list 4 12) (list 4 14) (list 5 4))
+	;;       (list (list 4 14) (list 4 13) (list 4 0) (list 3 18)))
+	;; (list (list (list 5 0) (list 5 4) (list 5 1) (list 4 1))
+	;;       (list (list 5 1) (list 5 0) (list 5 2) (list 4 4))
+	;;       (list (list 5 2) (list 5 1) (list 5 3) (list 4 7))
+	;;       (list (list 5 3) (list 5 2) (list 5 4) (list 4 10))
+	;;       (list (list 5 4) (list 5 3) (list 5 0) (list 4 13)))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; processing geometry
+
+;; uses two models 
+;; orient: triangle faces coloured r,g,b to indicate orientation 
+;; relative to neighbours based on above (sides which connect to 
+;; adjacent faces): r/b=0 r/g=1 b/g=2
+;;
+;; rings: vertex colours define which ring the face is on (based on above)
+;; texture coordinates (s only) indicates the order within the ring
+
+(define (proc-geom)
+  (let ((pent-orient (load-ply-primitive "models/pentakis-orient.ply"))
+	(pent-rings (load-ply-primitive "models/pentakis-rings.ply")))
+    
+    (define (pent-calc n size)
+      (cond 
+       ((> n size) '())
+       (else
+	(cons
+	 (list
+	  (/ n 3)
+	  (list (pdata-ref "t" n) (pdata-ref "t" (+ n 1)) (pdata-ref "t" (+ n 2)))
+	  (list (pdata-ref "c" n) (pdata-ref "c" (+ n 1)) (pdata-ref "c" (+ n 2)))
+	  (with-primitive pent-orient (list (pdata-ref "c" n) (pdata-ref "c" (+ n 1)) (pdata-ref "c" (+ n 2))))
+	  )
+	 (pent-calc (+ n 3) size)))))
+    
+    (with-primitive 
+     pent-rings
+     (msg (pent-calc 0 (pdata-size)))
+     )))
+
+;; convert the geom data into ordered orientation info on each triangle
+
+(define (tri-id l) (list-ref l 0))
+(define (tri-order l) (list-ref l 1))
+(define (tri-order-av l) (vdiv (vadd (vadd (list-ref (list-ref l 1) 0)
+                                           (list-ref (list-ref l 1) 1))
+                                     (list-ref (list-ref l 1) 2)) 3))
+(define (tri-ring l) (list-ref l 2))
+(define (tri-orient l) (list-ref l 3))
+(define (tri-code t)
+  (let ((a (col->ring (list-ref (tri-orient t) 0)))
+        (b (col->ring (list-ref (tri-orient t) 1)))
+        (c (col->ring (list-ref (tri-orient t) 2))))
+    (cond
+      ((and (eq? a 0) (eq? b 1) (eq? c 2)) 0)
+      ((and (eq? a 0) (eq? b 2) (eq? c 1)) 1)
+      ((and (eq? a 1) (eq? b 0) (eq? c 2)) 2)
+      ((and (eq? a 1) (eq? b 2) (eq? c 0)) 3)
+      ((and (eq? a 2) (eq? b 0) (eq? c 1)) 4)
+      (else 5))))
+
+(define (col->ring c)
+  (cond
+    ((and (> (vx c) 0.5) (< (vy c) 0.5) (< (vz c) 0.5)) 0)
+    ((and (< (vx c) 0.5) (> (vy c) 0.5) (< (vz c) 0.5)) 1)
+    ((and (< (vx c) 0.5) (< (vy c) 0.5) (> (vz c) 0.5)) 2)
+    ((and (> (vx c) 0.5) (> (vy c) 0.5) (< (vz c) 0.5)) 3)
+    ((and (< (vx c) 0.5) (> (vy c) 0.5) (> (vz c) 0.5)) 4)
+    (else 5)))
+
+(define (get-ring ring-num l)
+  (filter
+   (lambda (t)
+     (eq? (col->ring (car (tri-ring t))) ring-num))
+   l))
+
+(define (sort-ring r)
+  (sort r (lambda (a b) (< (vx (tri-order-av a)) (vx (tri-order-av b))))))
+
+(define (build-ringed desc)
+  (map
+   (lambda (r)
+     (map
+      (lambda (t)
+	(list (tri-id t) (tri-code t)))
+      r))
+   (build-list 6 (lambda (ring) (sort-ring (get-ring ring desc))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; from blender model
+(define pent-ori
+  (list (list (list 74 5) (list 71 5) (list 68 5) (list 65 5) (list 77 5))
+	;; off by one: list moved left
+	(list (list 18 5) (list 75 4) (list 76 5) (list 17 5) (list 72 4) (list 73 5) (list 16 5) (list 69 4) (list 70 5) (list 15 5) (list 66 4) (list 67 5) (list 19 5) (list 78 4) (list 79 5))
+	;; off by three: list moved left
+	(list (list 59 0) (list 60 5) (list 61 0) (list 44 5) (list 56 0) (list 57 5) (list 58 0) (list 41 5) (list 53 0) (list 54 5) (list 55 0) (list 38 5) (list 50 0) (list 51 5) (list 52 0) (list 35 5) (list 62 0) (list 63 5) (list 64 0) (list 47 5))
+	;; off by three: list moved left
+	(list (list 49 5) (list 13 0) (list 8 5) (list 45 4) (list 46 5) (list 12 0) (list 7 5) (list 42 4) (list 43 5) (list 11 0) (list 6 5) (list 39 4)  (list 40 5) (list 10 0) (list 5 5) (list 36 4) (list 37 5) (list 14 0) (list 9 5) (list 48 4))  
+	;; some off...
+	(list (list 34 0) (list 29 0) (list 30 5) (list 31 0) (list 26 0) (list 27 5) (list 28 0) (list 20 0) (list 21 5) (list 22 0) (list 1 4) (list 24 1) (list 23 4) (list 32 0) (list 33 5))
+	;; REMOVED 80
+	(list (list 3 0) (list 2 0) (list 0 0) (list 25 4) (list 4 0))))
+
+(for-each
+ (lambda (l)
+   (msg (length l)))
+ pent-ori)
+
+
+
+(define (face loc a b c) (list loc a b c))
+(define (face-loc f) (list-ref f 0))
+(define (face-a f) (list-ref f 1))
+(define (face-b f) (list-ref f 2))
+(define (face-c f) (list-ref f 3))
+
+(define (find-face connect loc)
+  (list-ref
+   (list-ref connect (list-ref loc 0))
+   (list-ref loc 1)))
+
+(define (face-id->loc ori id)
+  (let ((ring-num 0) (n 0))
+    (foldl
+     (lambda (ring r)
+       (let ((r (foldl
+		 (lambda (t r)
+		   (let ((r (if (eq? (car t) id)
+				(list ring-num n) r)))
+		     (set! n (+ n 1)) r))
+		 r
+		 ring)))
+	 (set! n 0)
+	 (set! ring-num (+ ring-num 1)) r))
+     #f
+     ori)))
+
+(define (pentakis-random-edge prob)
+  (list (< (random 100) prob)
+	(< (random 100) prob) 
+	(< (random 100) prob)))
+
+(define (pentakis-build-values prob)
+  (list
+   (build-list 5 (lambda (i) (list (list 0 i) (pentakis-random-edge prob))))
+   (build-list 15 (lambda (i) (list (list 1 i) (pentakis-random-edge prob))))
+   (build-list 20 (lambda (i) (list (list 2 i) (pentakis-random-edge prob))))
+   (build-list 20 (lambda (i) (list (list 3 i) (pentakis-random-edge prob))))
+   (build-list 15 (lambda (i) (list (list 4 i) (pentakis-random-edge prob))))
+   (build-list 5 (lambda (i) (list (list 5 i) (pentakis-random-edge prob))))))
+
+(define (pentakis-build-test-values prob)
+  (list
+   (list (list (list 0 0) (list #f #f #f))
+	 (list (list 0 1) (list #f #f #f))
+	 (list (list 0 2) (list #f #f #f))
+	 (list (list 0 3) (list #f #f #f))
+	 (list (list 0 4) (list #f #f #f))
+	 )
+   (list (list (list 1 0) (list #f #f #f))
+	 (list (list 1 1) (list #f #f #f))
+	 (list (list 1 2) (list #f #f #f))
+	 (list (list 1 3) (list #f #f #f))
+	 (list (list 1 4) (list #f #f #f))
+	 (list (list 1 5) (list #f #f #f))
+	 (list (list 1 6) (list #f #f #f))
+	 (list (list 1 7) (list #f #f #f))
+	 (list (list 1 8) (list #f #f #f))
+	 (list (list 1 9) (list #f #f #f))
+	 (list (list 1 10) (list #f #f #f))
+	 (list (list 1 11) (list #f #f #f))
+	 (list (list 1 12) (list #f #f #f))
+	 (list (list 1 13) (list #f #f #f))
+	 (list (list 1 14) (list #f #f #f))
+	 )
+   (list (list (list 2 0) (list #f #f #f))
+	 (list (list 2 1) (list #f #f #f))
+	 (list (list 2 2) (list #f #f #f))
+	 (list (list 2 3) (list #f #f #f))
+	 (list (list 2 4) (list #f #f #f))
+	 (list (list 2 5) (list #f #f #f))
+	 (list (list 2 6) (list #f #f #f))
+	 (list (list 2 7) (list #f #f #f))
+	 (list (list 2 8) (list #f #f #f))
+	 (list (list 2 9) (list #f #f #f))
+	 (list (list 2 10) (list #f #f #f))
+	 (list (list 2 11) (list #f #f #f))
+	 (list (list 2 12) (list #f #f #f))
+	 (list (list 2 13) (list #f #f #f))
+	 (list (list 2 14) (list #f #f #f))
+	 (list (list 2 15) (list #f #f #f))
+	 (list (list 2 16) (list #f #f #f))
+	 (list (list 2 17) (list #f #f #f))
+	 (list (list 2 18) (list #f #f #f))
+	 (list (list 2 19) (list #f #f #f))
+	 )
+
+   (list (list (list 3 0) (list #f #f #t))
+	 (list (list 3 1) (list #f #f #t))
+	 (list (list 3 2) (list #f #f #t))
+	 (list (list 3 3) (list #f #f #t))
+	 (list (list 3 4) (list #f #f #f))
+	 (list (list 3 5) (list #f #f #f))
+	 (list (list 3 6) (list #f #f #f))
+	 (list (list 3 7) (list #f #f #f))
+	 (list (list 3 8) (list #f #f #f))
+	 (list (list 3 9) (list #f #f #f))
+	 (list (list 3 10) (list #f #f #f))
+	 (list (list 3 11) (list #f #f #f))
+	 (list (list 3 12) (list #f #f #f))
+	 (list (list 3 13) (list #f #f #f))
+	 (list (list 3 14) (list #f #f #f))
+	 (list (list 3 15) (list #f #f #f))
+	 (list (list 3 16) (list #f #f #f))
+	 (list (list 3 17) (list #f #f #f))
+	 (list (list 3 18) (list #f #f #f))
+	 (list (list 3 19) (list #f #f #f))
+	 )
+
+   (list (list (list 4 0) (list #f #f #t))
+	 (list (list 4 1) (list #f #f #t))
+	 (list (list 4 2) (list #f #f #t))
+	 (list (list 4 3) (list #f #f #t))
+	 (list (list 4 4) (list #f #f #f))
+	 (list (list 4 5) (list #f #f #f))
+	 (list (list 4 6) (list #f #f #f))
+	 (list (list 4 7) (list #f #f #f))
+	 (list (list 4 8) (list #f #f #f))
+	 (list (list 4 9) (list #f #f #f))
+	 (list (list 4 10) (list #f #f #f))
+	 (list (list 4 11) (list #f #f #f))
+	 (list (list 4 12) (list #f #f #f))
+	 (list (list 4 13) (list #f #f #f))
+	 (list (list 4 14) (list #f #f #f))
+	 )
+
+   (list (list (list 5 0) (list #f #f #f))
+	 (list (list 5 1) (list #f #f #f))
+	 (list (list 5 2) (list #f #f #f))
+	 (list (list 5 3) (list #f #f #f))
+	 (list (list 5 4) (list #f #f #f))
+	 )))
+   
+
+
+
+(define (pentakis-build-units values)
+  (map
+   (lambda (row)
+     (map
+      (lambda (value)
+        (let ((loc (car value))
+              (v (cadr value)))
+          (let ((face (find-face topology loc))) ;; topologyivity face
+	    (let ((a (cadr (find-face values (face-a face))))
+		  (b (cadr (find-face values (face-b face))))
+		  (c (cadr (find-face values (face-c face)))))
+		(string-append
+		 ;;(number->string v)
+		 ;; look up the our edge OR the corresponding edge for the neihbouring face
+		 (if (or (list-ref v 0) (list-ref a 1)) "1" "0") ;; left -> right
+		 (if (or (list-ref v 1) (list-ref b 0)) "1" "0") ;; right -> left
+		 (if (or (list-ref v 2) (list-ref c 2)) "1" "0") ;; up/down -> down/up
+		 )))))
+      row))
+   values))
+
