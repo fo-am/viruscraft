@@ -5,6 +5,7 @@
 
 
 (define receptor-types (list 'circle 'triangle 'square 'donut))
+(define host-species-types (list 'sea 'land 'land2))
 
 (define size-conv 0.003)
 
@@ -16,7 +17,7 @@
 (define host-health-start 10)
 (define host-decline-age 500)
 (define host-spawn-min-distance 0.05)
-(define spawn-dist 0.1)
+(define spawn-dist 0.2)
 (define host-spawn-dist-tries 50)
 
 (define host-loc-lat-start (* Math.PI 0.25))
@@ -29,9 +30,9 @@
 (define susceptibility-slope 2.5)
 (define susceptibility-max-receptors 20)
 ;;(define susceptibility-prob-factor 0.2)
-(define max-pop-size 100)
+(define max-pop-size 50)
 
-(define infection-distance 0.1)
+(define infection-distance 0.4)
 
 ;;;;;;;;;;;;;;;;;;;
 ;; minimal geometry
@@ -83,15 +84,16 @@
   (set! current-host-id (+ current-host-id 1))
   current-host-id)
 
-(define (make-host id receptor infected pos health age)
-  (list id receptor infected pos health age))
+(define (make-host id receptor species infected pos health age)
+  (list id receptor species infected pos health age))
 
 (define (host-id h) (list-ref h 0))
 (define (host-receptor h) (list-ref h 1))
-(define (host-infected? h) (list-ref h 2))
-(define (host-location h) (list-ref h 3))
-(define (host-health h) (list-ref h 4))
-(define (host-age h) (list-ref h 5))
+(define (host-species h) (list-ref h 2))
+(define (host-infected? h) (list-ref h 3))
+(define (host-location h) (list-ref h 4))
+(define (host-health h) (list-ref h 5))
+(define (host-age h) (list-ref h 6))
 
 ;;;;;;;;;;;;;;;;;;;
 ;; host model
@@ -171,6 +173,7 @@
    (if (< (random 100) mutation-rate)
        (pick-random-receptor-type)
        (host-receptor host))
+   (host-species host) ;; maintain species type
    #f ;; infected should always be false as infected
       ;; species can't generate new species (at the moment)
    ;; pick a new position on the edge of the parent species
@@ -191,6 +194,7 @@
     (make-host
      (host-id host)
      (host-receptor host) ;; doesn't change
+     (host-species host)
      (host-calculate-infection host susceptibility infection-present)
      (host-location host) ;; can't move
      (host-calculate-health host susceptibility)
@@ -202,6 +206,7 @@
     (make-host
      (host-id host)
      (host-receptor host) 
+     (host-species host) 
      (if (> susceptibility 0) #t #f)
      ;;(host-calculate-infection host susceptibility #t)
      (host-location host)
@@ -212,6 +217,7 @@
   (make-host 
    (make-host-id)
    (pick-random-receptor-type)
+   (choose host-species-types)
    #f
    (vector (+ host-loc-lat-start (* (rndf) host-loc-lat-width))
 	   (+ host-loc-lng-start (* (rndf) host-loc-lng-width)))
@@ -222,6 +228,7 @@
   (make-host 
    (make-host-id)
    (pick-random-receptor-type)
+   (choose host-species-types)
    #f
    (vector (* (quotient i 10) width) (* (modulo i 10) width))
    host-health-start

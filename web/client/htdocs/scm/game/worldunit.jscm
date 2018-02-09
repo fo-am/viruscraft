@@ -134,7 +134,7 @@ void main() {
   (with-state
    (shader pvertex-shader pfragment-shader)
    (parent world-root)
-   (scale (vector 10 10 10))
+   (scale (vector 12 12 12))
    (index-for-each
     (lambda (i face-id)
       (let ((tx (with-primitive pentakis (get-face-transforms face-id)))

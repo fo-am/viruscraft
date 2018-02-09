@@ -41,6 +41,8 @@
 (define (zero? n) (js "n===0"))
 (define (eqv? a b) (eq? a b))
 (define (equal? a b) (eq? a b))
+(define (floor n) (Math.floor n))
+(define (fmod a b) (js "Number((a - (Math.floor(a / b) * b)).toPrecision(8));"))
 
 (define (random n)
   (Math.floor (* (Math.random) n)))

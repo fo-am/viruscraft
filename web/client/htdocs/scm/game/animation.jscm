@@ -1,0 +1,41 @@
+;; -*- mode: scheme; -*-
+;; Planet Fluxus Copyright (C) 2013 Dave Griffiths
+
+(define (anim-suck n)
+  (cond
+   ((eq? n (pdata-size)) (list))
+   (else (cons (pdata-ref "p" n) (anim-suck (+ n 1))))))
+
+(define (load-vertex-data fn)
+  (let ((p (load-ply-primitive fn))
+	(ret (list)))
+    (with-primitive 
+     p (anim-suck 0))))
+
+(define (load-blend-shapes fns)
+  (map
+   (lambda (fn)
+     (load-vertex-data fn))
+   fns))
+
+(define (set-blend-shape! blends n)
+  (index-map
+   (lambda (i v) 
+     (pdata-set! "p" i v)
+     )
+   (list-ref blends n))
+  (pdata-upload!))
+
+(define (set-blend-shape-lerp! blends n)
+  (let ((n (fmod n (length blends)))
+	(i 0) 
+	(t (- n (floor n))))
+    (map2
+     (lambda (a b) 
+       (pdata-set! "p" i (vlerp a b t))
+       (set! i (+ i 1))
+       )
+     (list-ref blends (floor n))
+     (list-ref blends (modulo (+ (floor n) 1) (length blends))))
+    (pdata-upload!)))
+

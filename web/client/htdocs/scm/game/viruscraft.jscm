@@ -42,26 +42,6 @@
 (define units (pentakis-build-units values))
 (build-world values units)
 
-(define cloud-shadow
-  (with-state
-   (rotate (vector 90 0 0))
-   (hint-nozwrite)
-   (texture (load-texture "cloud-shadow.png"))
-   (parent world-root)
-   (scale (vector 1.05 1.05 1.05))
-   (scale (vector 6 6 6))
-   (load-primitive "models/smooth-sphere-tex.obj")))
-
-(define clouds
-  (with-state
-   (rotate (vector 90 0 0))
-   (hint-nozwrite)
-   (texture (load-texture "clouds.png"))
-   (parent world-root)
-   (scale (vector 1.07 1.07 1.07))
-   (scale (vector 10 10 10))
-   (load-primitive "models/smooth-sphere-tex.obj")))
-
 (define score 0)
 (define hi-score 0)
 
@@ -144,9 +124,9 @@
   (set! score (+ score 1))
   (when (> score hi-score) (set! hi-score score))
 
-  (with-primitive world-root (rotate (vector 0 0 0.2)))
-  (with-primitive clouds (rotate (vector 0 0.1 0)))
-  (with-primitive cloud-shadow (rotate (vector 0 0.1 0)))
+  (with-primitive world-root (rotate (vector 0 0 0.05)))
+
+  (update-host-anim (* frame 2))
 
 ;;  (set-camera-transform (mat4.rotateX (camera-transform) 0.01))  
   (set! frame (+ frame 1))
