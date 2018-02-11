@@ -27,7 +27,7 @@
    ()
    (scenenode 0 (state gl) 0 '())
    ()
-   (vector 1 1 1 1)))
+   (vector 1 1 1)))
 
 (define (renderer-gl r) (list-ref r 0))
 (define (renderer-list r) (list-ref r 1))
@@ -199,4 +199,4 @@
       ))))
 
 (define (renderer-print r)
-  (scenegraph-print (renderer-scenegraph r)))
+  (scenegraph-print (renderer-scenegraph r) 0))

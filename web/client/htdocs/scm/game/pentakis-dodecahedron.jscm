@@ -390,9 +390,6 @@
 	 (list (list 5 4) (list #f #f #f))
 	 )))
    
-
-
-
 (define (pentakis-build-units values)
   (map
    (lambda (row)

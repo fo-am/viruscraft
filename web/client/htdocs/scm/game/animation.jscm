@@ -26,6 +26,8 @@
    (list-ref blends n))
   (pdata-upload!))
 
+;; cpu bound version - reallllly slow
+;; could easily do GPU
 (define (set-blend-shape-lerp! blends n)
   (let ((n (fmod n (length blends)))
 	(i 0) 
@@ -37,5 +39,6 @@
        )
      (list-ref blends (floor n))
      (list-ref blends (modulo (+ (floor n) 1) (length blends))))
-    (pdata-upload!)))
+    (pdata-upload!)
+    ))
 

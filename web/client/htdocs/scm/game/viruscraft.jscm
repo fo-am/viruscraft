@@ -24,7 +24,7 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(clear-colour (vector 0.0 0.0 0.0 1.0))
+(clear-colour (vector 0.0 0.0 0.0))
 
 (set-camera-transform 
  (mat4.rotateX  
@@ -40,7 +40,7 @@
 
 (define values (pentakis-build-values 20))
 (define units (pentakis-build-units values))
-(build-world values units)
+(define world-units (build-world values units))
 
 (define score 0)
 (define hi-score 0)
@@ -135,5 +135,4 @@
 ;;(qslerp virus-src virus-dst virus-t))
 
 (every-frame (render))
-
 

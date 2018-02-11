@@ -26,6 +26,7 @@
 (load "flx/scm/renderer.jscm")
 (load "flx/scm/instanceprim.jscm")
 (load "flx/scm/polyprim.jscm")
+(load "flx/scm/geometry.jscm")
 
 (define the-renderer 0)
 

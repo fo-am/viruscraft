@@ -8,7 +8,7 @@
 (define (obj-variation-jitter o) (list-ref o 0))
 (define (obj-variation-obj o) (list-ref o 1))
 
-(define num-variations 1)
+(define num-variations 3)
 
 (define (blendshape blends) 
   (list 
@@ -48,7 +48,7 @@
    (host-id host)
    (with-state
     (let ((pos (spherical->cartesian     
-		(vector (vx (host-location host)) 12
+		(vector (vx (host-location host)) 10
 			(vy (host-location host))))))
       ;;(scale (vector 0.5 0.5 0.5))
       (translate pos)

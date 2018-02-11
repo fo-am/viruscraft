@@ -5,16 +5,27 @@
 
 (load "scm/game/pentakis-dodecahedron.jscm")
 
+(define world-type "flat")
+;;(define world-type "mod")
+
+(define (make-unit face-id unit-code tx ori)
+  (list face-id unit-code tx ori))
+
+(define (unit-face-id u) (list-ref u 0))
+(define (unit-face-code u) (list-ref u 1))
+(define (unit-face-tx u) (list-ref u 2))
+(define (unit-face-ori u) (list-ref u 3))
+
 (define unit-models 
   (with-state (translate (vector 1000 0 0)) 
-	      (list (load-ply-primitive "models/world-unit-mod-000.ply")
-		    (load-ply-primitive "models/world-unit-mod-001.ply")
-		    (load-ply-primitive "models/world-unit-mod-010.ply")
-		    (load-ply-primitive "models/world-unit-mod-011.ply")
-		    (load-ply-primitive "models/world-unit-mod-100.ply")
-		    (load-ply-primitive "models/world-unit-mod-101.ply")
-		    (load-ply-primitive "models/world-unit-mod-110.ply")
-		    (load-ply-primitive "models/world-unit-mod-111.ply"))))
+	      (list (load-ply-primitive (string-append "models/world-unit-" world-type "-000.ply"))
+		    (load-ply-primitive (string-append "models/world-unit-" world-type "-001.ply"))
+		    (load-ply-primitive (string-append "models/world-unit-" world-type "-010.ply"))
+		    (load-ply-primitive (string-append "models/world-unit-" world-type "-011.ply"))
+		    (load-ply-primitive (string-append "models/world-unit-" world-type "-100.ply"))
+		    (load-ply-primitive (string-append "models/world-unit-" world-type "-101.ply"))
+		    (load-ply-primitive (string-append "models/world-unit-" world-type "-110.ply"))
+		    (load-ply-primitive (string-append "models/world-unit-" world-type "-111.ply")))))
 
 (define (unit->model unit models)
   (list-ref
@@ -29,8 +40,6 @@
     ((eq? unit "101") 6)
     (else 7))))
 
-(define (choose l) (list-ref l (random (length l))))
-
 (define pentakis 
   (with-state
    (hint-none)
@@ -39,12 +48,28 @@
    (translate (vector 1000 0 0))
    (load-ply-primitive "models/pentakis-rings.ply")))
 
+(define (search-face-with-lat-lng pentakis face-ids lat lng)
+  (with-primitive 
+   pentakis
+   (index-foldl
+    (lambda (i id r)
+      (if (and (not r)
+	       (point-in-triangle2? 
+		(list lat lng) 
+		(list
+		 (pdata-ref "c" (* id 3))
+		 (pdata-ref "c" (+ (* id 3) 1))
+		 (pdata-ref "c" (+ (* id 3) 2)))))
+	  id r))
+    #f
+    face-ids)))
+
 (define (longest a b c)
   (if (> (vmag a) (vmag b)) 
       (if (> (vmag a) (vmag c)) 0 2)
       (if (> (vmag b) (vmag c)) 1 2)))
 
-(define (get-face-transforms face-num)
+(define (get-face-transform face-num)
   (let ((centre 
 	 (vdiv 
 	  (vadd
@@ -72,59 +97,6 @@
 (define world-root (build-locator))
 (define face-ids (build-list 80 (lambda (i) i)))
 
- (define pvertex-shader
-  "
-precision mediump float;
-varying vec3 P;
-varying vec3 T;
-varying vec3 C;
-varying vec3 N;
-varying vec3 L;
-uniform mat4 ModelViewMatrix;
-uniform mat4 NormalMatrix;
-uniform vec3 CameraPos;
-attribute vec3 p;
-attribute vec3 t;
-attribute vec3 n;
-attribute vec3 c;
-
-void main()
-{
-    P = p.xyz;
-    T = t;
-    C = c;
-    L = vec3(0,1,0); /* vec3(ModelViewMatrix*vec4((vec3(0,10,0)-p),1)); */
-    N = normalize(vec3(NormalMatrix*vec4(n,1)));	
-    gl_Position = ModelViewMatrix * vec4(p,1);
-}")
-
-(define pfragment-shader
-  "
-precision mediump float;
-uniform sampler2D texture;
-uniform vec3 DiffuseColour;
-varying vec3 P;
-varying vec3 T;
-varying vec3 C;
-varying vec3 N;
-varying vec3 L;
-
-void main() {
-    vec3 l = normalize(L);
-    vec3 n = normalize(N);
-    float diffuse = dot(vec3(0,0.6,0.6),n);
-
-    if(texture2D(texture, vec2(T.s, T.t)).a == 0.0) {
-        discard;
-    }
-
-    gl_FragColor = vec4(texture2D(texture, vec2(T.s, T.t)).xyz *
-                            DiffuseColour*C*diffuse, 
-                        texture2D(texture, vec2(T.s, T.t)).a);
-}
-")
-
-
 (define (build-world value units)
   (msg "building world")
 
@@ -132,12 +104,11 @@ void main() {
   (set! world-root (build-locator))
 
   (with-state
-   (shader pvertex-shader pfragment-shader)
    (parent world-root)
-   (scale (vector 12 12 12))
-   (index-for-each
+   (scale (vector 10 10 10))
+   (index-map
     (lambda (i face-id)
-      (let ((tx (with-primitive pentakis (get-face-transforms face-id)))
+      (let ((tx (with-primitive pentakis (get-face-transform face-id)))
 	    (loc (face-id->loc pent-ori face-id)))
 	(let ((ori (cadr (find-face pent-ori loc)))
 	      (unit (find-face units loc)))
@@ -162,7 +133,8 @@ void main() {
 		 (scale (vector -1 1 1)))
 	   
 	   (rotate (vector -90 0 0))
-	   (build-instance (unit->model unit unit-models))))))
+	   (build-instance (unit->model unit unit-models))
+	   (make-unit face-id unit tx ori)))))
     face-ids)))
 
 

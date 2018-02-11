@@ -48,7 +48,8 @@
 (define (random-point-nearby position)
   (vector
    (+ (vx position) (* spawn-dist (sin (* (rndf) two-pi))))
-   (+ (vy position) (* spawn-dist (cos (* (rndf) two-pi))))))
+   (+ (vy position) (* spawn-dist (cos (* (rndf) two-pi)))) 
+   0))
 
 ;;;;;;;;;;;;;;;;;;;
 ;; receptor types
@@ -220,7 +221,8 @@
    (choose host-species-types)
    #f
    (vector (+ host-loc-lat-start (* (rndf) host-loc-lat-width))
-	   (+ host-loc-lng-start (* (rndf) host-loc-lng-width)))
+	   (+ host-loc-lng-start (* (rndf) host-loc-lng-width))
+	   0)
    (+ host-health-start (random (- max-host-health host-health-start)))
    (random host-decline-age)))
 
@@ -230,7 +232,7 @@
    (pick-random-receptor-type)
    (choose host-species-types)
    #f
-   (vector (* (quotient i 10) width) (* (modulo i 10) width))
+   (vector (* (quotient i 10) width) (* (modulo i 10) width) 0)
    host-health-start
    (random host-decline-age)))
 

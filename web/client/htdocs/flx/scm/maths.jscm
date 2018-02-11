@@ -19,23 +19,27 @@
 (js "var pi = Math.PI")
 (js "var two_pi = Math.PI*2")
 
+
 (define (sqrt a) (Math.sqrt a))
 (define (pow a b) (Math.pow a b))
 (define (square x) (* x x))
 (define (trunc x) (js "~~x"))
+(define (feq a b) (< (Math.abs (- a b)) Number.EPSILON))
 
-(define vector
-  (lambda (x y z)
-    (list x y z)))
+(define (vector x y z) (list x y z))
 
-(define vx (lambda (v) (list-ref v 0)))
-(define vy (lambda (v) (list-ref v 1)))
-(define vz (lambda (v) (list-ref v 2)))
-(define vw (lambda (v) (list-ref v 3)))
+(define (vx v) (list-ref v 0))
+(define (vy v) (list-ref v 1))
+(define (vz v) (list-ref v 2))
+(define (vw v) (list-ref v 3))
 
-(define vector-clone
-  (lambda (v)
-    (vector (vx v) (vy v) (vz v))))
+(define (veq? a b) 
+  (and (feq? (vx a) (vx a))
+       (feq? (vy a) (vy b))
+       (feq? (vz a) (vz b))))
+
+(define (vector-clone v)
+  (vector (vx v) (vy v) (vz v)))
 
 (define (vadd a b)
   (vector (+ (vx a) (vx b))
