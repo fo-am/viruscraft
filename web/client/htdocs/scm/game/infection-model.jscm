@@ -16,12 +16,12 @@
 (define host-infection-growth -0.1) ; not (* sus)
 (define host-health-start 10)
 (define host-decline-age 500)
-(define host-spawn-min-distance 0.05)
+(define host-spawn-min-distance 0.00005)
 (define spawn-dist 0.2)
 (define host-spawn-dist-tries 5)
 
-(define host-loc-lat-start (* Math.PI 0.25))
-(define host-loc-lat-width (* Math.PI 0.5))
+(define host-loc-lat-start (* Math.PI 0))
+(define host-loc-lat-width (* Math.PI 1))
 (define host-loc-lng-start (* Math.PI 0))
 (define host-loc-lng-width (* Math.PI 2))
 
@@ -30,7 +30,7 @@
 (define susceptibility-slope 2.5)
 (define susceptibility-max-receptors 20)
 ;;(define susceptibility-prob-factor 0.2)
-(define max-pop-size 50)
+(define max-pop-size 100)
 
 (define infection-distance 0.4)
 
@@ -216,14 +216,15 @@
 
 ;; loop round until we find a position - todo: will hang!!
 (define (find-world-position species world-position-checker)
-  (let ((pos (vector (+ host-loc-lat-start (* (rndf) host-loc-lat-width))
-		     (+ host-loc-lng-start (* (rndf) host-loc-lng-width))
+  (let ((pos (vector (* (rndf) host-loc-lat-width)
+		     (* (rndf) host-loc-lng-width)
 		     0)))
     (if (world-position-checker species pos) 
 	pos (find-world-position species world-position-checker))))
 
+;;(choose host-species-types)))
 (define (make-random-host world-position-checker)
-  (let ((species (choose host-species-types)))
+  (let ((species 'land)) 
     (make-host 
      (make-host-id)
      (pick-random-receptor-type)
@@ -237,7 +238,8 @@
   (make-host 
    (make-host-id)
    (pick-random-receptor-type)
-   (choose host-species-types)
+   'sea
+   ;;(choose host-species-types)
    #f
    (vector (* (quotient i 10) width) (* (modulo i 10) width) 0)
    host-health-start

@@ -45,7 +45,7 @@
   (with-state
    (hide #t)
    (scale (vector 6.9 6.9 6.9))
-   (load-ply-primitive "models/pentakis-rings.ply")))
+   (load-ply-primitive "models/pentakis-rings2.ply")))
 
 (define (longest a b c)
   (if (> (vmag a) (vmag b)) 
@@ -107,12 +107,14 @@
 	    (else (rotate (vector 0 0 0))))
 	   
 	   (when (eq? ori 4) 
-		 (rotate (vector 0 120 0))
-		 (scale (vector -1 1 1)))
+	    	 ;;(colour (vector 1 0.5 0.5))
+	    	 (rotate (vector 0 120 0))
+	    	 (scale (vector -1 1 1)))
 	   
 	   (when (eq? ori 0) 
-		 (rotate (vector 0 -120 0))
-		 (scale (vector -1 1 1)))
+	    	 ;;(colour (vector 0 1 0))
+	    	 (rotate (vector 0 -120 0))
+	   	 (scale (vector -1 1 1)))
 	   
 	   (rotate (vector -90 0 0))
 	   (make-unit face-id unit tx ori
@@ -136,49 +138,94 @@
 
 (define triangle-verts
   (list
+   (vector -0.86603 -0.5 0)
    (vector 0 1 0)
    (vector 0.86603 -0.5 0)
-   (vector -0.86603 -0.5 0)))
+   ))
 
-(define (calc-local face-id location)
+(define triangle-verts-4
+  (list
+   (vector 0 1 0)
+   (vector -0.86603 -0.5 0)
+   (vector 0.86603 -0.5 0)
+   ))
+
+(define triangle-verts-0
+  (list
+   (vector -0.86603 -0.5 0)
+   (vector 0.86603 -0.5 0)
+   (vector 0 1 0)
+   ))
+
+(define (calc-local/bary face-id location ori)
   (with-primitive 
    pentakis
-   (let ((bary (point3->barycentric 
-		(vector (vx location) (vy location) 0)
-		(pdata-ref "t" (* face-id 3))
-		(pdata-ref "t" (+ (* face-id 3) 1))
-		(pdata-ref "t" (+ (* face-id 3) 2)))))
-     (vadd
-      (vadd
-       (vmul (list-ref triangle-verts 0) (vx bary))
-       (vmul (list-ref triangle-verts 1) (vy bary)))
-      (vmul (list-ref triangle-verts 2) (vz bary))))))
+   (let ((bary 
+	  (point3->barycentric 
+	   (vector (vx location) (vy location) 0)
+	   (pdata-ref "t" (* face-id 3))
+	   (pdata-ref "t" (+ (* face-id 3) 1))
+	   (pdata-ref "t" (+ (* face-id 3) 2)))))
+     (let ((triangle (cond ((eq? ori 4) triangle-verts-4)
+			   ((eq? ori 0) triangle-verts-0)
+			   (else triangle-verts))))
+       (list
+	(vadd
+	 (vadd
+	  (vmul (list-ref triangle 0) (vx bary))
+	  (vmul (list-ref triangle 1) (vy bary)))
+	 (vmul (list-ref triangle 2) (vz bary)))
+	bary)))))
 
 (define (find-local/bary/unit-from-latlng world-units location)
   ;; convert latlng to tex coords
-  (let ((location (list (fmod (/ (vx location) Math.PI) 1) 
-			(fmod (/ (vy location) (* 2 Math.PI)) 1))))
+  (let ((location (list (/ (vx location) Math.PI) 
+			(/ (vy location) (* 2 Math.PI)))))
     (let ((face-id (find-face-from-latlng pentakis face-ids location)))
-      (list
-       (calc-local face-id location)
-       (foldl
-	(lambda (unit r)
-	  (if (and (not r) (eq? face-id (unit-face-id unit)))
-	      unit r))
-	#f
-	world-units))))) 
+      (let ((unit (foldl
+		   (lambda (unit r)
+		     (if (and (not r) 
+			      (eq? face-id (unit-face-id unit)))
+			 unit r))
+		   #f
+		   world-units)))
+	(append
+	 (calc-local/bary face-id location (unit-face-ori unit))
+	 (list unit))))))
+
+(define (land-100? bary d) (and (> (vx bary) d) (> (vz bary) d)))
+(define (land-010? bary d) (and (> (vy bary) d) (> (vz bary) d)))
+(define (land-001? bary d) (and (> (vy bary) d) (> (vx bary) d)))
+
+(define (land-110? bary d) (and (> (vy bary) 0.2) (< (vy bary) 0.6)))
+(define (land-011? bary d) (and (> (vz bary) 0.2) (< (vz bary) 0.6)))
+(define (land-101? bary d) (and (> (vx bary) 0.2) (< (vx bary) 0.6)))
 
 (define (build-world-position-checker world-units)
   (lambda (species-type location)
     (let ((t (find-local/bary/unit-from-latlng world-units location)))
-      (let ((unit (cadr t)) (pos (car t)))
+      (let ((pos (list-ref t 0)) 
+	    (bary (list-ref t 1))
+	    (unit (list-ref t 2)))
 	(cond
 	 ((or (eq? species-type 'land2) (eq? species-type 'land))
 	  (cond
 	   ((eq? (unit-face-code unit) "111") #t)
+	   ((eq? (unit-face-code unit) "100") (land-100? bary 0.2))
+	   ((eq? (unit-face-code unit) "010") (land-010? bary 0.2))
+	   ((eq? (unit-face-code unit) "001") (land-001? bary 0.2))
+	   ((eq? (unit-face-code unit) "110") (land-110? bary 0.2))
+	   ((eq? (unit-face-code unit) "011") (land-011? bary 0.2))
+	   ((eq? (unit-face-code unit) "101") (land-101? bary 0.2))
 	   (else #f)))
 	 ((eq? species-type 'sea)
 	  (cond
 	   ((eq? (unit-face-code unit) "000") #t)
+	   ((eq? (unit-face-code unit) "100") (not (land-100? bary 0.1)))
+	   ((eq? (unit-face-code unit) "010") (not (land-010? bary 0.1)))
+	   ((eq? (unit-face-code unit) "001") (not (land-001? bary 0.1)))
+	   ((eq? (unit-face-code unit) "110") (not (land-110? bary 0.2)))
+	   ((eq? (unit-face-code unit) "011") (not (land-011? bary 0.2)))
+	   ((eq? (unit-face-code unit) "101") (not (land-101? bary 0.2)))
 	   (else #f)))
 	 (else #f))))))

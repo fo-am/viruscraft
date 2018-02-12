@@ -47,7 +47,9 @@
 
 (define (make-organism world-units host)
   (let ((t (find-local/bary/unit-from-latlng world-units (host-location host))))
-    (let ((pos (car t)) (unit (cadr t)))
+    (let ((pos (list-ref t 0)) 
+	  (bary (list-ref t 1))
+	  (unit (list-ref t 2)))
       (list 
        (host-id host)
        (with-state

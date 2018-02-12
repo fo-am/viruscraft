@@ -106,7 +106,6 @@
    (scale (vector 5 5 5)))
   (set! host-extinct-marker-t (- host-extinct-marker-t 0.01))
 
-
   (set! virus-q (qslerp virus-src virus-dst virus-t)) 
   (when (< virus-t 1) (set! virus-t (+ virus-t 0.05)))
 
@@ -132,13 +131,13 @@
 
   (with-primitive world-root (rotate (vector 0 0 0.5)))
 
-  (update-host-anim (* frame 2))
+  ;;(update-host-anim (* frame 2))
 
 ;;  (set-camera-transform (mat4.rotateX (camera-transform) 0.01))  
   (set! frame (+ frame 1))
   )
 
 ;;(qslerp virus-src virus-dst virus-t))
+;;(with-primitive world-root (rotate (vector 90 0 0)))
 
 (every-frame (render))
-;;(render)
