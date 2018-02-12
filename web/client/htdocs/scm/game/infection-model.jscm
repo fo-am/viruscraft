@@ -18,7 +18,7 @@
 (define host-decline-age 500)
 (define host-spawn-min-distance 0.05)
 (define spawn-dist 0.2)
-(define host-spawn-dist-tries 50)
+(define host-spawn-dist-tries 5)
 
 (define host-loc-lat-start (* Math.PI 0.25))
 (define host-loc-lat-width (* Math.PI 0.5))
@@ -163,12 +163,12 @@
   (let ((point (random-point-nearby position)))
     (cond
      ;; give up!!
-     ((< num-tries 1) (msg "spawn: over max tries") point)
+     ((< num-tries 1) (msg "spawn: over max tries") #f)
      ((check-location point population host-spawn-min-distance) point)
      (else (find-free-location position population (- num-tries 1))))))
 
 ;; returns a new, mutated host species
-(define (host-new-species host population)
+(define (host-new-species host population location)
   (make-host
    (make-host-id)
    (if (< (random 100) mutation-rate)
@@ -177,8 +177,8 @@
    (host-species host) ;; maintain species type
    #f ;; infected should always be false as infected
       ;; species can't generate new species (at the moment)
-   ;; pick a new position on the edge of the parent species
-   (find-free-location (host-location host) population host-spawn-dist-tries)
+   ;; pick a new position near to the parent species
+   location
    host-health-start
    0))
 
@@ -214,17 +214,24 @@
      (host-health host)
      (host-age host))))
 
-(define (make-random-host)
-  (make-host 
-   (make-host-id)
-   (pick-random-receptor-type)
-   (choose host-species-types)
-   #f
-   (vector (+ host-loc-lat-start (* (rndf) host-loc-lat-width))
-	   (+ host-loc-lng-start (* (rndf) host-loc-lng-width))
-	   0)
-   (+ host-health-start (random (- max-host-health host-health-start)))
-   (random host-decline-age)))
+;; loop round until we find a position - todo: will hang!!
+(define (find-world-position species world-position-checker)
+  (let ((pos (vector (+ host-loc-lat-start (* (rndf) host-loc-lat-width))
+		     (+ host-loc-lng-start (* (rndf) host-loc-lng-width))
+		     0)))
+    (if (world-position-checker species pos) 
+	pos (find-world-position species world-position-checker))))
+
+(define (make-random-host world-position-checker)
+  (let ((species (choose host-species-types)))
+    (make-host 
+     (make-host-id)
+     (pick-random-receptor-type)
+     species
+     #f
+     (find-world-position species world-position-checker)
+     (+ host-health-start (random (- max-host-health host-health-start)))
+     (random host-decline-age))))
 
 (define (make-grid-host i width)
   (make-host 
@@ -245,17 +252,22 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; main population
 
-(define (make-random-population size)
-  (build-list size (lambda (_) (make-random-host))))
+(define (make-random-population size world-position-checker)
+  (build-list size (lambda (_) (make-random-host world-position-checker))))
 
 (define (make-grid-population size width)
   (build-list size (lambda (i) (make-grid-host i width))))
 
-(define (population-collect-new-species population)
+(define (population-collect-new-species population world-position-checker)
   (foldl
    (lambda (host r)
      (if (host-can-branch-new-species? host)
-         (cons (host-new-species host population) r) r))
+	 ;; first find a location free of other organisms
+	 (let ((location (find-free-location (host-location host) population host-spawn-dist-tries)))
+	   ;; now check that we can live there
+	   (if (and location (world-position-checker (host-species host) location))
+	       (cons (host-new-species host population location) r) r))
+	 r))
    '()
    population))
 
@@ -264,16 +276,20 @@
    (lambda (other-host infection)
      (if (and (not infection)
               (host-infected? other-host)
-	      (< (vec2-dist (host-location host) (host-location other-host))
+	      (< (vec2-dist (host-location host) 
+			    (host-location other-host))
 		 infection-distance))
 	 #t infection))
    #f
    population))
 
-(define (population-update population virus)
+;; requires a function to check the new position for organisms
+(define (population-update population virus world-position-checker)
   (append
    (if (< (length population) max-pop-size)
-       (population-collect-new-species population) ;; add new species
+       (population-collect-new-species 
+	population 
+	world-position-checker) ;; add new species
        '())
    (map
     (lambda (host)

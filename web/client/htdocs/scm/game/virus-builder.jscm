@@ -73,10 +73,10 @@
 	  (colour (vector 1 0 0))
 	  (build-instance instance)))))
 
-(define receptor-circle (load-primitive "models/receptor-circle.obj"))
-(define receptor-triangle (load-primitive "models/receptor-triangle.obj"))
-(define receptor-square (load-primitive "models/receptor-square.obj"))
-(define receptor-donut (load-primitive "models/receptor-donut.obj"))
+(define receptor-circle (with-state (hide #t) (load-primitive "models/receptor-circle.obj")))
+(define receptor-triangle (with-state (hide #t) (load-primitive "models/receptor-triangle.obj")))
+(define receptor-square (with-state (hide #t) (load-primitive "models/receptor-square.obj")))
+(define receptor-donut (with-state (hide #t) (load-primitive "models/receptor-donut.obj")))
 
 (define (update-virus)
   (set! virus (make-virus 

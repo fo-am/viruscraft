@@ -225,6 +225,12 @@
            (lambda (state)
              (state-modify-parent state id)))))
 
+(define (hide v)
+  (set! the-renderer (renderer-modify-current-state
+           the-renderer
+           (lambda (state)
+             (state-modify-hidden state v)))))
+
 (define (add-to-scenegraph! prim)
   (let ((id (new-id)))
     (set! the-renderer (renderer-modify-scenegraph

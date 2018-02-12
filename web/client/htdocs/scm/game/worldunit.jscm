@@ -8,16 +8,17 @@
 (define world-type "flat")
 ;;(define world-type "mod")
 
-(define (make-unit face-id unit-code tx ori)
-  (list face-id unit-code tx ori))
+(define (make-unit face-id unit-code tx ori root)
+  (list face-id unit-code tx ori root))
 
 (define (unit-face-id u) (list-ref u 0))
 (define (unit-face-code u) (list-ref u 1))
 (define (unit-face-tx u) (list-ref u 2))
 (define (unit-face-ori u) (list-ref u 3))
+(define (unit-face-root u) (list-ref u 4))
 
 (define unit-models 
-  (with-state (translate (vector 1000 0 0)) 
+  (with-state (hide #t) 
 	      (list (load-ply-primitive (string-append "models/world-unit-" world-type "-000.ply"))
 		    (load-ply-primitive (string-append "models/world-unit-" world-type "-001.ply"))
 		    (load-ply-primitive (string-append "models/world-unit-" world-type "-010.ply"))
@@ -42,27 +43,9 @@
 
 (define pentakis 
   (with-state
-   (hint-none)
-   (hint-wire)
+   (hide #t)
    (scale (vector 6.9 6.9 6.9))
-   (translate (vector 1000 0 0))
    (load-ply-primitive "models/pentakis-rings.ply")))
-
-(define (search-face-with-lat-lng pentakis face-ids lat lng)
-  (with-primitive 
-   pentakis
-   (index-foldl
-    (lambda (i id r)
-      (if (and (not r)
-	       (point-in-triangle2? 
-		(list lat lng) 
-		(list
-		 (pdata-ref "c" (* id 3))
-		 (pdata-ref "c" (+ (* id 3) 1))
-		 (pdata-ref "c" (+ (* id 3) 2)))))
-	  id r))
-    #f
-    face-ids)))
 
 (define (longest a b c)
   (if (> (vmag a) (vmag b)) 
@@ -98,8 +81,6 @@
 (define face-ids (build-list 80 (lambda (i) i)))
 
 (define (build-world value units)
-  (msg "building world")
-
   (destroy world-root)
   (set! world-root (build-locator))
 
@@ -113,6 +94,7 @@
 	(let ((ori (cadr (find-face pent-ori loc)))
 	      (unit (find-face units loc)))
 	  (with-state	      
+	   ;(hint-none)(hint-wire)
 	   (concat (cadr tx))
 	   (rotate (vector -90 0 0))
 	   (scale (vector 0.58 -1 1.75))
@@ -133,10 +115,70 @@
 		 (scale (vector -1 1 1)))
 	   
 	   (rotate (vector -90 0 0))
-	   (build-instance (unit->model unit unit-models))
-	   (make-unit face-id unit tx ori)))))
+	   (make-unit face-id unit tx ori
+		      (build-instance (unit->model unit unit-models)))))))
     face-ids)))
 
+(define (find-face-from-latlng pentakis face-ids location)
+  (with-primitive 
+   pentakis
+   (index-foldl
+    (lambda (i id r)
+      (if (and (not r)
+	       (point2-in-triangle? 
+		location
+		(pdata-ref "t" (* id 3))
+		(pdata-ref "t" (+ (* id 3) 1))
+		(pdata-ref "t" (+ (* id 3) 2))))
+	  id r))
+    #f
+    face-ids)))
 
+(define triangle-verts
+  (list
+   (vector 0 1 0)
+   (vector 0.86603 -0.5 0)
+   (vector -0.86603 -0.5 0)))
 
+(define (calc-local face-id location)
+  (with-primitive 
+   pentakis
+   (let ((bary (point3->barycentric 
+		(vector (vx location) (vy location) 0)
+		(pdata-ref "t" (* face-id 3))
+		(pdata-ref "t" (+ (* face-id 3) 1))
+		(pdata-ref "t" (+ (* face-id 3) 2)))))
+     (vadd
+      (vadd
+       (vmul (list-ref triangle-verts 0) (vx bary))
+       (vmul (list-ref triangle-verts 1) (vy bary)))
+      (vmul (list-ref triangle-verts 2) (vz bary))))))
 
+(define (find-local/bary/unit-from-latlng world-units location)
+  ;; convert latlng to tex coords
+  (let ((location (list (fmod (/ (vx location) Math.PI) 1) 
+			(fmod (/ (vy location) (* 2 Math.PI)) 1))))
+    (let ((face-id (find-face-from-latlng pentakis face-ids location)))
+      (list
+       (calc-local face-id location)
+       (foldl
+	(lambda (unit r)
+	  (if (and (not r) (eq? face-id (unit-face-id unit)))
+	      unit r))
+	#f
+	world-units))))) 
+
+(define (build-world-position-checker world-units)
+  (lambda (species-type location)
+    (let ((t (find-local/bary/unit-from-latlng world-units location)))
+      (let ((unit (cadr t)) (pos (car t)))
+	(cond
+	 ((or (eq? species-type 'land2) (eq? species-type 'land))
+	  (cond
+	   ((eq? (unit-face-code unit) "111") #t)
+	   (else #f)))
+	 ((eq? species-type 'sea)
+	  (cond
+	   ((eq? (unit-face-code unit) "000") #t)
+	   (else #f)))
+	 (else #f))))))

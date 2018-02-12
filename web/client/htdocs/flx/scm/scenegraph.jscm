@@ -91,31 +91,34 @@
       (scenenode-children sn))))))
 
 (define (scenegraph-render sn gl view-camera camera-pos tx)
-  (when (not (zero? (scenenode-primitive sn)))
-	(let ((hints (state-hints (scenenode-state sn))))
-	  ;; hints that affect all types of primitive
-	  (if (bitwise-and hints FLX_HINT_NOZWRITE)
-	      (gl.depthMask false)
-	      (gl.depthMask true))
-	  (if (bitwise-and hints FLX_HINT_CULL_FACE)
-	      (gl.enable gl.CULL_FACE)
-	      (gl.disable gl.CULL_FACE))
-	  (if (bitwise-and hints FLX_HINT_CULL_CCW) 
-	      (gl.frontFace gl.CW)
-	      (gl.frontFace gl.CCW))
-	  (if (bitwise-and hints FLX_HINT_IGNORE_DEPTH) 
-	      (gl.disable gl.DEPTH_TEST)
-	      (gl.enable gl.DEPTH_TEST))
-	  (primitive-render 
-	   (scenenode-primitive sn) gl view-camera camera-pos 
-	   (scenenode-state sn)
-	   tx)))
-  ;;(msg (+ "len:" (length (scenenode-children sn))))
-  (for-each 
-   (lambda (child)
-     (scenegraph-render child gl view-camera camera-pos
-			(state-tx (scenenode-state sn))))
-   (scenenode-children sn)))
+  (when (not (state-hidden (scenenode-state sn)))
+	(when (not (zero? (scenenode-primitive sn)))
+	      (let ((hints (state-hints (scenenode-state sn))))
+		;; hints that affect all types of primitive
+		(if (bitwise-and hints FLX_HINT_NOZWRITE)
+		    (gl.depthMask false)
+		    (gl.depthMask true))
+		(if (bitwise-and hints FLX_HINT_CULL_FACE)
+		    (gl.enable gl.CULL_FACE)
+		    (gl.disable gl.CULL_FACE))
+		(if (bitwise-and hints FLX_HINT_CULL_CCW) 
+		    (gl.frontFace gl.CW)
+		    (gl.frontFace gl.CCW))
+		(if (bitwise-and hints FLX_HINT_IGNORE_DEPTH) 
+		    (gl.disable gl.DEPTH_TEST)
+		    (gl.enable gl.DEPTH_TEST))
+		(primitive-render 
+		 (scenenode-primitive sn) gl view-camera camera-pos 
+		 (scenenode-state sn)
+		 tx)))
+	
+	(let ((child-tx (mat4.create)))
+	  ;; pass the heirachical transform down
+	  (mat4.multiply tx (state-tx (scenenode-state sn)) child-tx)    
+	  (for-each 
+	   (lambda (child)
+	     (scenegraph-render child gl view-camera camera-pos child-tx))
+	   (scenenode-children sn)))))
 
 (define (scenegraph-print sn depth)
   (scenenode-print sn)

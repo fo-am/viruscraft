@@ -11,12 +11,14 @@
 (define num-variations 3)
 
 (define (blendshape blends) 
-  (list 
-   (build-list 
-    num-variations 
-    (lambda (_) 
-      (obj-variation (random 30) (load-ply-primitive (car blends)))))
-   (load-blend-shapes blends)))
+  (with-state
+   (hide #t)
+   (list 
+    (build-list 
+     num-variations 
+     (lambda (_) 
+       (obj-variation (random 30) (load-ply-primitive (car blends)))))
+    (load-blend-shapes blends))))
 
 (define (blendshape-vars b) (list-ref b 0))
 (define (blendshape-blends b) (list-ref b 1))
@@ -43,37 +45,33 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define (make-organism root host)
-  (list 
-   (host-id host)
-   (with-state
-    (let ((pos (spherical->cartesian     
-		(vector (vx (host-location host)) 10
-			(vy (host-location host))))))
-      ;;(scale (vector 0.5 0.5 0.5))
-      (translate pos)
-      ;;(scale (vector 0.05 0.05 0.05))
-      (maim (vnormalise pos) (vector 0 0 1)))
-    (shader host-vertex-shader host-fragment-shader)
-    (rotate (vector 0 90 0))
-    (scale (vector 0.2 0.2 0.2))
-    (parent root)
+(define (make-organism world-units host)
+  (let ((t (find-local/bary/unit-from-latlng world-units (host-location host))))
+    (let ((pos (car t)) (unit (cadr t)))
+      (list 
+       (host-id host)
+       (with-state
+	(shader host-vertex-shader host-fragment-shader)
+	(translate pos)
+	(translate (vector 0 0 0.2))
+	(scale (vector 0.05 0.05 0.05))
+	(parent (unit-face-root unit))
 
-    (texture (load-texture 
-	      (cond 
-	       ((eq? (host-receptor host) 'circle) "host-circle3.png")
-	       ((eq? (host-receptor host) 'triangle) "host-triangle3.png")
-	       ((eq? (host-receptor host) 'square) "host-square3.png")
-	       (else "host-donut3.png"))))
-    
-    (build-instance 
-     (obj-variation-obj 
-      (choose (blendshape-vars (cond ((eq? (host-species host) 'sea) (list-ref host-blends 0))
-				     ((eq? (host-species host) 'land) (list-ref host-blends 1)) 
-				     (else (list-ref host-blends 2)) 
-				     )))))
-    )
-   ))
+	(texture (load-texture 
+		  (cond 
+		   ((eq? (host-receptor host) 'circle) "host-circle3.png")
+		   ((eq? (host-receptor host) 'triangle) "host-triangle3.png")
+		   ((eq? (host-receptor host) 'square) "host-square3.png")
+		   (else "host-donut3.png"))))
+	
+	(build-instance 
+	 (obj-variation-obj 
+	  (choose (blendshape-vars (cond ((eq? (host-species host) 'sea) (list-ref host-blends 0))
+					 ((eq? (host-species host) 'land) (list-ref host-blends 1)) 
+					 (else (list-ref host-blends 2)) 
+					 )))))
+	)
+       ))))
 
 (define (organism-id c) (list-ref c 0))
 (define (organism-root c) (list-ref c 1))
@@ -83,26 +81,28 @@
    ((host-alive? host)
     (with-primitive 
      (organism-root organism)
-     (translate (vector 0 -0.05 0))
+     ;(translate (vector 0 -0.05 0))
      (cond ((host-infected? host) 
-	    (rotate (vector 0 0 -2))
+	    ;(rotate (vector 0 0 -2))
 	    (colour (vector 2 0.5 0.5)))
 	   (else 
-	    (rotate (vector 0 0 (if (zero? (modulo (host-id host) 2)) 1 -1)))))))
+	    ;(rotate (vector 0 0 (if (zero? (modulo (host-id host) 2)) 1 -1)))
+	    0
+	    ))))
    (else
     ;; remove the primitive as we have died
     (destroy (organism-root organism)))))
 
-(define (organisms-update organisms host root)
+(define (organisms-update organisms host world-units)
   (cond
    ((null? organisms) 
-    (make-organism root host))
+    (make-organism world-units host))
    ((eq? (organism-id (car organisms)) (host-id host))
     (organism-update! (car organisms) host)
     ;; no change
     (car organisms))
    (else
-    (organisms-update (cdr organisms) host root))))
+    (organisms-update (cdr organisms) host world-units))))
 
 (define (organisms-destroy organisms)
   (for-each 
@@ -110,10 +110,10 @@
      (destroy (organism-root organism)))
    organisms))
 
-(define (update-organisms organisms population root)
+(define (update-organisms organisms population world-units)
   (foldl  
    (lambda (host r)
-     (cons (organisms-update organisms host root) r))
+     (cons (organisms-update organisms host world-units) r))
    '()
    population))
 

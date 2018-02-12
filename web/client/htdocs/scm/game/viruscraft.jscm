@@ -10,7 +10,7 @@
 (load "scm/game/worldunit.jscm")
 (load "scm/game/virus-builder.jscm")
 
-(define flag (load-primitive "models/flag.obj"))
+(define flag (with-state (hide #t) (load-primitive "models/flag.obj")))
 
 (with-primitive 
  flag
@@ -31,16 +31,19 @@
   (mat4.translate (camera-transform) (vector 5 0 -7))
   (* 0.5 Math.PI)))
 
+(define values (pentakis-build-values 20))
+(define units (pentakis-build-units values))
+(define world-units (build-world values units))
+(define world-position-checker (build-world-position-checker world-units))
+
 (define frame 1)
 (define infection-rate 10)
 
 (define virus (make-virus (list)))
-(define population (population-infect (make-random-population 50) virus infection-rate))
+(define population (population-infect 
+		    (make-random-population 50 world-position-checker) 
+		    virus infection-rate))
 (define organisms '())
-
-(define values (pentakis-build-values 20))
-(define units (pentakis-build-units values))
-(define world-units (build-world values units))
 
 (define score 0)
 (define hi-score 0)
@@ -63,14 +66,17 @@
 
 (define (render)
   (when (zero? (modulo frame 1))
-	(set! population (population-update population virus))
-	(set! organisms (update-organisms organisms population world-root)))
-
+	(set! population (population-update population virus world-position-checker))
+	(set! organisms (update-organisms organisms population world-units)))
+  
   (when (zero? (length population))
 	(when (> score 100)
 	      (set! host-extinct-marker-t 1))
 	(set! score 0)
-	(set! population (population-infect (make-random-population 50) virus infection-rate)))
+	(set! population 
+	      (population-infect 
+	       (make-random-population 50 world-position-checker) 
+	       virus infection-rate)))
 
   (when (zero? (population-num-infected population))
 	(when (> score 100)
@@ -124,7 +130,7 @@
   (set! score (+ score 1))
   (when (> score hi-score) (set! hi-score score))
 
-  (with-primitive world-root (rotate (vector 0 0 0.05)))
+  (with-primitive world-root (rotate (vector 0 0 0.5)))
 
   (update-host-anim (* frame 2))
 
@@ -135,4 +141,4 @@
 ;;(qslerp virus-src virus-dst virus-t))
 
 (every-frame (render))
-
+;;(render)
