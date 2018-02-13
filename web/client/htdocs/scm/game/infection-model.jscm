@@ -15,8 +15,8 @@
 (define host-normal-growth 1) 
 (define host-infection-growth -0.1) ; not (* sus)
 (define host-health-start 10)
-(define host-decline-age 500)
-(define host-spawn-min-distance 0.00005)
+(define host-decline-age 1000)
+(define host-spawn-min-distance 0.05)
 (define spawn-dist 0.2)
 (define host-spawn-dist-tries 5)
 
@@ -214,17 +214,19 @@
      (host-health host)
      (host-age host))))
 
+;;(* (rndf) host-loc-lng-width)
+;;(* (rndf) host-loc-lat-width)
 ;; loop round until we find a position - todo: will hang!!
 (define (find-world-position species world-position-checker)
-  (let ((pos (vector (* (rndf) host-loc-lat-width)
-		     (* (rndf) host-loc-lng-width)
-		     0)))
+  (let ((pos (vector
+	      (* (rndf) host-loc-lat-width) 
+	      (* (rndf) host-loc-lng-width) 
+	      0)))
     (if (world-position-checker species pos) 
 	pos (find-world-position species world-position-checker))))
 
-;;(choose host-species-types)))
 (define (make-random-host world-position-checker)
-  (let ((species 'land)) 
+  (let ((species (choose host-species-types))) 
     (make-host 
      (make-host-id)
      (pick-random-receptor-type)

@@ -129,15 +129,17 @@
   (set! score (+ score 1))
   (when (> score hi-score) (set! hi-score score))
 
-  (with-primitive world-root (rotate (vector 0 0 0.5)))
+  (with-primitive world-root (rotate (vector 0 0.05 0)))
 
-  ;;(update-host-anim (* frame 2))
+  (update-host-anim (* frame 2))
 
 ;;  (set-camera-transform (mat4.rotateX (camera-transform) 0.01))  
   (set! frame (+ frame 1))
   )
 
 ;;(qslerp virus-src virus-dst virus-t))
-;;(with-primitive world-root (rotate (vector 90 0 0)))
+(with-primitive world-root (rotate (vector 90 0 0)))
 
 (every-frame (render))
+;;(render)
+;;(every-frame (with-primitive world-root (rotate (vector 0 0.5 0))))
