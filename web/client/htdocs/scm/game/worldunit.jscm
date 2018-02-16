@@ -6,7 +6,8 @@
 (load "scm/game/pentakis-dodecahedron.jscm")
 
 ;;(define world-type "flat")
-(define world-type "mod")
+;;(define world-type "mod")
+(define world-type "two")
 
 (define (make-unit face-id unit-code tx ori root)
   (list face-id unit-code tx ori root))
@@ -184,14 +185,10 @@
 	 (calc-local/bary face-id location (unit-face-ori unit))
 	 (list unit))))))
 
+;; returns whether the coordinates are on land for each tile type
 (define (land-100? bary d) (and (> (vy bary) d) (> (vz bary) d)))
 (define (land-010? bary d) (and (> (vy bary) d) (> (vx bary) d)))
 (define (land-001? bary d) (and (> (vz bary) d) (> (vx bary) d)))
-
-;(define (land-110? bary d) (and (> (vy bary) 0.3) (< (vy bary) 0.6)))
-;(define (land-011? bary d) (and (> (vx bary) 0.3) (< (vx bary) 0.6)))
-;(define (land-101? bary d) (and (> (vz bary) 0.3) (< (vz bary) 0.6)))
-
 (define (land-110? bary d) (and (> (vy bary) d) (< (vy bary) (- 1 d))))
 (define (land-011? bary d) (and (> (vx bary) d) (< (vx bary) (- 1 d))))
 (define (land-101? bary d) (and (> (vz bary) d) (< (vz bary) (- 1 d))))
@@ -204,8 +201,7 @@
 	;; we need to reorient the barycentric coordinates to 
 	;; match the orientation of the base unit... XD
 	(let ((bary (reorient-triangle (list-ref t 1) 
-				       (unit-face-ori unit))))
-	  
+				       (unit-face-ori unit))))	  
 	  (cond
 	   ((or (eq? species-type 'land2) (eq? species-type 'land))
 	    (cond
