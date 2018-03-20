@@ -28,11 +28,13 @@
     (lambda (i)
       (let ((a (* rad-conv (+ 36 (* i (/ 360 5))))))
 	(qaxisangle (vector (sin a) 0 (cos a)) 144))))))
-  
+
+(define builder-pos (vector -9 0 0))
+
 (define virus-builder (with-state 
 		       (shader vertex-virus fragment-virus)
-		       (translate (vector -20 0 0)) 
-		       (scale (vector 3 3 3))
+		       (translate builder-pos) 
+		       (scale (vector 2 2 2))
 		       (colour (vector 1 0 0))
 		       (load-primitive "models/ico.obj")))
 
@@ -112,4 +114,82 @@
 		 (translate (vector -17 6.5 0))
 		 (scale (vector 0.5 0.5 0.5))
 		 (load-primitive "models/pointer.obj")))
+
+;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define num-buttons 10)
+
+(define button-objs (list
+		     "models/builder-left.obj"
+		     "models/builder-triangle.obj"
+		     "models/builder-corner.obj"
+		     "models/builder-guitar.obj"
+		     "models/builder-circle.obj"
+		     "models/builder-right.obj"
+		     "models/builder-circle.obj"
+		     "models/builder-square.obj"
+		     "models/builder-tee.obj"
+		     "models/builder-donut.obj"))
+
+(define button-fns (list 
+		    (lambda () (rotate-virus-left))
+		    (lambda () (attach-virus-triangle))
+		    (lambda () (attach-virus-donut))
+		    (lambda () (attach-virus-donut))
+		    (lambda () (attach-virus-circle))
+		    (lambda () (rotate-virus-right))
+		    (lambda () (attach-virus-donut))
+		    (lambda () (attach-virus-square))
+		    (lambda () (attach-virus-donut))
+		    (lambda () (attach-virus-donut))))
+(define (make-button prim fn) (list prim fn))
+(define (button-prim b) (list-ref b 0))
+(define (button-fn b) (list-ref b 1))
+
+(define buttons 
+  (build-list
+   num-buttons
+   (lambda (i)
+     (make-button
+      (with-state 
+       (shader vertex-virus fragment-virus)
+       (translate builder-pos)
+       (translate (vmul (vector (cos (* (/ i num-buttons) Math.PI 2))
+				(sin (* (/ i num-buttons) Math.PI 2))
+				0) 5))
+       (scale (vector 0.25 0.25 0.25))
+       (colour (vector 1 0 0))
+       (load-primitive (list-ref button-objs i)))
+      (list-ref button-fns i)))))
+  
+(define (update-buttons buttons)
+  ;; (let ((canvas (document.getElementById "canvas")))
+  ;;   (let ((ctx (canvas.getContext "2d")))	
+  ;;     (ctx.beginPath)
+  ;;     (ctx.arc canvas-mouse-x canvas-mouse-y 10 0 (* Math.PI 2) true)
+  ;;     (ctx.closePath)
+  ;;     (set! ctx.strokeStyle "#fff")
+  ;;     (ctx.stroke)))
+  
+  (for-each
+   (lambda (button)
+     (let ((pos (primitive-screen-pos (button-prim button))))       
+       (let ((dist (vdist (vector canvas-mouse-x  
+				  canvas-mouse-y 0) pos)))
+	 (let ((run
+		(with-primitive 
+		 (button-prim button)
+		 (cond 
+		  ((< dist 30) 
+		   (colour (rndvec))
+		   #t)
+		  (else
+		   (colour (vector 1 0 0))
+		   #f)))))
+	   (when (and run (eq? canvas-mouse-state "down"))
+		 (msg "clicked")
+		 (let ((fn (button-fn button)))
+		   (fn)))))))
+
+   buttons))
 

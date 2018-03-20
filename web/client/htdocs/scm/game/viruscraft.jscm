@@ -9,6 +9,7 @@
 (load "scm/game/host-organism.jscm")
 (load "scm/game/worldunit.jscm")
 (load "scm/game/virus-builder.jscm")
+(load "scm/game/canvas.jscm")
 
 (define flag (with-state (hide #t) (load-primitive "models/flag.obj")))
 
@@ -26,10 +27,10 @@
 
 (clear-colour (vector 0.0 0.0 0.0))
 
-(set-camera-transform 
- (mat4.rotateX  
-  (mat4.translate (camera-transform) (vector 5 0 -7))
-  (* 0.5 Math.PI)))
+;(set-camera-transform 
+; (mat4.rotateX  
+;  (mat4.translate (camera-transform) (vector 5 0 -7))
+;  (* 0.5 Math.PI)))
 
 (define values (pentakis-build-values 20))
 (define units (pentakis-build-units values))
@@ -64,7 +65,15 @@
    (texture (load-texture "host-extinct.png"))
    (build-instance flag)))
 
+(define webgl-canvas (document.getElementById "webgl-canvas"))
+(define canvas (document.getElementById "canvas"))
+(resize-glcanvas webgl-canvas)
+
 (define (render)
+  (resize-glcanvas webgl-canvas)
+  (resize-canvas canvas)
+  (canvas-render)
+
   (when (zero? (modulo frame 1))
 	(set! population (population-update population virus world-position-checker))
 	(set! organisms (update-organisms organisms population world-units)))
@@ -111,20 +120,21 @@
 
   (with-primitive virus-builder
 		  (identity)
-		  (translate (vector -17 0 0)) 
-		  (rotate (vector -80 0 -5))
-		  (scale (vector 3 3 3))
+		  (translate builder-pos) 
+		  (rotate (vector 80 0 -25))
+		  (scale (vector 2 2 2))
 		  (concat (q->m virus-q)))
 
   (with-primitive pointer
 		  (translate 
 		   (vector 0 (* 0.1 (sin (* 3 (time)))) 0)))
 
-  (let ((el (document.getElementById "score")))
-    (set! el.innerHTML score))
 
-  (let ((el (document.getElementById "hi-score")))
-    (set! el.innerHTML hi-score))
+ ;; (let ((el (document.getElementById "score")))
+ ;;   (set! el.innerHTML score))
+
+ ;; (let ((el (document.getElementById "hi-score")))
+ ;;   (set! el.innerHTML hi-score))
   
   (set! score (+ score 1))
   (when (> score hi-score) (set! hi-score score))
@@ -135,11 +145,21 @@
 
 ;;  (set-camera-transform (mat4.rotateX (camera-transform) 0.01))  
   (set! frame (+ frame 1))
+
+  (update-buttons buttons)
   )
 
 ;;(qslerp virus-src virus-dst virus-t))
 (with-primitive world-root (rotate (vector 90 0 0)))
 
+(canvas-setup)
+
 (every-frame (render))
 ;;(render)
 ;;(every-frame (with-primitive world-root (rotate (vector 0 0.5 0))))
+
+;;(define zx (with-state (translate (vector -5 -1 0) (build-cube))))
+
+
+
+;;(every-frame )

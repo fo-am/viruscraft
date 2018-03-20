@@ -4,6 +4,8 @@ body {
     /*font-family: 'Josefin Sans', sans-serif;*/
     font-family: 'Comfortaa', cursive;
     font-size: 150%;
+    padding: 0;
+    margin: 0;
 }
 
 h1 {
@@ -34,12 +36,19 @@ input {
 }
 
 #webgl-canvas {
-}
-
-#canvas2 {
     position: absolute;
     left: 0px;
     top: 0px;
+    width: 100vw;
+    height: 100vh;
+}
+
+#canvas {
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    width: 100vw;
+    height: 100vh;
 }
 
 input {
