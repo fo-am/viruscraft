@@ -125,11 +125,6 @@
 		  (scale (vector 2 2 2))
 		  (concat (q->m virus-q)))
 
-  (with-primitive pointer
-		  (translate 
-		   (vector 0 (* 0.1 (sin (* 3 (time)))) 0)))
-
-
  ;; (let ((el (document.getElementById "score")))
  ;;   (set! el.innerHTML score))
 

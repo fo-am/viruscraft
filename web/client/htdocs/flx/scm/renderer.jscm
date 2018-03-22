@@ -128,7 +128,7 @@
 		   (vz (renderer-clear-colour r))
 		   (list-ref (renderer-clear-colour r) 3))
     (gl.clear (js "gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT"))
-    (mat4.perspective 45 (/ gl.viewportWidth gl.viewportHeight) 0.1 1000.0
+    (mat4.perspective 25 (/ gl.viewportWidth gl.viewportHeight) 0.1 1000.0
 		      (renderer-view r))
 
     (gl.enable gl.BLEND)
