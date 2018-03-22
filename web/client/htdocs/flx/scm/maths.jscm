@@ -34,7 +34,7 @@
 (define (vw v) (list-ref v 3))
 
 (define (veq? a b) 
-  (and (feq? (vx a) (vx a))
+  (and (feq? (vx a) (vx b))
        (feq? (vy a) (vy b))
        (feq? (vz a) (vz b))))
 

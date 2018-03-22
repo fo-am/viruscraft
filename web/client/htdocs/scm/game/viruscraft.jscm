@@ -8,8 +8,8 @@
 (load "scm/game/shaders.jscm")
 (load "scm/game/host-organism.jscm")
 (load "scm/game/worldunit.jscm")
-(load "scm/game/virus-builder.jscm")
 (load "scm/game/canvas.jscm")
+(load "scm/game/virus-builder.jscm")
 
 (define flag (with-state (hide #t) (load-primitive "models/flag.obj")))
 
@@ -115,13 +115,13 @@
    (scale (vector 5 5 5)))
   (set! host-extinct-marker-t (- host-extinct-marker-t 0.01))
 
-  (set! virus-q (qslerp virus-src virus-dst virus-t)) 
-  (when (< virus-t 1) (set! virus-t (+ virus-t 0.05)))
+  ;;(set! virus-q (qslerp virus-src virus-dst virus-t)) 
+  ;;(when (< virus-t 1) (set! virus-t (+ virus-t 0.05)))
 
   (with-primitive virus-builder
 		  (identity)
 		  (translate builder-pos) 
-		  (rotate (vector 80 0 -25))
+		  ;;(rotate (vector 80 0 -25))
 		  (scale (vector 2 2 2))
 		  (concat (q->m virus-q)))
 
@@ -139,9 +139,13 @@
   (set! score (+ score 1))
   (when (> score hi-score) (set! hi-score score))
 
-  (with-primitive world-root (rotate (vector 0 0.05 0)))
-
-  (update-host-anim (* frame 2))
+  (with-primitive world-root 
+		  (identity)
+		  (translate (vector 5 0 0))
+		  (scale (vector 0.7 0.7 0.7))
+		  (concat (q->m world-q)))
+  
+;;  (update-host-anim (* frame 2))
 
 ;;  (set-camera-transform (mat4.rotateX (camera-transform) 0.01))  
   (set! frame (+ frame 1))

@@ -41,6 +41,8 @@
 (define receptor-ids (build-list 20 (lambda (i) 0)))
 (define cur-receptor-types (build-list 20 (lambda (i) #f)))
 
+(define world-q (qaxisangle (vector 0 0 1) 0))
+
 (define virus-q (car receptor-rotations))
 (define virus-t 0)
 (define virus-src (car receptor-rotations))
@@ -117,27 +119,23 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define num-buttons 10)
+(define num-buttons 8)
 
 (define button-objs (list
-		     "models/builder-left.obj"
 		     "models/builder-triangle.obj"
 		     "models/builder-corner.obj"
 		     "models/builder-guitar.obj"
 		     "models/builder-circle.obj"
-		     "models/builder-right.obj"
 		     "models/builder-circle.obj"
 		     "models/builder-square.obj"
 		     "models/builder-tee.obj"
 		     "models/builder-donut.obj"))
 
 (define button-fns (list 
-		    (lambda () (rotate-virus-left))
 		    (lambda () (attach-virus-triangle))
 		    (lambda () (attach-virus-donut))
 		    (lambda () (attach-virus-donut))
 		    (lambda () (attach-virus-circle))
-		    (lambda () (rotate-virus-right))
 		    (lambda () (attach-virus-donut))
 		    (lambda () (attach-virus-square))
 		    (lambda () (attach-virus-donut))
@@ -161,8 +159,52 @@
        (colour (vector 1 0 0))
        (load-primitive (list-ref button-objs i)))
       (list-ref button-fns i)))))
-  
+
+(define face-display 
+  (with-state (parent virus-builder) (build-cube)))
+
+(define (display-front-face)
+  (define (_ n closest r)
+    (cond
+     ((> n (pdata-size)) r)
+     ((> (vdot (mtransform (get-transform) (pdata-ref "n" n))
+	       (vector 0 0 1)) closest)
+      ;; return average of these face points
+      (_ (+ n 3) 
+	 (vdot (mtransform (get-transform) (pdata-ref "n" n))
+	       (vector 0 0 1))
+	 (vdiv
+	  (vadd
+	   (vadd 
+	    (pdata-ref "p" n)
+	    (pdata-ref "p" (+ n 1)))
+	   (pdata-ref "p" (+ n 2)))
+	  3)))
+     (else (_ (+ n 3) closest r))))
+  (with-primitive 
+   face-display
+   (let ((pos (with-primitive virus-builder (_ 0 -99999 #f))))
+     (identity)
+     (translate pos)
+     (scale (vector 0.2 0.2 0.2)))))
+
+(set-canvas-drag-fn
+ (lambda ()
+   (let ((drag (vector (- canvas-drag-x) canvas-drag-y 0)))
+     (when (not (veq? drag (vector 0 0 0)))
+	   (let ((rot-axis (vcross drag (vector 0 0 -1))))
+		 (cond
+		  ((< (vdist (primitive-screen-pos virus-builder) (vector canvas-mouse-x canvas-mouse-y 0))
+		      100)
+		   (set! virus-q (qmul virus-q (qaxisangle (vnormalise rot-axis) 6)))
+		   )
+		  (else        
+		   (set! world-q (qmul world-q (qaxisangle (vnormalise rot-axis) 2)))
+		   )))))))
+
 (define (update-buttons buttons)
+  (display-front-face)
+
   ;; (let ((canvas (document.getElementById "canvas")))
   ;;   (let ((ctx (canvas.getContext "2d")))	
   ;;     (ctx.beginPath)
