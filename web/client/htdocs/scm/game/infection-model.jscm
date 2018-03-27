@@ -2,7 +2,7 @@
 ;; Viruscraft Copyright (C) 2017 FoAM Kernow
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
+;; the main infection and population model
 
 (define receptor-types (list 'circle 'triangle 'square 'donut))
 (define host-species-types (list 'sea 'land 'land2))
@@ -25,7 +25,7 @@
 (define host-loc-lng-start (* Math.PI 0))
 (define host-loc-lng-width (* Math.PI 2))
 
-(define new-species-likelihood 3)
+(define new-organism-likelihood 3)
 (define mutation-rate 5)
 (define susceptibility-slope 2.5)
 (define susceptibility-max-receptors 20)
@@ -78,7 +78,7 @@
   
 ;;;;;;;;;;;;;;;;;;;
 ;; host
-;; a host species, which may be susceptible to a virus
+;; a host organism, which may be susceptible to a virus
 
 (define current-host-id 0)
 (define (make-host-id) 
@@ -117,7 +117,7 @@
    susceptibility-slope))
  
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; reproduction and death of host species
+;; reproduction and death of host organism
 
 ;; returns an updated health based on infection and age constraints
 (define (host-calculate-health host susceptibility)
@@ -134,12 +134,12 @@
   (> (host-health host) min-host-health))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; creating new species
+;; creating new organism
 
-(define (host-can-branch-new-species? host)
+(define (host-can-breed? host)
   (if (host-infected? host)
       #f ;; infected hosts can't reproduce
-      (< (random 100) new-species-likelihood)))
+      (< (random 100) new-organism-likelihood)))
 
 ;; check if a point is within bounding box and 
 ;; far enough away from other hosts
@@ -167,8 +167,8 @@
      ((check-location point population host-spawn-min-distance) point)
      (else (find-free-location position population (- num-tries 1))))))
 
-;; returns a new, mutated host species
-(define (host-new-species host population location)
+;; returns a new, mutated host organism
+(define (host-new-organism host population location)
   (make-host
    (make-host-id)
    (if (< (random 100) mutation-rate)
@@ -262,15 +262,15 @@
 (define (make-grid-population size width)
   (build-list size (lambda (i) (make-grid-host i width))))
 
-(define (population-collect-new-species population world-position-checker)
+(define (population-collect-new-organisms population world-position-checker)
   (foldl
    (lambda (host r)
-     (if (host-can-branch-new-species? host)
+     (if (host-can-breed? host)
 	 ;; first find a location free of other organisms
 	 (let ((location (find-free-location (host-location host) population host-spawn-dist-tries)))
 	   ;; now check that we can live there
 	   (if (and location (world-position-checker (host-species host) location))
-	       (cons (host-new-species host population location) r) r))
+	       (cons (host-new-organism host population location) r) r))
 	 r))
    '()
    population))
@@ -291,17 +291,17 @@
 (define (population-update population virus world-position-checker)
   (append
    (if (< (length population) max-pop-size)
-       (population-collect-new-species 
+       (population-collect-new-organisms 
 	population 
-	world-position-checker) ;; add new species
+	world-position-checker) ;; add new organisms
        '())
    (map
     (lambda (host)
       (host-update
        host virus
-       (population-is-infection-present? host population))) ;; update species
+       (population-is-infection-present? host population))) ;; update organisms
     (filter
-     host-alive? ;; remove dead host species
+     host-alive? ;; remove dead host organisms
      ;; do this before main update so we can detect dead ones 
      ;; for the visualisation in order to remove them
      population))))

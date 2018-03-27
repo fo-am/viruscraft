@@ -68,8 +68,7 @@ unsigned char read_c() {
   return (SENSE_C_PORT&mask)>>3;
 }
 
-void set_led_state(unsigned char s)
-{
+void set_led_state(unsigned char s) {
     if (s) STATUS_PORT|=_BV(PIN_STATUS);
     else STATUS_PORT&=~_BV(PIN_STATUS);
 }

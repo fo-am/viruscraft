@@ -6,7 +6,8 @@
 (define canvas-mouse-x 0)
 (define canvas-mouse-y 0)
 (define canvas-mouse-state 0)
-
+(define canvas-mouse-zoom 0)
+(define canvas-mouse-zoom-delta 0)
 (define canvas-drag-x 0)
 (define canvas-drag-y 0)
 (define canvas-is-dragging #f)
@@ -57,6 +58,13 @@
   (let ((e (car e.targetTouches)))
     (mouse-from-event canvas e state)))
 
+(define (canvas-zoom e)
+  (let ((delta (if e.wheelDelta (/ e.wheelDelta 40) 
+		   (if e.detail (- e.detail) 0))))
+    (set! canvas-mouse-zoom-delta delta)
+    (set! canvas-mouse-zoom (+ canvas-mouse-zoom delta))
+    (e.preventDefault)))
+
 (define (canvas-setup)
   (let ((canvas (document.getElementById "canvas")))
     (let ((ctx (canvas.getContext "2d")))	
@@ -76,7 +84,10 @@
       (canvas.addEventListener
        "touchend" (lambda (e) (mouse-from-event canvas e "up")))
       (canvas.addEventListener
-       "touchcancel" (lambda (e) (mouse-from-event canvas e "up"))))))
+       "touchcancel" (lambda (e) (mouse-from-event canvas e "up")))
+      (canvas.addEventListener "DOMMouseScroll" canvas-zoom)
+      (canvas.addEventListener "mousewheel" canvas-zoom)
+      )))
 
 (define (canvas-render)
   (let ((canvas (document.getElementById "canvas")))

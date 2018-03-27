@@ -68,6 +68,7 @@
 (define webgl-canvas (document.getElementById "webgl-canvas"))
 (define canvas (document.getElementById "canvas"))
 (resize-glcanvas webgl-canvas)
+(define world-zoom 0)
 
 (define (render)
   (resize-glcanvas webgl-canvas)
@@ -137,7 +138,8 @@
   (with-primitive world-root 
 		  (identity)
 		  (translate (vector 5 0 0))
-		  (scale (vector 0.7 0.7 0.7))
+		  (let ((s (+ (min (max 0.02 (* canvas-mouse-zoom 0.02)) 2) 0.7)))
+		    (scale (vector s s s)))
 		  (concat (q->m world-q)))
   
 ;;  (update-host-anim (* frame 2))
