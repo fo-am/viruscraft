@@ -43,17 +43,19 @@
   (resize-canvas canvas)
   
   (cond
-   ((eq? mode mode-loading) (loading-mode-render))
-   ((eq? mode mode-title) (title-mode-render))
-   ((eq? mode mode-worldbuild) (worldbuild-mode-render))
-   (else (play-mode-render)))
-  
-  (canvas-render)
-  
+   ((eq? mode mode-loading) (loading-mode-render current-mode))
+   ((eq? mode mode-title) (title-mode-render current-mode))
+   ((eq? mode mode-worldbuild) (worldbuild-mode-render current-mode))
+   (else (play-mode-render current-mode)))  
+
+  (cond
+   ((eq? mode mode-loading) (loading-mode-canvas-render current-mode))
+   ((eq? mode mode-title) (title-mode-canvas-render current-mode))
+   ((eq? mode mode-worldbuild) (worldbuild-mode-canvas-render current-mode))
+   (else (play-mode-canvas-render current-mode)))  
   )
 
 
 (with-primitive world-root (rotate (vector 90 0 0)))
 (canvas-setup)
-
 (every-frame (render))

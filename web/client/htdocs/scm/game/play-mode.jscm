@@ -149,3 +149,12 @@
   (update-host-anim (* frame 2))
   (set! frame (+ frame 1))
   )
+
+(define (play-mode-canvas-render g)
+  (ctx.clearRect 0 0 screen-width screen-height)	  
+  (set! ctx.fillStyle "#fff")
+
+  (ctx.fillText "play mode" 54 110)
+  (ctx.fillText (+ "score: " (play-mode-score g)) 54 140)
+  )
+  

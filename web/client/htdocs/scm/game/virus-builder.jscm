@@ -12,22 +12,29 @@
     5
     (lambda (i)
       (let ((a (* rad-conv (* i (/ 360 5)))))
-	(qaxisangle (vector (sin a) 0 (cos a)) 36))))
+       (qaxisangle (vector (sin a) 0 (cos a)) 36))))
    (build-list 
     5
     (lambda (i)
       (let ((a (* rad-conv (* i (/ 360 5)))))
-	(qaxisangle (vector (sin a) 0 (cos a)) 82))))
+       (qaxisangle (vector (sin a) 0 (cos a)) 82))))
    (build-list 
     5
     (lambda (i)
       (let ((a (* rad-conv (+ 36 (* i (/ 360 5))))))
-	(qaxisangle (vector (sin a) 0 (cos a)) 100))))
+       (qaxisangle (vector (sin a) 0 (cos a)) 100))))
    (build-list 
     5
     (lambda (i)
       (let ((a (* rad-conv (+ 36 (* i (/ 360 5))))))
-	(qaxisangle (vector (sin a) 0 (cos a)) 144))))))
+       (qaxisangle (vector (sin a) 0 (cos a)) 144))))))
+
+;; almost makes sense - mapping from obj exported faces
+;; to rotation order calculated above
+(define faceid->rotation (list 16 17 15 19 18
+			       12 11 10 14 13
+			        7  6  5  9  8
+			        2  1  0  4  3))
 
 (define builder-pos (vector -9 0 0))
 
@@ -38,28 +45,18 @@
 		       (colour (vector 1 0 0))
 		       (load-primitive "models/ico.obj")))
 
+(define receptor-circle (with-state (hide #t) (load-primitive "models/receptor-circle.obj")))
+(define receptor-triangle (with-state (hide #t) (load-primitive "models/receptor-triangle.obj")))
+(define receptor-square (with-state (hide #t) (load-primitive "models/receptor-square.obj")))
+(define receptor-donut (with-state (hide #t) (load-primitive "models/receptor-donut.obj")))
+
 (define receptor-ids (build-list 20 (lambda (i) 0)))
 (define cur-receptor-types (build-list 20 (lambda (i) #f)))
 
 (define world-q (qaxisangle (vector 0 0 1) 0))
+(define virus-q (qaxisangle (vector 0 0 1) 0))
 
-(define virus-q (car receptor-rotations))
-(define virus-t 0)
-(define virus-src (car receptor-rotations))
-(define virus-dst (cadr receptor-rotations))
 (define virus-recep-id 1)
-
-(define (rotate-virus-left)
-  (set! virus-recep-id (modulo (+ virus-recep-id 1) 20))
-  (set! virus-src virus-q)
-  (set! virus-dst (list-ref receptor-rotations virus-recep-id))
-  (set! virus-t 0))
-
-(define (rotate-virus-right)
-  (set! virus-recep-id (modulo (- virus-recep-id 1) 20))
-  (set! virus-src virus-q)
-  (set! virus-dst (list-ref receptor-rotations virus-recep-id))
-  (set! virus-t 0))
 
 (define (attach-virus instance type)
   (when (not (zero? (list-ref receptor-ids virus-recep-id)))
@@ -71,16 +68,13 @@
 	 (with-state
 	  (shader vertex-virus fragment-virus)
 	  (parent virus-builder)
-	  (concat (minverse (q->m (list-ref receptor-rotations virus-recep-id))))
+	  (concat (minverse (q->m (list-ref receptor-rotations 
+					    (list-ref faceid->rotation virus-recep-id)))))
 	  (translate (vector 0 0.8 0))
 	  (scale (vector 0.3 0.3 0.3))
 	  (colour (vector 1 0 0))
 	  (build-instance instance)))))
 
-(define receptor-circle (with-state (hide #t) (load-primitive "models/receptor-circle.obj")))
-(define receptor-triangle (with-state (hide #t) (load-primitive "models/receptor-triangle.obj")))
-(define receptor-square (with-state (hide #t) (load-primitive "models/receptor-square.obj")))
-(define receptor-donut (with-state (hide #t) (load-primitive "models/receptor-donut.obj")))
 
 (define (update-virus)
   (set! virus (make-virus 
@@ -165,29 +159,37 @@
     (cond
      ((> n (pdata-size)) r)
      ((> (vdot (mtransform (get-transform) (pdata-ref "n" n))
-	       (vector 0 0 1)) closest)
+	       (vector 0 1 0)) closest)
       ;; return average of these face points
       (_ (+ n 3) 
 	 (vdot (mtransform (get-transform) (pdata-ref "n" n))
-	       (vector 0 0 1))
-	 (vdiv
-	  (vadd
-	   (vadd 
-	    (pdata-ref "p" n)
-	    (pdata-ref "p" (+ n 1)))
-	   (pdata-ref "p" (+ n 2)))
-	  3)))
-     (else (_ (+ n 3) closest r))))
+	       (vector 0 1 0))
+	 (list
+	  ;; face id
+	  (/ n 3)
+	  ;; position
+	  (vdiv
+	   (vadd
+	    (vadd 
+	     (pdata-ref "p" n)
+	     (pdata-ref "p" (+ n 1)))
+	    (pdata-ref "p" (+ n 2)))
+	   3))))
+      (else (_ (+ n 3) closest r))))
   (with-primitive 
    face-display
-   (let ((pos (with-primitive virus-builder (_ 0 -99999 #f))))
-     (identity)
-     (translate pos)
-     (scale (vector 0.2 0.2 0.2)))))
+   (let ((face-details (with-primitive virus-builder (_ 0 -99999 #f))))
+     (msg face-details)
+     (let ((pos (cadr face-details)))
+       (identity)
+       (translate pos)
+       (scale (vector 0.2 0.2 0.2))
+       (car face-details)
+       ))))
 
 (set-canvas-drag-fn
  (lambda ()
-   (display-front-face)
+   (set! virus-recep-id (display-front-face))
    (let ((drag (vector (- canvas-drag-x) canvas-drag-y 0)))
      (when (not (veq? drag (vector 0 0 0)))
 	   (let ((rot-axis (vcross drag (vector 0 0 -1)))

@@ -90,7 +90,3 @@
   (canvas.addEventListener "DOMMouseScroll" canvas-zoom)
   (canvas.addEventListener "mousewheel" canvas-zoom))
 
-(define (canvas-render)
-  (ctx.clearRect 0 0 screen-width screen-height)	  
-  (set! ctx.fillStyle "#fff")
-  (ctx.fillText "hello world" 54 110))
