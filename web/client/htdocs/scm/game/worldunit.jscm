@@ -127,6 +127,11 @@
 		      (build-instance (unit->model unit unit-models)))))))
     face-ids)))
 
+(define (build-world-from-params sea-level)
+  (let ((values (pentakis-build-values sea-level)))
+    (build-world values (pentakis-build-units values))))
+
+
 (define (find-face-from-latlng pentakis face-ids location)
   (with-primitive 
    pentakis

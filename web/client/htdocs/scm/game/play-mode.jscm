@@ -1,0 +1,151 @@
+;; -*- mode: scheme; -*-
+;; Viruscraft Copyright (C) 2018 FoAM Kernow
+
+(define infection-rate 10)
+(define world-zoom 0)
+(define virus (make-virus (list)))
+
+(define (make-play-mode population organisms score hi-score world-units world-pos-checker) 
+  (list population organisms score hi-score world-units world-pos-checker))
+
+(define (play-mode-population m) (list-ref m 0))
+(define (play-mode-modify-population m v) (list-replace m 0 v))
+(define (play-mode-organisms m) (list-ref m 1))
+(define (play-mode-modify-organisms m v) (list-replace m 1 v))
+(define (play-mode-score m) (list-ref m 2))
+(define (play-mode-modify-score m v) (list-replace m 2 v))
+(define (play-mode-hi-score m) (list-ref m 3))
+(define (play-mode-modify-hi-score m v) (list-replace m 3 v))
+(define (play-mode-world-units m) (list-ref m 4))
+(define (play-mode-world-pos-checker m) (list-ref m 5))
+(define (play-mode-modify-world-pos-checker m v) (list-replace m 5 v))
+
+(define (init-play-mode world-units)
+  (let ((wpc (build-world-position-checker world-units)))
+    (make-play-mode
+     (population-infect 
+      (make-random-population 50 wpc) 
+      virus infection-rate)
+     '() 0 0 world-units wpc)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;
+;; popup markers
+
+(define flag (with-state (hide #t) (load-primitive "models/flag.obj")))
+
+(with-primitive 
+ flag
+ (pdata-set! "t" 0 (vector 1 0 0))
+ (pdata-set! "t" 1 (vector 0 0 0))
+ (pdata-set! "t" 2 (vector 1 1 0))
+ (pdata-set! "t" 3 (vector 0 0 0))
+ (pdata-set! "t" 4 (vector 0 1 0))
+ (pdata-set! "t" 5 (vector 1 1 0))
+ (pdata-upload!))
+
+(define virus-extinct-marker-t 0)
+(define virus-extinct-marker 
+  (with-state
+   (translate (vector -5 7 0))
+   (scale (vector 5 5 5))
+   (texture (load-texture "extinct.png"))
+   (build-instance flag)))
+
+(define host-extinct-marker-t 0)
+(define host-extinct-marker 
+  (with-state
+   (translate (vector -5 7 0))
+   (scale (vector 5 5 5))
+   (texture (load-texture "host-extinct.png"))
+   (build-instance flag)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define (play-mode-update g)
+  (virus-builder-update-buttons buttons)
+
+  (cond
+   ;; no hosts!
+   ((zero? (length (play-mode-population g)))
+    (when (> (play-mode-score g) 100) (set! host-extinct-marker-t 1))
+    (make-play-mode
+     (population-infect 
+      (make-random-population 50 (play-mode-world-pos-checker g)) 
+      virus infection-rate)
+     '() 0 (play-mode-hi-score g)
+     (play-mode-world-units g)
+     (play-mode-world-pos-checker g)))
+
+   ;; no infections
+   ((zero? (population-num-infected (play-mode-population g)))
+    (when (> (play-mode-score g) 100) (set! virus-extinct-marker-t 1))
+    (make-play-mode
+     (population-infect 
+      (play-mode-population g)
+      virus infection-rate)
+     (update-organisms 
+      (play-mode-organisms g)
+      (play-mode-population g)
+      (play-mode-world-units g))
+     0 (play-mode-hi-score g)
+     (play-mode-world-units g)
+     (play-mode-world-pos-checker g)))
+
+   ;; normal
+   (else
+    (make-play-mode
+     (population-update 
+      (play-mode-population g) 
+      virus
+      (play-mode-world-pos-checker g))
+     (update-organisms 
+      (play-mode-organisms g)
+      (play-mode-population g)
+      (play-mode-world-units g))
+     (+ (play-mode-score g) 1)
+     (if (> (play-mode-score g) (play-mode-hi-score g))
+	 (play-mode-score g)
+	 (play-mode-hi-score g)) 
+     (play-mode-world-units g)
+     (play-mode-world-pos-checker g)))))   
+
+(define frame 0)
+
+(define (play-mode-render g)
+  (with-primitive 
+   virus-extinct-marker 
+   (identity)
+   (if (> virus-extinct-marker-t 0)
+       (translate (vector -5 7 0))
+       (translate (vector -80 7 0)))
+   (scale (vector 5 5 5)))
+  (set! virus-extinct-marker-t (- virus-extinct-marker-t 0.01))
+
+  (with-primitive 
+   host-extinct-marker 
+   (identity)
+   (if (> host-extinct-marker-t 0)
+       (translate (vector -5 7 0))
+       (translate (vector -80 7 0)))
+   (scale (vector 5 5 5)))
+  (set! host-extinct-marker-t (- host-extinct-marker-t 0.01))
+
+  (with-primitive 
+   virus-builder
+   (identity)
+   (translate builder-pos) 
+   ;;(rotate (vector 80 0 -25))
+   (scale (vector 2 2 2))
+   (concat (q->m virus-q)))
+
+  (with-primitive 
+   world-root 
+   (identity)
+   (translate (vector 5 0 0))
+   (let ((s (+ (min (max 0.02 (* canvas-mouse-zoom 0.02)) 2) 0.7)))
+     (scale (vector s s s)))
+   (concat (q->m world-q)))
+
+  (update-host-anim (* frame 2))
+  (set! frame (+ frame 1))
+  )

@@ -13,6 +13,10 @@
 (define canvas-is-dragging #f)
 (define canvas-drag-fn (lambda () 0))
 
+(define webgl-canvas (document.getElementById "webgl-canvas"))
+(define canvas (document.getElementById "canvas"))
+(define ctx (canvas.getContext "2d"))
+
 (define (set-canvas-drag-fn fn)
   (set! canvas-drag-fn fn))
 
@@ -66,33 +70,27 @@
     (e.preventDefault)))
 
 (define (canvas-setup)
-  (let ((canvas (document.getElementById "canvas")))
-    (let ((ctx (canvas.getContext "2d")))	
-      (canvas.addEventListener
-       "mousedown" (lambda (e) (mouse-from-event canvas e "down")))
-      (canvas.addEventListener
-       "touchstart" (lambda (e) (touch-from-event canvas e "down")))
-      (canvas.addEventListener
-       "mousemove" (lambda (e) (mouse-from-event canvas e "move")))      
-      (canvas.addEventListener
-       "touchmove"
-       (lambda (e)
-	 (e.preventDefault)
-	 (touch-from-event canvas e "move")))      
-      (canvas.addEventListener
-       "mouseup" (lambda (e) (mouse-from-event canvas e "up")))
-      (canvas.addEventListener
-       "touchend" (lambda (e) (mouse-from-event canvas e "up")))
-      (canvas.addEventListener
-       "touchcancel" (lambda (e) (mouse-from-event canvas e "up")))
-      (canvas.addEventListener "DOMMouseScroll" canvas-zoom)
-      (canvas.addEventListener "mousewheel" canvas-zoom)
-      )))
+  (canvas.addEventListener
+   "mousedown" (lambda (e) (mouse-from-event canvas e "down")))
+  (canvas.addEventListener
+   "touchstart" (lambda (e) (touch-from-event canvas e "down")))
+  (canvas.addEventListener
+   "mousemove" (lambda (e) (mouse-from-event canvas e "move")))      
+  (canvas.addEventListener
+   "touchmove"
+   (lambda (e)
+     (e.preventDefault)
+     (touch-from-event canvas e "move")))      
+  (canvas.addEventListener
+   "mouseup" (lambda (e) (mouse-from-event canvas e "up")))
+  (canvas.addEventListener
+   "touchend" (lambda (e) (mouse-from-event canvas e "up")))
+  (canvas.addEventListener
+   "touchcancel" (lambda (e) (mouse-from-event canvas e "up")))
+  (canvas.addEventListener "DOMMouseScroll" canvas-zoom)
+  (canvas.addEventListener "mousewheel" canvas-zoom))
 
 (define (canvas-render)
-  (let ((canvas (document.getElementById "canvas")))
-    (let ((ctx (canvas.getContext "2d")))	
-      (ctx.clearRect 0 0 screen-width screen-height)	
-      
-      (set! ctx.fillStyle "#fff")
-      (ctx.fillText "hello world" 54 110))))
+  (ctx.clearRect 0 0 screen-width screen-height)	  
+  (set! ctx.fillStyle "#fff")
+  (ctx.fillText "hello world" 54 110))

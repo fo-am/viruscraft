@@ -199,7 +199,7 @@
 		   (set! world-q (qmul world-q (qaxisangle (vnormalise rot-axis) 2))))		   
 		  (else 0)))))))
 
-(define (update-buttons buttons)
+(define (virus-builder-update-buttons buttons)
 
   ;; (let ((canvas (document.getElementById "canvas")))
   ;;   (let ((ctx (canvas.getContext "2d")))	

@@ -10,157 +10,50 @@
 (load "scm/game/worldunit.jscm")
 (load "scm/game/canvas.jscm")
 (load "scm/game/virus-builder.jscm")
+(load "scm/game/play-mode.jscm")
 
-(define flag (with-state (hide #t) (load-primitive "models/flag.obj")))
+(define mode-loading 0)
+(define mode-title 1)
+(define mode-worldbuild 2)
+(define mode-play 3)
 
-(with-primitive 
- flag
- (pdata-set! "t" 0 (vector 1 0 0))
- (pdata-set! "t" 1 (vector 0 0 0))
- (pdata-set! "t" 2 (vector 1 1 0))
- (pdata-set! "t" 3 (vector 0 0 0))
- (pdata-set! "t" 4 (vector 0 1 0))
- (pdata-set! "t" 5 (vector 1 1 0))
- (pdata-upload!))
+(define mode mode-play)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (clear-colour (vector 0.0 0.0 0.0))
-
-;(set-camera-transform 
-; (mat4.rotateX  
-;  (mat4.translate (camera-transform) (vector 5 0 -7))
-;  (* 0.5 Math.PI)))
-
-(define values (pentakis-build-values 20))
-(define units (pentakis-build-units values))
-(define world-units (build-world values units))
-(define world-position-checker (build-world-position-checker world-units))
-
-(define frame 1)
-(define infection-rate 10)
-
-(define virus (make-virus (list)))
-(define population (population-infect 
-		    (make-random-population 50 world-position-checker) 
-		    virus infection-rate))
-(define organisms '())
-
-(define score 0)
-(define hi-score 0)
-
-(define virus-extinct-marker-t 0)
-(define virus-extinct-marker 
-  (with-state
-   (translate (vector -5 7 0))
-   (scale (vector 5 5 5))
-   (texture (load-texture "extinct.png"))
-   (build-instance flag)))
-
-(define host-extinct-marker-t 0)
-(define host-extinct-marker 
-  (with-state
-   (translate (vector -5 7 0))
-   (scale (vector 5 5 5))
-   (texture (load-texture "host-extinct.png"))
-   (build-instance flag)))
-
-(define webgl-canvas (document.getElementById "webgl-canvas"))
-(define canvas (document.getElementById "canvas"))
 (resize-glcanvas webgl-canvas)
-(define world-zoom 0)
 
+(define world-units (build-world-from-params 20))
+(define game-mode (init-play-mode world-units))
+
+(define current-mode game-mode)
+
+(define (update current-mode)
+  (cond
+   ((eq? mode mode-loading) (loading-mode-update current-mode))
+   ((eq? mode mode-title) (title-mode-update current-mode))
+   ((eq? mode mode-worldbuild) (worldbuild-mode-update current-mode))
+   (else (play-mode-update current-mode))))
+  
 (define (render)
+  (set! current-mode (update current-mode))
+
   (resize-glcanvas webgl-canvas)
   (resize-canvas canvas)
+  
+  (cond
+   ((eq? mode mode-loading) (loading-mode-render))
+   ((eq? mode mode-title) (title-mode-render))
+   ((eq? mode mode-worldbuild) (worldbuild-mode-render))
+   (else (play-mode-render)))
+  
   (canvas-render)
-
-  (when (zero? (modulo frame 1))
-	(set! population (population-update population virus world-position-checker))
-	(set! organisms (update-organisms organisms population world-units)))
   
-  (when (zero? (length population))
-	(when (> score 100)
-	      (set! host-extinct-marker-t 1))
-	(set! score 0)
-	(set! population 
-	      (population-infect 
-	       (make-random-population 50 world-position-checker) 
-	       virus infection-rate)))
-
-  (when (zero? (population-num-infected population))
-	(when (> score 100)
-	      (set! virus-extinct-marker-t 1))
-	(set! score 0)
-	(set! population (population-infect population virus infection-rate))
-	;(organisms-destroy organisms)
-	;(set! organisms '())
-	;(set! organisms (update-organisms organisms population))
-	)
-
-  (with-primitive 
-   virus-extinct-marker 
-   (identity)
-   (if (> virus-extinct-marker-t 0)
-       (translate (vector -5 7 0))
-       (translate (vector -80 7 0)))
-   (scale (vector 5 5 5)))
-  (set! virus-extinct-marker-t (- virus-extinct-marker-t 0.01))
-
-  (with-primitive 
-   host-extinct-marker 
-   (identity)
-   (if (> host-extinct-marker-t 0)
-       (translate (vector -5 7 0))
-       (translate (vector -80 7 0)))
-   (scale (vector 5 5 5)))
-  (set! host-extinct-marker-t (- host-extinct-marker-t 0.01))
-
-  ;;(set! virus-q (qslerp virus-src virus-dst virus-t)) 
-  ;;(when (< virus-t 1) (set! virus-t (+ virus-t 0.05)))
-
-  (with-primitive virus-builder
-		  (identity)
-		  (translate builder-pos) 
-		  ;;(rotate (vector 80 0 -25))
-		  (scale (vector 2 2 2))
-		  (concat (q->m virus-q)))
-
- ;; (let ((el (document.getElementById "score")))
- ;;   (set! el.innerHTML score))
-
- ;; (let ((el (document.getElementById "hi-score")))
- ;;   (set! el.innerHTML hi-score))
-  
-  (set! score (+ score 1))
-  (when (> score hi-score) (set! hi-score score))
-
-  (with-primitive world-root 
-		  (identity)
-		  (translate (vector 5 0 0))
-		  (let ((s (+ (min (max 0.02 (* canvas-mouse-zoom 0.02)) 2) 0.7)))
-		    (scale (vector s s s)))
-		  (concat (q->m world-q)))
-  
-;;  (update-host-anim (* frame 2))
-
-;;  (set-camera-transform (mat4.rotateX (camera-transform) 0.01))  
-  (set! frame (+ frame 1))
-
-  (update-buttons buttons)
   )
 
-;;(qslerp virus-src virus-dst virus-t))
-(with-primitive world-root (rotate (vector 90 0 0)))
 
+(with-primitive world-root (rotate (vector 90 0 0)))
 (canvas-setup)
 
 (every-frame (render))
-;;(render)
-;;(every-frame (with-primitive world-root (rotate (vector 0 0.5 0))))
-
-;;(define zx (with-state (translate (vector -5 -1 0) (build-cube))))
-
-
-
-;;(every-frame )
