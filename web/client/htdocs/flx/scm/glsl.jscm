@@ -35,6 +35,8 @@
             (alert (gl.getShaderInfoLog shader)))
       (gl.useProgram shader-program)
 
+      ;; we look for hardcoded attributes on the shader
+
       (when (not (eq? (gl.getAttribLocation shader-program "p") -1))
 	    (set! shader-program.vertexPositionAttribute
 		  (gl.getAttribLocation shader-program "p"))
@@ -54,6 +56,12 @@
 	    (set! shader-program.vertexColorAttribute
 		  (gl.getAttribLocation shader-program "c"))
 	    (gl.enableVertexAttribArray shader-program.vertexColorAttribute))
+
+      ;; second position buffer for animation
+      (when (not (eq? (gl.getAttribLocation shader-program "p2") -1))
+	    (set! shader-program.vertexPositionAttribute
+		  (gl.getAttribLocation shader-program "p2"))
+	    (gl.enableVertexAttribArray shader-program.vertexPositionAttribute))
       
       (when (gl.getUniformLocation shader-program "ModelViewMatrix")
 	    (set! shader-program.ModelViewMatrixUniform

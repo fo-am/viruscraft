@@ -207,7 +207,9 @@ function inner_load_ply(data) {
 	tpos+=2;
     }
 
-    return [["p","n","t","c"], arrayIndex.length*3, verts, 0];
+    return [["p","n","t","c"],
+	    ["position","normal","texture","colour"], 
+	    arrayIndex.length*3, verts, 0];
     // return [
     //     new Float32Array(arrayVertex),
     //     new Float32Array(arrayNormal),
@@ -217,13 +219,14 @@ function inner_load_ply(data) {
     // ];
 }
 
-// Load PLY function;
-function LoadPLY(filename)
-{
-    var xmlhttp = new XMLHttpRequest();
-    //console.log("Loading Model <" + filename + ">...");
-    xmlhttp.open("GET", filename, false);
-    xmlhttp.send();
-    var str=xmlhttp.responseText;
-    return inner_load_ply(str);
+function load_ply(url, loadedfn) {
+    var xmlHttp = new XMLHttpRequest();
+    xmlHttp.addEventListener("load",function() {
+	var str=xmlHttp.responseText;
+	loadedfn(inner_load_ply(str));
+    });
+    xmlHttp.open("GET", url);
+    xmlHttp.overrideMimeType("script");
+    xmlHttp.send();
 }
+

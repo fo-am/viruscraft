@@ -27,6 +27,7 @@
 (load "flx/scm/instanceprim.jscm")
 (load "flx/scm/polyprim.jscm")
 (load "flx/scm/geometry.jscm")
+(load "flx/scm/meshcache.jscm")
 
 (define the-renderer 0)
 
@@ -196,7 +197,7 @@
 
 (define (load-primitive url)
   (let ((gl (renderer-gl the-renderer))
-	(raw (load-obj url)))
+	(raw (mesh-cache-search url)))
     (add-to-scenegraph!     
      (primitive
       'polyprim
@@ -204,7 +205,7 @@
 
 (define (load-ply-primitive url)
   (let ((gl (renderer-gl the-renderer))
-	(raw (LoadPLY url)))
+	(raw (mesh-cache-search url)))
     (add-to-scenegraph!     
      (primitive
       'polyprim
@@ -295,6 +296,16 @@
 	  (primitive-inner
 	   (scenenode-primitive (renderer-grab-stack-top the-renderer))))
 	 fn name)))
+
+(define (pdata-add! name type)
+  (when (renderer-grabbed? the-renderer)
+	 ;; todo: check type is polyprim
+	(let ((pp (primitive-inner
+		   (scenenode-primitive (renderer-grab-stack-top the-renderer)))))
+	  (pdata-internal-add!
+	   (renderer-gl the-renderer) 
+	   (polyprim-pdata pp)
+	   name type))))
 
 (define (pdata-size)
   (when (renderer-grabbed? the-renderer)

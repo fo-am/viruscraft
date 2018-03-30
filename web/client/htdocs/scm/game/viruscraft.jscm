@@ -3,6 +3,7 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(load "scm/game/preload.jscm")
 (load "scm/game/spherical.jscm")
 (load "scm/game/infection-model.jscm")
 (load "scm/game/shaders.jscm")
@@ -10,6 +11,7 @@
 (load "scm/game/worldunit.jscm")
 (load "scm/game/canvas.jscm")
 (load "scm/game/virus-builder.jscm")
+(load "scm/game/loading-mode.jscm")
 (load "scm/game/play-mode.jscm")
 
 (define mode-loading 0)
@@ -17,28 +19,35 @@
 (define mode-worldbuild 2)
 (define mode-play 3)
 
-(define mode mode-play)
+(define mode mode-loading)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (clear-colour (vector 0.0 0.0 0.0))
 (resize-glcanvas webgl-canvas)
 
-(define world-units (build-world-from-params 20))
-(define game-mode (init-play-mode world-units))
-
-(define current-mode game-mode)
+(define world-units '())
+(define current-mode (init-loading-mode))
 
 (define (update current-mode)
   (cond
-   ((eq? mode mode-loading) (loading-mode-update current-mode))
+   ((eq? mode mode-loading) 
+    (cond 
+     ((loading-mode-ready? current-mode)
+      (worldunit-load-models)
+      (set! world-units (build-world-from-params 20))
+      (build-virus-builder)
+      (host-organism-load-models)
+      (msg "switching to play mode")
+      (set! mode mode-play)
+      (init-play-mode world-units))
+     (else (loading-mode-update current-mode))))
    ((eq? mode mode-title) (title-mode-update current-mode))
    ((eq? mode mode-worldbuild) (worldbuild-mode-update current-mode))
    (else (play-mode-update current-mode))))
   
 (define (render)
   (set! current-mode (update current-mode))
-
   (resize-glcanvas webgl-canvas)
   (resize-canvas canvas)
   

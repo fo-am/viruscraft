@@ -9,8 +9,10 @@
 (define (load-vertex-data fn)
   (let ((p (load-ply-primitive fn))
 	(ret (list)))
-    (with-primitive 
-     p (anim-suck 0))))
+    (with-primitive p 
+     ;;(pdata-add! "p2" "position")
+     
+     (anim-suck 0))))
 
 (define (load-blend-shapes fns)
   (map

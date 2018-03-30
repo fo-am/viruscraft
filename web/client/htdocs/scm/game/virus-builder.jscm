@@ -38,17 +38,11 @@
 
 (define builder-pos (vector -9 0 0))
 
-(define virus-builder (with-state 
- 		       (shader vertex-virus fragment-virus)
-		       (translate builder-pos) 
-		       (scale (vector 2 2 2))
-		       (colour (vector 1 0 0))
-		       (load-primitive "models/ico.obj")))
-
-(define receptor-circle (with-state (hide #t) (load-primitive "models/receptor-circle.obj")))
-(define receptor-triangle (with-state (hide #t) (load-primitive "models/receptor-triangle.obj")))
-(define receptor-square (with-state (hide #t) (load-primitive "models/receptor-square.obj")))
-(define receptor-donut (with-state (hide #t) (load-primitive "models/receptor-donut.obj")))
+(define virus-builder #f)
+(define receptor-circle #f)
+(define receptor-triangle #f)
+(define receptor-square #f)
+(define receptor-donut #f)
 
 (define receptor-ids (build-list 20 (lambda (i) 0)))
 (define cur-receptor-types (build-list 20 (lambda (i) #f)))
@@ -131,28 +125,8 @@
 (define (button-prim b) (list-ref b 0))
 (define (button-fn b) (list-ref b 1))
 
-(define buttons 
-  (build-list
-   num-buttons
-   (lambda (i)
-     (make-button
-      (with-state 
-       (shader vertex-virus fragment-virus)
-       (translate builder-pos)
-       (translate (vmul (vector (cos (* (/ i num-buttons) Math.PI 2))
-				(sin (* (/ i num-buttons) Math.PI 2))
-				0) 5))
-       (scale (vector 0.25 0.25 0.25))
-       (colour (vector 1 1 0))
-       (load-primitive (list-ref button-objs i)))
-      (list-ref button-fns i)))))
-
-(define face-display 
-  (with-state 
-   (shader vertex-virus fragment-virus)
-   (parent virus-builder)
-   (colour (vector 0.8 1 0))
-   (load-primitive "models/ico.obj")))
+(define buttons '())
+(define face-display #f)
 
 (define (display-front-face)
   (define (_ n closest r)
@@ -233,3 +207,41 @@
 
    buttons))
 
+(define (build-virus-builder)
+  (set! virus-builder (with-state 
+			 (shader vertex-virus fragment-virus)
+			 (translate builder-pos) 
+			 (scale (vector 2 2 2))
+			 (colour (vector 1 0 0))
+			 (load-primitive "models/ico.obj")))
+  
+  (set! receptor-circle (with-state (hide #t) (load-primitive "models/receptor-circle.obj")))
+  (set! receptor-triangle (with-state (hide #t) (load-primitive "models/receptor-triangle.obj")))
+  (set! receptor-square (with-state (hide #t) (load-primitive "models/receptor-square.obj")))
+  (set! receptor-donut (with-state (hide #t) (load-primitive "models/receptor-donut.obj")))
+
+  (set! buttons 
+	(build-list
+	 num-buttons
+	 (lambda (i)
+	   (make-button
+	    (with-state 
+	     (shader vertex-virus fragment-virus)
+	     (translate builder-pos)
+	     (translate (vmul (vector (cos (* (/ i num-buttons) Math.PI 2))
+				      (sin (* (/ i num-buttons) Math.PI 2))
+				      0) 5))
+	     (scale (vector 0.25 0.25 0.25))
+	     (colour (vector 1 1 0))
+	     (load-primitive (list-ref button-objs i)))
+	    (list-ref button-fns i)))))
+
+  (set! face-display 
+	(with-state 
+	 (shader vertex-virus fragment-virus)
+	 (parent virus-builder)
+	 (colour (vector 0.8 1 0))
+	 (load-primitive "models/ico.obj")))
+  
+  
+  )

@@ -20,50 +20,69 @@
 (define (play-mode-world-pos-checker m) (list-ref m 5))
 (define (play-mode-modify-world-pos-checker m v) (list-replace m 5 v))
 
+(define flag #f)
+
 (define (init-play-mode world-units)
   (let ((wpc (build-world-position-checker world-units)))
+
+    (set! flag (with-state (hide #t) (load-primitive "models/flag.obj")))
+    (with-primitive 
+     flag
+     (pdata-set! "t" 0 (vector 1 0 0))
+     (pdata-set! "t" 1 (vector 0 0 0))
+     (pdata-set! "t" 2 (vector 1 1 0))
+     (pdata-set! "t" 3 (vector 0 0 0))
+     (pdata-set! "t" 4 (vector 0 1 0))
+     (pdata-set! "t" 5 (vector 1 1 0))
+     (pdata-upload!))
+
+    (set! virus-extinct-marker 
+	  (with-state
+	   (translate (vector -5 7 0))
+	   (scale (vector 5 5 5))
+	   (texture (load-texture "extinct.png"))
+	   (build-instance flag)))
+
+    (set! host-extinct-marker 
+	  (with-state
+	   (translate (vector -5 7 0))
+	   (scale (vector 5 5 5))
+	   (texture (load-texture "host-extinct.png"))
+	   (build-instance flag)))
+
+    
     (make-play-mode
      (population-infect 
       (make-random-population 50 wpc) 
       virus infection-rate)
      '() 0 0 world-units wpc)))
 
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; popup markers
 
-(define flag (with-state (hide #t) (load-primitive "models/flag.obj")))
-
-(with-primitive 
- flag
- (pdata-set! "t" 0 (vector 1 0 0))
- (pdata-set! "t" 1 (vector 0 0 0))
- (pdata-set! "t" 2 (vector 1 1 0))
- (pdata-set! "t" 3 (vector 0 0 0))
- (pdata-set! "t" 4 (vector 0 1 0))
- (pdata-set! "t" 5 (vector 1 1 0))
- (pdata-upload!))
-
 (define virus-extinct-marker-t 0)
-(define virus-extinct-marker 
-  (with-state
-   (translate (vector -5 7 0))
-   (scale (vector 5 5 5))
-   (texture (load-texture "extinct.png"))
-   (build-instance flag)))
-
+(define virus-extinct-marker #f)
 (define host-extinct-marker-t 0)
-(define host-extinct-marker 
-  (with-state
-   (translate (vector -5 7 0))
-   (scale (vector 5 5 5))
-   (texture (load-texture "host-extinct.png"))
-   (build-instance flag)))
+(define host-extinct-marker #f)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(define death-count 0)
+
 (define (play-mode-update g)
   (virus-builder-update-buttons buttons)
-
+  
+  ;; keep track of deaths
+  (set! death-count 
+	(foldl
+	 (lambda (host r)
+	   (if (and (not (host-alive? host))
+		    (host-infected? host))
+	       (+ r 1) r))
+	 death-count
+	 (play-mode-population g)))
+  
   (cond
    ;; no hosts!
    ((zero? (length (play-mode-population g)))
@@ -79,6 +98,7 @@
    ;; no infections
    ((zero? (population-num-infected (play-mode-population g)))
     (when (> (play-mode-score g) 100) (set! virus-extinct-marker-t 1))
+    (set! death-count 0)
     (make-play-mode
      (population-infect 
       (play-mode-population g)
@@ -154,7 +174,10 @@
   (ctx.clearRect 0 0 screen-width screen-height)	  
   (set! ctx.fillStyle "#fff")
 
+
   (ctx.fillText "play mode" 54 110)
   (ctx.fillText (+ "score: " (play-mode-score g)) 54 140)
+  (ctx.fillText (+ "infected: " (population-num-infected (play-mode-population g))) 54 170)
+  (ctx.fillText (+ "deaths: " death-count) 54 200)
   )
-  
+

@@ -1,10 +1,12 @@
-function load_obj(url) {
+function load_obj(url, loadedfn) {
     var xmlHttp = new XMLHttpRequest();
-    xmlHttp.open( "GET", url, false );
+    xmlHttp.addEventListener("load",function() {
+	var str=xmlHttp.responseText;
+	loadedfn(inner_load_obj(str));
+    });
+    xmlHttp.open("GET", url);
     xmlHttp.overrideMimeType("script");
-    xmlHttp.send( null );
-    var str=xmlHttp.responseText;
-    return inner_load_obj(xmlHttp.responseText);
+    xmlHttp.send();
 }
 
 function inner_load_obj(string) {
@@ -95,6 +97,8 @@ function inner_load_obj(string) {
         }
     }
     // returns fluxus vbo object (see vbo.jscm)
-    return [["p","n","t","c"], (verts.length/3)/4, verts, 0];
+    return [["p","n","t","c"],
+	    ["position","normal","texture","colour"], 
+	    (verts.length/3)/4, verts, 0];
 }
 

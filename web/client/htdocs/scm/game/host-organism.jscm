@@ -23,13 +23,16 @@
 (define (blendshape-vars b) (list-ref b 0))
 (define (blendshape-blends b) (list-ref b 1))
 
-(define host-blends 
-  (list
-   (blendshape (list "models/host-sea-1.ply" "models/host-sea-2.ply"))
-   (blendshape (list "models/host-land-1.ply" "models/host-land-2.ply"))
-   (blendshape (list "models/host-land2-1.ply" "models/host-land2-2.ply"))
-;;   (blendshape (list "models/host-air-1.ply" "models/host-air-2.ply"))
-   ))
+(define host-blends '()) 
+
+(define (host-organism-load-models)
+  (set! host-blends 
+	(list
+	 (blendshape (list "models/host-sea-1.ply" "models/host-sea-2.ply"))
+	 (blendshape (list "models/host-land-1.ply" "models/host-land-2.ply"))
+	 (blendshape (list "models/host-land2-1.ply" "models/host-land2-2.ply"))
+	 ;;   (blendshape (list "models/host-air-1.ply" "models/host-air-2.ply"))
+	 )))
 
 (define (update-host-anim frame)
   (for-each 
@@ -170,5 +173,58 @@ void main() {
                             DiffuseColour*C*diffuse,1.0-a),1.0);
 }
 ")
+
+
+;;  (define host-vertex-shader
+;;   "
+;; precision mediump float;
+;; varying vec3 P;
+;; varying vec3 T;
+;; varying vec3 C;
+;; varying vec3 N;
+;; varying vec3 L;
+;; varying vec3 P2;
+;; uniform mat4 ModelViewMatrix;
+;; uniform mat4 NormalMatrix;
+;; uniform vec3 CameraPos;
+;; attribute vec3 p;
+;; attribute vec3 t;
+;; attribute vec3 n;
+;; attribute vec3 c;
+;; attribute vec3 p2;
+
+;; void main()
+;; {
+;;     P = p.xyz;
+;;     P2 = p2.xyz;
+;;     T = t;
+;;     C = c;
+;;     L = vec3(0,0,1); /* vec3(ModelViewMatrix*vec4((vec3(0,10,0)-p),1)); */
+;;     N = normalize(vec3(NormalMatrix*vec4(n,1)));	
+;;     gl_Position = ModelViewMatrix * vec4(p,1);
+;; }")
+
+;; (define host-fragment-shader
+;;   "
+;; precision mediump float;
+;; uniform sampler2D texture;
+;; uniform vec3 DiffuseColour;
+;; varying vec3 P;
+;; varying vec3 P2;
+;; varying vec3 T;
+;; varying vec3 C;
+;; varying vec3 N;
+;; varying vec3 L;
+
+;; void main() {
+;;     vec3 l = normalize(L);
+;;     vec3 n = normalize(N);
+;;     float diffuse = dot(vec3(0,0,1),n);
+;;     float a = texture2D(texture, vec2(T.s, T.t)).a;
+
+;;     gl_FragColor = vec4(mix(texture2D(texture, vec2(T.s, T.t)).xyz,
+;;                             DiffuseColour*C*diffuse,1.0-a),1.0);
+;; }
+;; ")
 
 

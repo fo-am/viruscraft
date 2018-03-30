@@ -156,24 +156,6 @@
       (scenegraph-render (renderer-scenegraph r) gl view-camera camera-pos ident))
     (renderer-immediate-clear r)))
 
-(define (interleave-pdata a b c d)
-  (js "var ret=[];")
-  (js "for (var i=0; i<a.length; i+=3) {") 
-  (js "ret.push(a[i]);")
-  (js "ret.push(a[i+1]);")
-  (js "ret.push(a[i+2]);")
-  (js "ret.push(b[i]);")
-  (js "ret.push(b[i+1]);")
-  (js "ret.push(b[i+2]);")
-  (js "ret.push(c[i]);")
-  (js "ret.push(c[i+1]);")
-  (js "ret.push(c[i+2]);")
-  (js "ret.push(d[i]);")
-  (js "ret.push(d[i+1]);")
-  (js "ret.push(d[i+2]);")
-  (js "}")
-  ret)
-
 (define (assemble-polyprim gl vertices normals texcoords)
   (primitive
    'polyprim
@@ -181,10 +163,11 @@
     gl
     (make-pdata 
      (list "p" "n" "t" "c") 
+     (list "position" "normal" "texture" "colour")
      (/ (length vertices) 4)
-     (interleave-pdata 
-      vertices normals texcoords 
-      (build-list (* (length vertices) 3) (lambda (_) 1))))
+     (pdata-interleave-pdata-util 
+      (list vertices normals texcoords 
+	    (build-list (* (length vertices) 3) (lambda (_) 1)))))
     )))
 
 ;; todo - probably replace these with the import code path to simplify things...
