@@ -37,7 +37,7 @@
 (define FLX_HINT_NOZWRITE       0x00080000)
 
 (define (state gl)
-  (let ((shader (build-shader gl vertex-shader fragment-shader)))
+  (let ((shader (build-shader gl (list "p" "n" "t" "c") vertex-shader fragment-shader)))
     (list
      (mat4.identity (mat4.create))
      shader

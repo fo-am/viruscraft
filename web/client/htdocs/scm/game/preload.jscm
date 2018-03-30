@@ -1,0 +1,47 @@
+;; -*- mode: scheme; -*-
+;; Planet Fluxus Copyright (C) 2013 Dave Griffiths
+
+(load-texture "white.png")
+(load-texture "extinct.png")
+(load-texture "host-extinct.png")
+(load-texture "host-circle3.png")
+(load-texture "host-triangle3.png")
+(load-texture "host-square3.png")
+(load-texture "host-donut3.png")
+
+(load-mesh-cache "models/ico.obj")
+(load-mesh-cache "models/receptor-square.obj")
+(load-mesh-cache "models/receptor-triangle.obj")
+(load-mesh-cache "models/receptor-circle.obj")
+(load-mesh-cache "models/receptor-donut.obj")
+;;(load-mesh-cache "models/receptor-guitar.obj")
+;;(load-mesh-cache "models/receptor-angle.obj")
+;;(load-mesh-cache "models/receptor-tee.obj")
+
+(load-mesh-cache "models/builder-square.obj")
+(load-mesh-cache "models/builder-triangle.obj")
+(load-mesh-cache "models/builder-circle.obj")
+(load-mesh-cache "models/builder-donut.obj")
+(load-mesh-cache "models/builder-guitar.obj")
+(load-mesh-cache "models/builder-corner.obj")
+(load-mesh-cache "models/builder-tee.obj")
+
+(load-mesh-cache "models/flag.obj")
+
+(load-mesh-cache "models/world-unit-two-000.ply")
+(load-mesh-cache "models/world-unit-two-001.ply")
+(load-mesh-cache "models/world-unit-two-010.ply")
+(load-mesh-cache "models/world-unit-two-011.ply")
+(load-mesh-cache "models/world-unit-two-100.ply")
+(load-mesh-cache "models/world-unit-two-101.ply")
+(load-mesh-cache "models/world-unit-two-110.ply")
+(load-mesh-cache "models/world-unit-two-111.ply")
+
+(load-mesh-cache "models/pentakis-rings2.ply")
+
+(load-mesh-cache "models/host-sea-1.ply")
+(load-mesh-cache "models/host-sea-2.ply")
+(load-mesh-cache "models/host-land-1.ply")
+(load-mesh-cache "models/host-land-2.ply")
+(load-mesh-cache "models/host-land2-1.ply")
+(load-mesh-cache "models/host-land2-2.ply")

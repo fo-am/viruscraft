@@ -250,12 +250,6 @@
 	;; REMOVED 80
 	(list (list 3 0) (list 2 0) (list 0 0) (list 25 4) (list 4 0))))
 
-(for-each
- (lambda (l)
-   (msg (length l)))
- pent-ori)
-
-
 
 (define (face loc a b c) (list loc a b c))
 (define (face-loc f) (list-ref f 0))

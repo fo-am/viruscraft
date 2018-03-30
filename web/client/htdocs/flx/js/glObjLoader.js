@@ -98,7 +98,6 @@ function inner_load_obj(string) {
     }
     // returns fluxus vbo object (see vbo.jscm)
     return [["p","n","t","c"],
-	    ["position","normal","texture","colour"], 
 	    (verts.length/3)/4, verts, 0];
 }
 

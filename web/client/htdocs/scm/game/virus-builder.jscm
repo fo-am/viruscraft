@@ -153,7 +153,6 @@
   (with-primitive 
    face-display
    (let ((face-details (with-primitive virus-builder (_ 0 -99999 #f))))
-     (msg face-details)
      (let ((pos (cadr face-details)))
        (identity)
        (translate pos)

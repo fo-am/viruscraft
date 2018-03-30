@@ -35,7 +35,6 @@
   (build-polyprim 
    gl (make-pdata 
        (list "p" "n" "t" "c")
-       (list "position" "normal" "texture" "colour")
        size-verts
        (build-list 
 	(* (* size-verts 4) 3) 

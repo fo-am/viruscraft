@@ -22,47 +22,35 @@
 	(begin
 	  (alert (gl.getShaderInfoLog shader))
 	  #f)
-	shader))))
+	shader)))
 
-(define (build-shader gl vert frag)
+(define (build-shader gl attrib-names vert frag)
   (let ((fragment-shader (compile-shader gl gl.FRAGMENT_SHADER frag))
 	(vertex-shader (compile-shader gl gl.VERTEX_SHADER vert)))
     (let ((shader-program (gl.createProgram)))
       (gl.attachShader shader-program vertex-shader)
       (gl.attachShader shader-program fragment-shader)
+
+      (index-for-each
+       (lambda (index attrib-name)
+	 (gl.bindAttribLocation shader-program index attrib-name))
+       attrib-names)
+      
       (gl.linkProgram shader-program)
       (when (not (gl.getProgramParameter shader-program gl.LINK_STATUS))
             (alert (gl.getShaderInfoLog shader)))
       (gl.useProgram shader-program)
 
-      ;; we look for hardcoded attributes on the shader
-
-      (when (not (eq? (gl.getAttribLocation shader-program "p") -1))
-	    (set! shader-program.vertexPositionAttribute
-		  (gl.getAttribLocation shader-program "p"))
-	    (gl.enableVertexAttribArray shader-program.vertexPositionAttribute))
+      (index-for-each
+       (lambda (index attrib-name)
+	 (if (not (eq? (gl.getAttribLocation shader-program attrib-name) -1))
+	     (gl.enableVertexAttribArray index)
+	     (begin 
+	       (msg (+ "asked for " attrib-name " but not in shader (maybe optimised away)"))
+	       )))
+       attrib-names)
       
-      (when (not (eq? (gl.getAttribLocation shader-program "n") -1))
-	    (set! shader-program.vertexNormalAttribute
-		  (gl.getAttribLocation shader-program "n"))
-	    (gl.enableVertexAttribArray shader-program.vertexNormalAttribute))
-      
-      (when (not (eq? (gl.getAttribLocation shader-program "t") -1))
-	    (set! shader-program.vertexTextureAttribute
-		  (gl.getAttribLocation shader-program "t"))
-	    (gl.enableVertexAttribArray shader-program.vertexTextureAttribute))
-
-      (when (not (eq? (gl.getAttribLocation shader-program "c") -1))
-	    (set! shader-program.vertexColorAttribute
-		  (gl.getAttribLocation shader-program "c"))
-	    (gl.enableVertexAttribArray shader-program.vertexColorAttribute))
-
-      ;; second position buffer for animation
-      (when (not (eq? (gl.getAttribLocation shader-program "p2") -1))
-	    (set! shader-program.vertexPositionAttribute
-		  (gl.getAttribLocation shader-program "p2"))
-	    (gl.enableVertexAttribArray shader-program.vertexPositionAttribute))
-      
+      ;; common uniforms
       (when (gl.getUniformLocation shader-program "ModelViewMatrix")
 	    (set! shader-program.ModelViewMatrixUniform
 		  (gl.getUniformLocation shader-program "ModelViewMatrix")))

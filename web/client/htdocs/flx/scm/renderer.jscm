@@ -163,7 +163,6 @@
     gl
     (make-pdata 
      (list "p" "n" "t" "c") 
-     (list "position" "normal" "texture" "colour")
      (/ (length vertices) 4)
      (pdata-interleave-pdata-util 
       (list vertices normals texcoords 

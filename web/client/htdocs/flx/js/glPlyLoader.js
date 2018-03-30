@@ -208,7 +208,6 @@ function inner_load_ply(data) {
     }
 
     return [["p","n","t","c"],
-	    ["position","normal","texture","colour"], 
 	    arrayIndex.length*3, verts, 0];
     // return [
     //     new Float32Array(arrayVertex),

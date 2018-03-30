@@ -133,12 +133,23 @@
              (state-modify-texture state name)))))
 
 (define (shader vert frag)
-  (set! the-renderer (renderer-modify-current-state
-           the-renderer
+  (set! the-renderer 
+	(renderer-modify-current-state
+	 the-renderer
            (lambda (state)
              (state-modify-shader
               state
-              (build-shader (renderer-gl the-renderer) vert frag))))))
+              (build-shader (renderer-gl the-renderer) 
+			    (list "p" "n" "t" "c") vert frag))))))
+
+(define (shader-attrib-names names vert frag)
+  (set! the-renderer 
+	(renderer-modify-current-state
+	 the-renderer
+	 (lambda (state)
+	   (state-modify-shader
+	    state
+	    (build-shader (renderer-gl the-renderer) names vert frag))))))
 
 (define (colour col)
   (set! the-renderer (renderer-modify-current-state
@@ -297,7 +308,7 @@
 	   (scenenode-primitive (renderer-grab-stack-top the-renderer))))
 	 fn name)))
 
-(define (pdata-add! name type)
+(define (pdata-add! name)
   (when (renderer-grabbed? the-renderer)
 	 ;; todo: check type is polyprim
 	(let ((pp (primitive-inner
@@ -305,7 +316,7 @@
 	  (pdata-internal-add!
 	   (renderer-gl the-renderer) 
 	   (polyprim-pdata pp)
-	   name type))))
+	   name))))
 
 (define (pdata-size)
   (when (renderer-grabbed? the-renderer)
