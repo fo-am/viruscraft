@@ -14,7 +14,7 @@
 ;; You should have received a copy of the GNU Affero General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-(define (scenenode id state primitive children) (list id state primitive children)))
+(define (scenenode id state primitive children) (list id state primitive children))
 (define (scenenode-id p) (list-ref p 0))
 (define (scenenode-state p) (list-ref p 1))
 (define (scenenode-modify-state! p v) (set! p (list-replace p 1 v)))

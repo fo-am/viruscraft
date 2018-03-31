@@ -45,3 +45,11 @@
 (load-mesh-cache "models/host-land-2.ply")
 (load-mesh-cache "models/host-land2-1.ply")
 (load-mesh-cache "models/host-land2-2.ply")
+
+(shader-compile "host-organism" (list "p" "n" "t" "c" "p2")
+		"shaders/host-organism.vert"
+		"shaders/host-organism.frag")
+
+(shader-compile "virus" (list "p" "n" "t" "c")
+		"shaders/virus.vert"
+		"shaders/virus.frag")

@@ -1,0 +1,29 @@
+;; -*- mode: scheme; -*-
+;; Viruscraft Copyright (C) 2018 FoAM Kernow
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define (init-loading-mode)
+  (list #f))
+
+(define (loading-mode-ready? m) (list-ref m 0))
+(define (loading-mode-modify-ready m v) (list-replace m 0 v))
+
+(define (loading-mode-update m)
+  (loading-mode-modify-ready m (and
+				(meshes-loaded?)
+				(textures-loaded?)
+				(shaders-loaded?))))
+
+(define (loading-mode-render m)
+  0)
+
+(define (loading-mode-canvas-render m)
+  (ctx.clearRect 0 0 screen-width screen-height)	  
+  (set! ctx.fillStyle "#fff")
+  (let ((load-percent
+	 (* (/ (+ textures-total-load meshes-total-load)
+	       (+ meshes-load-outstanding textures-load-outstanding)) 100)))
+    
+    (ctx.fillText (+ "loading mode: " load-percent "%") 54 110))
+  )

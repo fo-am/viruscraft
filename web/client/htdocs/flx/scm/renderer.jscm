@@ -15,6 +15,7 @@
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
  
 (define (renderer gl)
+  (shader-cache-add gl "main" (list "p" "n" "t" "c") vertex-shader fragment-shader)
   (list
    gl
    ()

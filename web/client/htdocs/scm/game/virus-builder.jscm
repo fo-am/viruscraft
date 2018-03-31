@@ -60,7 +60,7 @@
 	(list-replace 
 	 receptor-ids virus-recep-id
 	 (with-state
-	  (shader vertex-virus fragment-virus)
+	  (shader-assign-compiled "virus")	
 	  (parent virus-builder)
 	  (concat (minverse (q->m (list-ref receptor-rotations 
 					    (list-ref faceid->rotation virus-recep-id)))))
@@ -208,11 +208,11 @@
 
 (define (build-virus-builder)
   (set! virus-builder (with-state 
-			 (shader vertex-virus fragment-virus)
-			 (translate builder-pos) 
-			 (scale (vector 2 2 2))
-			 (colour (vector 1 0 0))
-			 (load-primitive "models/ico.obj")))
+		       (shader-assign-compiled "virus")
+		       (translate builder-pos) 
+		       (scale (vector 2 2 2))
+		       (colour (vector 1 0 0))
+		       (load-primitive "models/ico.obj")))
   
   (set! receptor-circle (with-state (hide #t) (load-primitive "models/receptor-circle.obj")))
   (set! receptor-triangle (with-state (hide #t) (load-primitive "models/receptor-triangle.obj")))
@@ -225,7 +225,7 @@
 	 (lambda (i)
 	   (make-button
 	    (with-state 
-	     (shader vertex-virus fragment-virus)
+	     (shader-assign-compiled "virus")
 	     (translate builder-pos)
 	     (translate (vmul (vector (cos (* (/ i num-buttons) Math.PI 2))
 				      (sin (* (/ i num-buttons) Math.PI 2))
@@ -237,7 +237,7 @@
 
   (set! face-display 
 	(with-state 
-	 (shader vertex-virus fragment-virus)
+	 (shader-assign-compiled "virus")
 	 (parent virus-builder)
 	 (colour (vector 0.8 1 0))
 	 (load-primitive "models/ico.obj")))

@@ -17,17 +17,18 @@
 (load "flx/scm/texture.jscm")
 (load "flx/scm/maths.jscm")
 (load "flx/scm/glsl.jscm")
-(load "flx/scm/shaders.jscm")
 (load "flx/scm/state.jscm")
 (load "flx/scm/pdata.jscm")
 (load "flx/scm/scenegraph.jscm")
 (load "flx/scm/primitive.jscm")
 (load "flx/scm/data.jscm")
+(load "flx/scm/shaders.jscm")
 (load "flx/scm/renderer.jscm")
 (load "flx/scm/instanceprim.jscm")
 (load "flx/scm/polyprim.jscm")
 (load "flx/scm/geometry.jscm")
 (load "flx/scm/meshcache.jscm")
+(load "flx/scm/shadercache.jscm")
 
 (define the-renderer 0)
 
@@ -137,6 +138,18 @@
            the-renderer
            (lambda (state)
              (state-modify-texture state name)))))
+
+(define (shader-compile name attrib-names vert frag)
+  (internal-load-shader-cache (renderer-gl the-renderer) name attrib-names vert frag))
+
+(define (shader-assign-compiled name)
+  (set! the-renderer 
+	(renderer-modify-current-state
+	 the-renderer
+           (lambda (state)
+             (state-modify-shader
+              state
+              (shader-cache-search name))))))
 
 (define (shader vert frag)
   (set! the-renderer 
