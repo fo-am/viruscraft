@@ -87,3 +87,33 @@
        (get-uniform-info-list gl shader_program))
 
       shader-program)))
+
+;; todo: add matrices
+(define (internal-shader-set! gl shader name type value)
+  (gl.useProgram shader) 
+  (cond
+   ((number? value)
+    (if (eq? type "f")
+	(gl.uniform1f (js "shader[name]") value)
+	(gl.uniform1i (js "shader[name]") value)))
+   (else
+    (cond
+     ((eq? (length value) 1)
+      (if (eq? type "f")
+	  (gl.uniform1fv (js "shader[name]") value)
+	  (gl.uniform1iv (js "shader[name]") value)))
+     ((eq? (length value) 2)
+      (if (eq? type "f")
+	  (gl.uniform2fv (js "shader[name]") value)
+	  (gl.uniform2iv (js "shader[name]") value)))
+     ((eq? (length value) 3)
+      (if (eq? type "f")
+	  (gl.uniform3fv (js "shader[name]") value)
+	  (gl.uniform3iv (js "shader[name]") value)))
+     ((eq? (length value) 4)
+      (if (eq? type "f")
+	  (gl.uniform4fv (js "shader[name]") value)
+	  (gl.uniform4iv (js "shader[name]") value)))
+     (else
+      (msg (+ "internal-shader-set: unhandled type: " value)))))))
+ 

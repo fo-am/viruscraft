@@ -28,7 +28,7 @@
        (with-state
 	(shader-assign-compiled "host-organism")
 
-	(shader-set! "speed" "1f" (+ 3 (* 3 (rndf))))
+	(shader-set! "speed" "f" (+ 3 (* 3 (rndf))))
 
 	(translate pos)
 	(when (not (eq? (host-species host) 'sea)) 
@@ -59,7 +59,7 @@
    ((host-alive? host)
     (with-primitive 
      (organism-root organism)
-     (shader-set! "time" "1f" (time))
+     (shader-set! "time" "f" (time))
      (translate (vector 0 -0.025 0))
      (rotate (vector 0 0 (if (zero? (modulo (host-id host) 2)) 1 -1)))
      (when (host-infected? host) 

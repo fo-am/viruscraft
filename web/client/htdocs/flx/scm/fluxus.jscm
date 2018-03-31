@@ -177,13 +177,7 @@
            (lambda (state)
 	     (let ((gl (renderer-gl the-renderer))
 		   (shader (state-shader state)))
-	       (gl.useProgram shader)
-;;	       (console.log (js "shader[name]"))
-	       (cond
-		((eq? type "1f") (gl.uniform1f (js "shader[name]") value))
-		((eq? type "3fv") (gl.uniform3fv (js "shader[name]") value))
-		((eq? type "4fv") (gl.uniform4fv (js "shader[name]") value))
-		(else (gl.uniformMatrix4fv (js "shader[name]") value)))
+	       (internal-shader-set! gl shader name type value)
 	       state)))))
 
 (define (colour col)
