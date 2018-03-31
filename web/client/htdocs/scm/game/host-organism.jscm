@@ -3,26 +3,7 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (load "scm/game/animation.jscm")
-
-(define (obj-variation jitter obj) (list jitter obj))
-(define (obj-variation-jitter o) (list-ref o 0))
-(define (obj-variation-obj o) (list-ref o 1))
-
-(define num-variations 3)
-
-(define (blendshape blends) 
-  (with-state
-   (hide #t)
-   (list 
-    (build-list 
-     num-variations 
-     (lambda (_) 
-       (obj-variation (random 30) (load-ply-primitive (car blends)))))
-    (load-blend-shapes blends))))
-
-(define (blendshape-vars b) (list-ref b 0))
-(define (blendshape-blends b) (list-ref b 1))
-
+		     
 (define host-blends '()) 
 
 (define (host-organism-load-models)
@@ -33,18 +14,6 @@
 	 (blendshape (list "models/host-land2-1.ply" "models/host-land2-2.ply"))
 	 ;;   (blendshape (list "models/host-air-1.ply" "models/host-air-2.ply"))
 	 )))
-
-(define (update-host-anim frame)
-  (for-each 
-   (lambda (blendshape)
-     (for-each
-      (lambda (obj-var)
-	(with-primitive (obj-variation-obj obj-var)
-			(set-blend-shape-lerp! 
-			 (blendshape-blends blendshape) 
-			 (/ frame (+ (obj-variation-jitter obj-var) 10)))))
-      (blendshape-vars blendshape)))
-   host-blends))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -57,8 +26,11 @@
        (host-id host)
        (with-state
 	(shader-attrib-names 
-	 (list "p" "n" "t" "c" "d")
+	 (list "p" "n" "t" "c" "p2")
 	 host-vertex-shaderx host-fragment-shader)
+
+	(shader-set! "speed" "1f" (+ 3 (* 3 (rndf))))
+
 	(translate pos)
 	(when (not (eq? (host-species host) 'sea)) 
 	      (translate (vector 0 0 0.2)))
@@ -74,12 +46,10 @@
 		   (else "host-donut3.png"))))
 	
 	(build-instance 
-	 (obj-variation-obj 
-	  (choose (blendshape-vars (cond ((eq? (host-species host) 'sea) (list-ref host-blends 0))
-					 ((eq? (host-species host) 'land) (list-ref host-blends 1)) 
-					 (else (list-ref host-blends 2)) 
-					 )))))
-	)
+	 (cond ((eq? (host-species host) 'sea) (list-ref host-blends 0))
+	       ((eq? (host-species host) 'land) (list-ref host-blends 1)) 
+	       (else (list-ref host-blends 2)) 
+	       )))
        ))))
 
 (define (organism-id c) (list-ref c 0))
@@ -90,6 +60,7 @@
    ((host-alive? host)
     (with-primitive 
      (organism-root organism)
+     (shader-set! "time" "1f" (time))
      (cond ((host-infected? host) 
 	    ;;(rotate (vector 0 0 -2))
 	    (colour (vector 2 0.5 0.5)))
@@ -128,55 +99,6 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;;  (define host-vertex-shader
-;;   "
-;; precision mediump float;
-;; varying vec3 P;
-;; varying vec3 T;
-;; varying vec3 C;
-;; varying vec3 N;
-;; varying vec3 L;
-;; uniform mat4 ModelViewMatrix;
-;; uniform mat4 NormalMatrix;
-;; uniform vec3 CameraPos;
-;; attribute vec3 p;
-;; attribute vec3 t;
-;; attribute vec3 n;
-;; attribute vec3 c;
-
-;; void main()
-;; {
-;;     P = p.xyz;
-;;     T = t;
-;;     C = c;
-;;     L = vec3(0,0,1); /* vec3(ModelViewMatrix*vec4((vec3(0,10,0)-p),1)); */
-;;     N = normalize(vec3(NormalMatrix*vec4(n,1)));	
-;;     gl_Position = ModelViewMatrix * vec4(p,1);
-;; }")
-
-;; (define host-fragment-shader
-;;   "
-;; precision mediump float;
-;; uniform sampler2D texture;
-;; uniform vec3 DiffuseColour;
-;; varying vec3 P;
-;; varying vec3 T;
-;; varying vec3 C;
-;; varying vec3 N;
-;; varying vec3 L;
-
-;; void main() {
-;;     vec3 l = normalize(L);
-;;     vec3 n = normalize(N);
-;;     float diffuse = dot(vec3(0,0,1),n);
-;;     float a = texture2D(texture, vec2(T.s, T.t)).a;
-
-;;     gl_FragColor = vec4(mix(texture2D(texture, vec2(T.s, T.t)).xyz,
-;;                             DiffuseColour*C*diffuse,1.0-a),1.0);
-;; }
-;; ")
-
-
  (define host-vertex-shaderx
   "
 precision mediump float;
@@ -188,15 +110,17 @@ varying vec3 L;
 uniform mat4 ModelViewMatrix;
 uniform mat4 NormalMatrix;
 uniform vec3 CameraPos;
+uniform float time;
+uniform float speed;
 attribute vec3 p;
 attribute vec3 t;
 attribute vec3 n;
 attribute vec3 c;
-attribute vec3 d;
+attribute vec3 p2;
 
 void main()
 {
-    P = p+d;
+    P = mix(p,p2,abs(mod(time*speed,2.0)-1.0));
     T = t;
     C = c;
     L = vec3(0,0,1); /* vec3(ModelViewMatrix*vec4((vec3(0,10,0)-p),1)); */

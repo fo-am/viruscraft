@@ -31,7 +31,13 @@
 
 (define the-renderer 0)
 
-(define (time) (js "new Date().getTime()/1000;"))
+(define flx-start-time (js "new Date().getTime()/1000"))
+ 
+(define (time) 
+  (let ((time-now (js "new Date()")))
+    (- (/ (time-now.getTime) 1000) 
+       flx_start_time)))
+
 (define (push) (set! the-renderer (renderer-stack-dup the-renderer)))
 (define (pop) (set! the-renderer (renderer-stack-pop the-renderer)))
 
@@ -150,6 +156,22 @@
 	   (state-modify-shader
 	    state
 	    (build-shader (renderer-gl the-renderer) names vert frag))))))
+
+(define (shader-set! name type value)
+  (set! the-renderer 
+	(renderer-modify-current-state
+	 the-renderer
+           (lambda (state)
+	     (let ((gl (renderer-gl the-renderer))
+		   (shader (state-shader state)))
+	       (gl.useProgram shader)
+;;	       (console.log (js "shader[name]"))
+	       (cond
+		((eq? type "1f") (gl.uniform1f (js "shader[name]") value))
+		((eq? type "3fv") (gl.uniform3fv (js "shader[name]") value))
+		((eq? type "4fv") (gl.uniform4fv (js "shader[name]") value))
+		(else (gl.uniformMatrix4fv (js "shader[name]") value)))
+	       state)))))
 
 (define (colour col)
   (set! the-renderer (renderer-modify-current-state

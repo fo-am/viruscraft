@@ -10,24 +10,13 @@
   (let ((p (load-ply-primitive fn))
 	(ret (list)))
     (with-primitive 
-     p 
-     (pdata-add! "d")   
-     (pdata-map! (lambda (p2) (rndvec)) "d")
-     (anim-suck 0))))
+     p (anim-suck 0))))
 
 (define (load-blend-shapes fns)
   (map
    (lambda (fn)
      (load-vertex-data fn))
    fns))
-
-(define (set-blend-shape! blends n)
-  (index-map
-   (lambda (i v) 
-     (pdata-set! "p" i v)
-     )
-   (list-ref blends n))
-  (pdata-upload!))
 
 ;; cpu bound version - reallllly slow
 ;; could easily do GPU
@@ -45,3 +34,18 @@
     (pdata-upload!)
     ))
 
+;; GPU version - assumes two frames atm
+(define (blendshape blends) 
+  (with-state
+   (hide #t)
+   (let ((vdata (load-vertex-data (cadr blends))))
+     (let ((p (load-ply-primitive (car blends))))
+       (with-primitive 
+	p
+	(pdata-add! "p2")
+	(index-map 
+	 (lambda (i v) 
+	   (pdata-set! "p2" i v))
+	 vdata)
+	(pdata-upload!)
+	p)))))

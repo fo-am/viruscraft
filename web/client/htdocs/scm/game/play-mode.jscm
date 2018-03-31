@@ -166,7 +166,7 @@
      (scale (vector s s s)))
    (concat (q->m world-q)))
 
-  (update-host-anim (* frame 2))
+  ;;(update-host-anim (* frame 2))
   (set! frame (+ frame 1))
   )
 
