@@ -73,12 +73,12 @@
 
       (gl.useProgram shader-program)
 
-      (index-for-each
-       (lambda (index attrib-name)
-	 (if (not (eq? (gl.getAttribLocation shader-program attrib-name) -1))
-	     (gl.enableVertexAttribArray index)
-	     (msg (+ "asked for " attrib-name " but not in shader (maybe optimised away)"))))
-       attrib-names)
+;      (index-for-each
+;       (lambda (index attrib-name)
+;	 (if (not (eq? (gl.getAttribLocation shader-program attrib-name) -1))
+;	     (gl.enableVertexAttribArray index)
+;	     (msg (+ "asked for " attrib-name " but not in shader (maybe optimised away)"))))
+ ;      attrib-names)
       
       ;; expose all the uniform variables  
       (for-each

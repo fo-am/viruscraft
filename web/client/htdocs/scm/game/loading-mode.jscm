@@ -21,9 +21,11 @@
 (define (loading-mode-canvas-render m)
   (ctx.clearRect 0 0 screen-width screen-height)	  
   (set! ctx.fillStyle "#fff")
+  (set! ctx.font "50pt Arial")
+  
   (let ((load-percent
-	 (* (/ (+ textures-total-load meshes-total-load)
-	       (+ meshes-load-outstanding textures-load-outstanding)) 100)))
+	 (floor (* (- 1 (/ (+ meshes-load-outstanding textures-load-outstanding)
+			   (+ textures-total-load meshes-total-load))) 100))))
     
     (ctx.fillText (+ "loading mode: " load-percent "%") 54 110))
   )

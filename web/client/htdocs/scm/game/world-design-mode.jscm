@@ -1,0 +1,28 @@
+;; -*- mode: scheme; -*-
+;; Viruscraft Copyright (C) 2018 FoAM Kernow
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define (init-world-design-mode)
+  (list #f))
+
+(define (world-design-mode-ready? m) (list-ref m 0))
+(define (world-design-mode-modify-ready m v) (list-replace m 0 v))
+
+(define (world-design-mode-update m)
+  m)
+
+(define (world-design-mode-render m)
+  0)
+
+(define slid (make-slider 100 100 400 100))
+
+(define (world-design-mode-canvas-render m)
+  (ctx.clearRect 0 0 screen-width screen-height)	  
+  (set! ctx.fillStyle "#fff")
+
+  (set! slid (slider-update slid))
+  (slider-render! slid)
+  
+  (ctx.fillText (+ "world-design mode") 54 110)
+  )

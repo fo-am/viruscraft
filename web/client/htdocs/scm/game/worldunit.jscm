@@ -83,18 +83,20 @@
   (let ((w ($ (string-append "#" id))))
     (parseFloat (js "w[0].value"))))
   
-(define world-root 
-  (with-state 
-   (translate (vector 5 0 0))
-   (scale (vector 0.7 0.7 0.7))
-;;   (rotate (vector 90 0 0)) 
-   (build-locator)))
+(define world-root #f)
 
 (define face-ids (build-list 80 (lambda (i) i)))
 
 ;;(find-face units loc)))
 
 (define (build-world value units)
+  (set! world-root
+	(with-state 
+	 (translate (vector 5 0 0))
+	 (scale (vector 0.7 0.7 0.7))
+	 ;;   (rotate (vector 90 0 0)) 
+	 (build-locator)))
+
   (with-state
    (parent world-root)
    (scale (vector 10 10 10))

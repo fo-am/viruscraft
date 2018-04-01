@@ -1,0 +1,34 @@
+;; -*- mode: scheme; -*-
+;; Viruscraft Copyright (C) 2018 FoAM Kernow
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define b '())
+
+(define (init-title-mode)
+  (set! b (make-mesh-button (vector 0 0 0) "models/ico.obj"
+			    30 "button" 
+			    (lambda (m)
+			      (msg "clicicied")
+			      (title-mode-modify-ready m #t))))  
+  (list #f))
+
+(define (title-mode-ready? m) (list-ref m 0))
+(define (title-mode-modify-ready m v) (list-replace m 0 v))
+
+(define (title-mode-update m)
+  (mesh-button-update b m)
+  )
+
+(define (title-mode-render m)
+  0)
+
+(define (title-mode-canvas-render m)
+  (ctx.clearRect 0 0 screen-width screen-height)	  
+  (set! ctx.fillStyle "#fff")
+  (set! ctx.font "10pt Arial")
+
+  (mesh-button-render! b)
+
+  (ctx.fillText (+ "title mode") 54 110)
+  )

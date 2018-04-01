@@ -153,7 +153,6 @@
     (mat4.toRotationMat local normal)
     
     (gl.useProgram shader)
-    
     (gl.bindBuffer gl.ARRAY_BUFFER (pdata-vbo pdata))
 
     ;; 12 bytes for 3 floats...

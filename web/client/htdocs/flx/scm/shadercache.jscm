@@ -42,7 +42,6 @@
 	(shader-cache-add gl name attrib-names vert-code frag-code))))))
 
 (define (shader-cache-add gl name attrib-names vert-code frag-code)
-  (msg (+ "adding " name))
   (set! shader-cache 
 	(cons 
 	 (list name (build-shader gl attrib-names vert-code frag-code))

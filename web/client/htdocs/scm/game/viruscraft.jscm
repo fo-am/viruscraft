@@ -11,12 +11,15 @@
 (load "scm/game/worldunit.jscm")
 (load "scm/game/canvas.jscm")
 (load "scm/game/virus-builder.jscm")
+(load "scm/game/canvas-widgets.jscm")
 (load "scm/game/loading-mode.jscm")
+(load "scm/game/title-mode.jscm")
+(load "scm/game/world-design-mode.jscm")
 (load "scm/game/play-mode.jscm")
 
 (define mode-loading 0)
 (define mode-title 1)
-(define mode-worldbuild 2)
+(define mode-world-design 2)
 (define mode-play 3)
 
 (define mode mode-loading)
@@ -34,18 +37,33 @@
    ((eq? mode mode-loading) 
     (cond 
      ((loading-mode-ready? current-mode)
+      (msg "switching to title mode")
+      (set! mode mode-title)
+      (init-title-mode))
+     (else (loading-mode-update current-mode))))
+
+   ((eq? mode mode-title) 
+    (cond 
+     ((title-mode-ready? current-mode)
+      (msg "switching to world design mode")
+      (set! mode mode-world-design)
+      (init-world-design-mode))
+     (else
+      (title-mode-update current-mode))))
+
+   ((eq? mode mode-world-design) 
+    (cond 
+     ((world-design-mode-ready? current-mode)
       (worldunit-load-models)
       (set! world-units (build-world-from-params 20))
       (build-virus-builder)
       (host-organism-load-models)
-      (msg "switching to play mode")
-      (set! mode mode-play)
-      (init-play-mode world-units))
-     (else (loading-mode-update current-mode))))
-   ((eq? mode mode-title) (title-mode-update current-mode))
-   ((eq? mode mode-worldbuild) (worldbuild-mode-update current-mode))
+      (init-play-mode world-units)
+      (set! mode mode-play))
+     (else (world-design-mode-update current-mode))))
+
    (else (play-mode-update current-mode))))
-  
+
 (define (render)
   (set! current-mode (update current-mode))
   (resize-glcanvas webgl-canvas)
@@ -54,17 +72,18 @@
   (cond
    ((eq? mode mode-loading) (loading-mode-render current-mode))
    ((eq? mode mode-title) (title-mode-render current-mode))
-   ((eq? mode mode-worldbuild) (worldbuild-mode-render current-mode))
+   ((eq? mode mode-world-design) (world-design-mode-render current-mode))
    (else (play-mode-render current-mode)))  
 
   (cond
    ((eq? mode mode-loading) (loading-mode-canvas-render current-mode))
    ((eq? mode mode-title) (title-mode-canvas-render current-mode))
-   ((eq? mode mode-worldbuild) (worldbuild-mode-canvas-render current-mode))
+   ((eq? mode mode-world-design) (world-design-mode-canvas-render current-mode))
    (else (play-mode-canvas-render current-mode)))  
   )
 
 
-(with-primitive world-root (rotate (vector 90 0 0)))
+;;(with-primitive world-root (rotate (vector 90 0 0)))
 (canvas-setup)
+(clear-colour (vector 0.5 0.5 0.5))
 (every-frame (render))

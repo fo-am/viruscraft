@@ -17,6 +17,8 @@
 (define canvas (document.getElementById "canvas"))
 (define ctx (canvas.getContext "2d"))
 
+(set! ctx.font "50pt Arial")
+
 (define (set-canvas-drag-fn fn)
   (set! canvas-drag-fn fn))
 
@@ -88,5 +90,7 @@
   (canvas.addEventListener
    "touchcancel" (lambda (e) (mouse-from-event canvas e "up")))
   (canvas.addEventListener "DOMMouseScroll" canvas-zoom)
-  (canvas.addEventListener "mousewheel" canvas-zoom))
+  (canvas.addEventListener "mousewheel" canvas-zoom)
+
+  )
 

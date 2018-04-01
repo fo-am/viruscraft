@@ -20,51 +20,15 @@
 (define (play-mode-world-pos-checker m) (list-ref m 5))
 (define (play-mode-modify-world-pos-checker m v) (list-replace m 5 v))
 
-(define flag #f)
-
 (define (init-play-mode world-units)
   (let ((wpc (build-world-position-checker world-units)))
+    (msg "INIT PLAY MODE")
 
-    (set! flag (with-state (hide #t) (load-primitive "models/flag.obj")))
-    (with-primitive 
-     flag
-     (pdata-set! "t" 0 (vector 1 0 0))
-     (pdata-set! "t" 1 (vector 0 0 0))
-     (pdata-set! "t" 2 (vector 1 1 0))
-     (pdata-set! "t" 3 (vector 0 0 0))
-     (pdata-set! "t" 4 (vector 0 1 0))
-     (pdata-set! "t" 5 (vector 1 1 0))
-     (pdata-upload!))
-
-    (set! virus-extinct-marker 
-	  (with-state
-	   (translate (vector -5 7 0))
-	   (scale (vector 5 5 5))
-	   (texture (load-texture "extinct.png"))
-	   (build-instance flag)))
-
-    (set! host-extinct-marker 
-	  (with-state
-	   (translate (vector -5 7 0))
-	   (scale (vector 5 5 5))
-	   (texture (load-texture "host-extinct.png"))
-	   (build-instance flag)))
-
-    
     (make-play-mode
      (population-infect 
       (make-random-population 50 wpc) 
       virus infection-rate)
      '() 0 0 world-units wpc)))
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;
-;; popup markers
-
-(define virus-extinct-marker-t 0)
-(define virus-extinct-marker #f)
-(define host-extinct-marker-t 0)
-(define host-extinct-marker #f)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -75,18 +39,17 @@
   
   ;; keep track of deaths
   (set! death-count 
-	(foldl
-	 (lambda (host r)
-	   (if (and (not (host-alive? host))
-		    (host-infected? host))
-	       (+ r 1) r))
-	 death-count
-	 (play-mode-population g)))
+  	(foldl
+  	 (lambda (host r)
+  	   (if (and (not (host-alive? host))
+  		    (host-infected? host))
+  	       (+ r 1) r))
+  	 death-count
+  	 (play-mode-population g)))
   
   (cond
    ;; no hosts!
    ((zero? (length (play-mode-population g)))
-    (when (> (play-mode-score g) 100) (set! host-extinct-marker-t 1))
     (make-play-mode
      (population-infect 
       (make-random-population 50 (play-mode-world-pos-checker g)) 
@@ -95,9 +58,8 @@
      (play-mode-world-units g)
      (play-mode-world-pos-checker g)))
 
-   ;; no infections
+   no infections
    ((zero? (population-num-infected (play-mode-population g)))
-    (when (> (play-mode-score g) 100) (set! virus-extinct-marker-t 1))
     (set! death-count 0)
     (make-play-mode
      (population-infect 
@@ -124,32 +86,14 @@
       (play-mode-world-units g))
      (+ (play-mode-score g) 1)
      (if (> (play-mode-score g) (play-mode-hi-score g))
-	 (play-mode-score g)
-	 (play-mode-hi-score g)) 
+   	 (play-mode-score g)
+   	 (play-mode-hi-score g)) 
      (play-mode-world-units g)
      (play-mode-world-pos-checker g)))))   
 
 (define frame 0)
 
 (define (play-mode-render g)
-  (with-primitive 
-   virus-extinct-marker 
-   (identity)
-   (if (> virus-extinct-marker-t 0)
-       (translate (vector -5 7 0))
-       (translate (vector -80 7 0)))
-   (scale (vector 5 5 5)))
-  (set! virus-extinct-marker-t (- virus-extinct-marker-t 0.01))
-
-  (with-primitive 
-   host-extinct-marker 
-   (identity)
-   (if (> host-extinct-marker-t 0)
-       (translate (vector -5 7 0))
-       (translate (vector -80 7 0)))
-   (scale (vector 5 5 5)))
-  (set! host-extinct-marker-t (- host-extinct-marker-t 0.01))
-
   (with-primitive 
    virus-builder
    (identity)
@@ -166,14 +110,14 @@
      (scale (vector s s s)))
    (concat (q->m world-q)))
 
-  ;;(update-host-anim (* frame 2))
   (set! frame (+ frame 1))
   )
+
 
 (define (play-mode-canvas-render g)
   (ctx.clearRect 0 0 screen-width screen-height)	  
   (set! ctx.fillStyle "#fff")
-
+  (set! ctx.strokeStyle "#fff")
 
   (ctx.fillText "play mode" 54 110)
   (ctx.fillText (+ "score: " (play-mode-score g)) 54 140)

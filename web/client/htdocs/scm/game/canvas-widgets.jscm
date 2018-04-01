@@ -1,0 +1,77 @@
+;; -*- mode: scheme; -*-
+;; Viruscraft Copyright (C) 2018 FoAM Kernow
+
+(define (inside-box? px py x y w h)
+  (and (and (> px x) (< px (+ x w)))
+       (and (> py y) (< py (+ y h)))))
+
+;; unholy mix of 3d and 2d
+(define (make-mesh-button pos mesh size text fn) 
+  (let ((prim (with-state
+	       (translate pos)
+	       (load-primitive mesh))))
+    (list pos text size fn 
+	  prim (primitive-screen-pos prim))))
+
+(define (mesh-button-pos b) (list-ref b 0))
+(define (mesh-button-text b) (list-ref b 1))
+(define (mesh-button-size b) (list-ref b 2))
+(define (mesh-button-fn b) (list-ref b 3))
+(define (mesh-button-prim b) (list-ref b 4))
+(define (mesh-button-canvas-pos b) (list-ref b 5))
+
+(define (mesh-button-update b m)
+  (cond
+   ((inside-box?
+     canvas-mouse-x canvas-mouse-y
+     (- (vx (mesh-button-canvas-pos b)) (mesh-button-size b)) 
+     (- (vy (mesh-button-canvas-pos b)) (mesh-button-size b))
+     (+ (vx (mesh-button-canvas-pos b)) (mesh-button-size b)) 
+     (+ (vy (mesh-button-canvas-pos b)) (mesh-button-size b)))
+    (if (eq? canvas-mouse-state "down")
+	((mesh-button-fn b) m)
+	(with-primitive 
+	 (mesh-button-prim b)
+	 (colour (rndvec))
+	 m)))
+   (else m)))
+
+(define (mesh-button-render! b)
+  (ctx.fillText 
+   (mesh-button-text b) 
+   (vx (mesh-button-canvas-pos b)) 
+   (vy (mesh-button-canvas-pos b)))
+  (with-primitive 
+   (mesh-button-prim b)
+   (rotate (vector 1 1 0.5))))
+  
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define (make-slider x y w p) (list x y w p))
+(define (slider-x s) (list-ref s 0))
+(define (slider-y s) (list-ref s 1))
+(define (slider-w s) (list-ref s 2))
+(define (slider-p s) (list-ref s 3))
+(define (slider-update-p s v) (list-replace s 3 v))
+
+(define (slider-update s)
+  (cond
+   ((and (or canvas-is-dragging (eq? canvas-mouse-state "down"))
+	 (inside-box?
+	  canvas-mouse-x canvas-mouse-y
+	  (slider-x s) (- (slider-y s) 20)
+	  (slider-w s) (+ (slider-y s) 20)))
+    (slider-update-p s canvas-mouse-x))
+   (else s)))
+
+(define (slider-render! s)
+  (ctx.moveTo (slider-x s) (slider-y s))
+  (ctx.lineTo (+ (slider-x s) (slider-w s)) (slider-y s))
+  (ctx.stroke)
+
+  (ctx.beginPath)
+  (ctx.moveTo (slider-p s) (slider-y s))
+  (ctx.arc (slider-p s) (slider-y s) 20 0 (* Math.PI 2))
+  (ctx.closePath)
+  (ctx.fill)
+  )
