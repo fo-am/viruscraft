@@ -3,26 +3,64 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(define next-button '())
+
 (define (init-world-design-mode)
+  (worldunit-load-models)
+  (msg "init world design world")
+
+  (set! world-units (build-world-from-params 20))
+
+  (set-canvas-drag-fn
+   (lambda ()
+     (let ((drag (vector (- canvas-drag-x) canvas-drag-y 0)))
+       (when (not (veq? drag (vector 0 0 0)))
+	     (let ((rot-axis (vcross drag (vector 0 0 -1))))
+	       (set! world-q (qmul world-q (qaxisangle (vnormalise rot-axis) 2))))))))
+
+  (let ((mode-root (build-locator)))
+    (with-state
+     (parent mode-root)
+     (set! next-button
+	   (make-mesh-button (vector 0 -6 0) "models/ico.obj"
+			     30 "Done" 
+			     (lambda (m)
+			       (msg "world design done pressed")
+			       (destroy mode-root)			       
+			       (world-design-mode-modify-ready m #t))))))
   (list #f))
 
 (define (world-design-mode-ready? m) (list-ref m 0))
 (define (world-design-mode-modify-ready m v) (list-replace m 0 v))
 
 (define (world-design-mode-update m)
-  m)
+  (set! sealevel-slider (slider-update sealevel-slider))
+  (mesh-button-update next-button m))
 
 (define (world-design-mode-render m)
-  0)
+  (with-primitive 
+   world-root 
+   (identity)
+   (translate (vector 5 0 0))
+   (let ((s (+ (min (max 0.02 (* canvas-mouse-zoom 0.02)) 2) 0.7)))
+     (scale (vector s s s)))
+   (concat (q->m world-q))))
 
-(define slid (make-slider 100 100 400 100))
+(define last-v 0)
+
+(define sealevel-slider 
+  (make-slider 400 500 400 "Sea level" 0
+	       (lambda (v)
+		 (when (not (eq? v last-v))
+		       (set! last-v v)
+		       (msg "slider design world")
+		       (destroy world-root)
+		       (set! world-units (build-world-from-params (/ v 4))))
+		 )))
 
 (define (world-design-mode-canvas-render m)
-  (ctx.clearRect 0 0 screen-width screen-height)	  
-  (set! ctx.fillStyle "#fff")
-
-  (set! slid (slider-update slid))
-  (slider-render! slid)
-  
-  (ctx.fillText (+ "world-design mode") 54 110)
-  )
+  (set! sealevel-slider (slider-update sealevel-slider))
+  (set! sealevel-slider (slider-update sealevel-slider))
+  (slider-render! sealevel-slider)
+  (mesh-button-render! next-button)
+  (ctx.fillText (+ "World Designer") 100 110))

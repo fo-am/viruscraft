@@ -12,15 +12,20 @@
 (define canvas-drag-y 0)
 (define canvas-is-dragging #f)
 (define canvas-drag-fn (lambda () 0))
+(define canvas-mouse-clicked #f)
+
+(define canvas-event-occurred #f)
 
 (define webgl-canvas (document.getElementById "webgl-canvas"))
 (define canvas (document.getElementById "canvas"))
 (define ctx (canvas.getContext "2d"))
 
-(set! ctx.font "50pt Arial")
-
 (define (set-canvas-drag-fn fn)
   (set! canvas-drag-fn fn))
+
+(define (canvas-init-defaults)
+  (set! ctx.fillStyle "#fff")
+  (set! ctx.font "30pt Arial"))
 
 (define (resize-canvas canvas) 
   ;; Lookup the size the browser is displaying the canvas.
@@ -33,7 +38,8 @@
 	  (set! canvas.width displayWidth)
 	  (set! canvas.height displayHeight)
 	  (set! screen-width canvas.width)
-	  (set! screen-height canvas.height))))
+	  (set! screen-height canvas.height)
+	  (canvas-init-defaults))))
 
 (define (mouse-from-event canvas e state)
   (let ((rect (canvas.getBoundingClientRect)))
@@ -43,10 +49,13 @@
 	    (ny (/ (- e.clientY rect.top) sy)))
 	
 	;; deal with dragging
-	(when canvas-is-dragging 
+	(when (and canvas-is-dragging (not canvas-event-occurred))
 	      (set! canvas-drag-x (- nx canvas-mouse-x))
 	      (set! canvas-drag-y (- ny canvas-mouse-y))
 	      (canvas-drag-fn))      
+
+	(set! canvas-event-occurred #f)
+
 	(cond 
 	 ((and (eq? state "move") (eq? canvas-mouse-state "down"))
 	  ;; starting drag
@@ -58,6 +67,13 @@
 	
 	(set! canvas-mouse-x nx)
 	(set! canvas-mouse-y ny)
+
+	(if (and (eq? state "down") (not (eq? canvas-mouse-state "down")))
+	    (set! canvas-mouse-clicked #t)
+	    (set! canvas-mouse-clicked #f))
+
+	(msg canvas-mouse-clicked)
+	
 	(set! canvas-mouse-state state)))))
 
 (define (touch-from-event canvas e state)

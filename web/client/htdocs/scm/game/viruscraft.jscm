@@ -29,7 +29,7 @@
 (clear-colour (vector 0.0 0.0 0.0))
 (resize-glcanvas webgl-canvas)
 
-(define world-units '())
+(define world-units #f)
 (define current-mode (init-loading-mode))
 
 (define (update current-mode)
@@ -54,15 +54,17 @@
    ((eq? mode mode-world-design) 
     (cond 
      ((world-design-mode-ready? current-mode)
-      (worldunit-load-models)
-      (set! world-units (build-world-from-params 20))
-      (build-virus-builder)
-      (host-organism-load-models)
-      (init-play-mode world-units)
-      (set! mode mode-play))
+      (set! mode mode-play)
+      (init-play-mode))
      (else (world-design-mode-update current-mode))))
-
-   (else (play-mode-update current-mode))))
+   
+   (else 
+    (cond 
+     ((play-mode-finished? current-mode)
+      (set! mode mode-world-design)
+      (init-world-design-mode))
+     (else
+      (play-mode-update current-mode))))))
 
 (define (render)
   (set! current-mode (update current-mode))
@@ -75,6 +77,8 @@
    ((eq? mode mode-world-design) (world-design-mode-render current-mode))
    (else (play-mode-render current-mode)))  
 
+
+  (ctx.clearRect 0 0 screen-width screen-height)	  
   (cond
    ((eq? mode mode-loading) (loading-mode-canvas-render current-mode))
    ((eq? mode mode-title) (title-mode-canvas-render current-mode))

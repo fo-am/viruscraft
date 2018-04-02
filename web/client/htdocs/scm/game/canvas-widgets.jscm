@@ -28,8 +28,11 @@
      (- (vy (mesh-button-canvas-pos b)) (mesh-button-size b))
      (+ (vx (mesh-button-canvas-pos b)) (mesh-button-size b)) 
      (+ (vy (mesh-button-canvas-pos b)) (mesh-button-size b)))
-    (if (eq? canvas-mouse-state "down")
-	((mesh-button-fn b) m)
+    (if canvas-mouse-clicked
+	(let ((fn (mesh-button-fn b))) 
+	  (set! canvas-event-occurred #t)
+	  (set! canvas-mouse-clicked #f)
+	  (fn m))
 	(with-primitive 
 	 (mesh-button-prim b)
 	 (colour (rndvec))
@@ -37,31 +40,36 @@
    (else m)))
 
 (define (mesh-button-render! b)
-  (ctx.fillText 
-   (mesh-button-text b) 
-   (vx (mesh-button-canvas-pos b)) 
-   (vy (mesh-button-canvas-pos b)))
+  (let ((m (ctx.measureText (mesh-button-text b))))
+    (ctx.fillText 
+     (mesh-button-text b) 
+     (- (vx (mesh-button-canvas-pos b)) (/ m.width 2)) 
+     (+ (vy (mesh-button-canvas-pos b)) 20)))
   (with-primitive 
    (mesh-button-prim b)
    (rotate (vector 1 1 0.5))))
   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define (make-slider x y w p) (list x y w p))
+(define (make-slider x y w text p fn) (list x y w text p fn))
 (define (slider-x s) (list-ref s 0))
 (define (slider-y s) (list-ref s 1))
 (define (slider-w s) (list-ref s 2))
-(define (slider-p s) (list-ref s 3))
-(define (slider-update-p s v) (list-replace s 3 v))
+(define (slider-text s) (list-ref s 3))
+(define (slider-p s) (list-ref s 4))
+(define (slider-update-p s v) (list-replace s 4 v))
+(define (slider-fn s) (list-ref s 5))
 
 (define (slider-update s)
   (cond
-   ((and (or canvas-is-dragging (eq? canvas-mouse-state "down"))
+   ((and (or canvas-is-dragging (or (eq? canvas-mouse-state "down") (eq? canvas-mouse-state "clicked")))
 	 (inside-box?
 	  canvas-mouse-x canvas-mouse-y
 	  (slider-x s) (- (slider-y s) 20)
-	  (slider-w s) (+ (slider-y s) 20)))
-    (slider-update-p s canvas-mouse-x))
+	  (slider-w s) 40))
+    (set! canvas-event-occurred #t)
+    (let ((fn (slider-fn s))) (fn (- canvas-mouse-x (slider-x s))))
+    (slider-update-p s (- canvas-mouse-x (slider-x s))))
    (else s)))
 
 (define (slider-render! s)
@@ -70,8 +78,15 @@
   (ctx.stroke)
 
   (ctx.beginPath)
-  (ctx.moveTo (slider-p s) (slider-y s))
-  (ctx.arc (slider-p s) (slider-y s) 20 0 (* Math.PI 2))
+  (ctx.moveTo (+ (slider-x s) (slider-p s)) (slider-y s))
+  (ctx.arc (+ (slider-x s) (slider-p s)) (slider-y s) 20 0 (* Math.PI 2))
   (ctx.closePath)
   (ctx.fill)
+
+  (let ((m (ctx.measureText (slider-text s))))
+    (ctx.fillText 
+     (slider-text s) 
+     (- (slider-x s) m.width) 
+     (+ (slider-y s) 20)))
+
   )

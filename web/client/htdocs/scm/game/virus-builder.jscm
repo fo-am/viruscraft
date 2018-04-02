@@ -160,20 +160,6 @@
        (car face-details)
        ))))
 
-(set-canvas-drag-fn
- (lambda ()
-   (set! virus-recep-id (display-front-face))
-   (let ((drag (vector (- canvas-drag-x) canvas-drag-y 0)))
-     (when (not (veq? drag (vector 0 0 0)))
-	   (let ((rot-axis (vcross drag (vector 0 0 -1)))
-		 (virus-dist (vdist (primitive-screen-pos virus-builder) (vector canvas-mouse-x canvas-mouse-y 0))))
-		 (cond
-		  ((< virus-dist 100)
-		   (set! virus-q (qmul virus-q (qaxisangle (vnormalise rot-axis) 6))))
-		  ((> virus-dist 300)
-		   (set! world-q (qmul world-q (qaxisangle (vnormalise rot-axis) 2))))		   
-		  (else 0)))))))
-
 (define (virus-builder-update-buttons buttons)
 
   ;; (let ((canvas (document.getElementById "canvas")))
@@ -242,5 +228,25 @@
 	 (colour (vector 0.8 1 0))
 	 (load-primitive "models/ico.obj")))
   
+  (set-canvas-drag-fn
+   (lambda ()
+     (set! virus-recep-id (display-front-face))
+     (let ((drag (vector (- canvas-drag-x) canvas-drag-y 0)))
+       (when (not (veq? drag (vector 0 0 0)))
+	     (let ((rot-axis (vcross drag (vector 0 0 -1)))
+		   (virus-dist (vdist (primitive-screen-pos virus-builder) (vector canvas-mouse-x canvas-mouse-y 0))))
+	       (cond
+		((< virus-dist 100)
+		 (set! virus-q (qmul virus-q (qaxisangle (vnormalise rot-axis) 6))))
+		((> virus-dist 300)
+		 (set! world-q (qmul world-q (qaxisangle (vnormalise rot-axis) 2))))		   
+		(else 0)))))))
   
   )
+
+(define (destroy-virus-builder)
+  (for-each 
+   (lambda (button)
+     (destroy (button-prim button)))
+   buttons)
+  (destroy virus-builder))

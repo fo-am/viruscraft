@@ -6,7 +6,7 @@
 (define virus (make-virus (list)))
 
 (define (make-play-mode population organisms score hi-score world-units world-pos-checker) 
-  (list population organisms score hi-score world-units world-pos-checker))
+  (list population organisms score hi-score world-units world-pos-checker #f))
 
 (define (play-mode-population m) (list-ref m 0))
 (define (play-mode-modify-population m v) (list-replace m 0 v))
@@ -19,10 +19,28 @@
 (define (play-mode-world-units m) (list-ref m 4))
 (define (play-mode-world-pos-checker m) (list-ref m 5))
 (define (play-mode-modify-world-pos-checker m v) (list-replace m 5 v))
+(define (play-mode-finished? m) (list-ref m 6))
+(define (play-mode-modify-finished m v) (list-replace m 6 v))
 
-(define (init-play-mode world-units)
+(define back-button '())
+
+(define (init-play-mode)
+  (let ((mode-root (build-locator)))
+    (with-state
+     (parent mode-root)
+     (set! back-button 
+	   (make-mesh-button (vector -3 -6.5 0) "models/ico.obj"
+			     30 "End" 
+			     (lambda (m)
+			       (destroy-virus-builder)
+			       (destroy world-root)
+			       (destroy mode-root)
+			       (play-mode-modify-finished m #t))))))
+  
+
   (let ((wpc (build-world-position-checker world-units)))
-    (msg "INIT PLAY MODE")
+    (build-virus-builder)
+    (host-organism-load-models)
 
     (make-play-mode
      (population-infect 
@@ -47,51 +65,51 @@
   	 death-count
   	 (play-mode-population g)))
   
-  (cond
-   ;; no hosts!
-   ((zero? (length (play-mode-population g)))
-    (make-play-mode
-     (population-infect 
-      (make-random-population 50 (play-mode-world-pos-checker g)) 
-      virus infection-rate)
-     '() 0 (play-mode-hi-score g)
-     (play-mode-world-units g)
-     (play-mode-world-pos-checker g)))
+  (mesh-button-update 
+   back-button
+   (cond
+    ;; no hosts!
+    ((zero? (length (play-mode-population g)))
+     (make-play-mode
+      (population-infect 
+       (make-random-population 50 (play-mode-world-pos-checker g)) 
+       virus infection-rate)
+      '() 0 (play-mode-hi-score g)
+      (play-mode-world-units g)
+      (play-mode-world-pos-checker g)))
 
-   no infections
-   ((zero? (population-num-infected (play-mode-population g)))
-    (set! death-count 0)
-    (make-play-mode
-     (population-infect 
-      (play-mode-population g)
-      virus infection-rate)
-     (update-organisms 
-      (play-mode-organisms g)
-      (play-mode-population g)
-      (play-mode-world-units g))
-     0 (play-mode-hi-score g)
-     (play-mode-world-units g)
-     (play-mode-world-pos-checker g)))
+    ;; no infections
+    ((zero? (population-num-infected (play-mode-population g)))
+     (set! death-count 0)
+     (make-play-mode
+      (population-infect 
+       (play-mode-population g)
+       virus infection-rate)
+      (update-organisms 
+       (play-mode-organisms g)
+       (play-mode-population g)
+       (play-mode-world-units g))
+      0 (play-mode-hi-score g)
+      (play-mode-world-units g)
+      (play-mode-world-pos-checker g)))
 
-   ;; normal
-   (else
-    (make-play-mode
-     (population-update 
-      (play-mode-population g) 
-      virus
-      (play-mode-world-pos-checker g))
-     (update-organisms 
-      (play-mode-organisms g)
-      (play-mode-population g)
-      (play-mode-world-units g))
-     (+ (play-mode-score g) 1)
-     (if (> (play-mode-score g) (play-mode-hi-score g))
-   	 (play-mode-score g)
-   	 (play-mode-hi-score g)) 
-     (play-mode-world-units g)
-     (play-mode-world-pos-checker g)))))   
-
-(define frame 0)
+    ;; normal
+    (else
+     (make-play-mode
+      (population-update 
+       (play-mode-population g) 
+       virus
+       (play-mode-world-pos-checker g))
+      (update-organisms 
+       (play-mode-organisms g)
+       (play-mode-population g)
+       (play-mode-world-units g))
+      (+ (play-mode-score g) 1)
+      (if (> (play-mode-score g) (play-mode-hi-score g))
+	  (play-mode-score g)
+	  (play-mode-hi-score g)) 
+      (play-mode-world-units g)
+      (play-mode-world-pos-checker g))))))
 
 (define (play-mode-render g)
   (with-primitive 
@@ -108,18 +126,15 @@
    (translate (vector 5 0 0))
    (let ((s (+ (min (max 0.02 (* canvas-mouse-zoom 0.02)) 2) 0.7)))
      (scale (vector s s s)))
-   (concat (q->m world-q)))
-
-  (set! frame (+ frame 1))
-  )
-
+   (concat (q->m world-q))))
 
 (define (play-mode-canvas-render g)
   (ctx.clearRect 0 0 screen-width screen-height)	  
   (set! ctx.fillStyle "#fff")
   (set! ctx.strokeStyle "#fff")
 
-  (ctx.fillText "play mode" 54 110)
+  (mesh-button-render! back-button)
+
   (ctx.fillText (+ "score: " (play-mode-score g)) 54 140)
   (ctx.fillText (+ "infected: " (population-num-infected (play-mode-population g))) 54 170)
   (ctx.fillText (+ "deaths: " death-count) 54 200)
