@@ -73,6 +73,11 @@ void set_led_state(unsigned char s) {
     else STATUS_PORT&=~_BV(PIN_STATUS);
 }
 
+////////////////////////////////////////////////////////
+
+#define FACE_SELECT_PIN PC2
+#define PAD_DETECT PD7
+
 int main(void) {
   I2C_init(I2C_ID<<1); // initalize as slave with address 0x32
   
@@ -80,8 +85,8 @@ int main(void) {
   //   MCUSR = 0;
   wdt_disable();
   
-  STATUS_PORT_D = 0xff;
-  DDRD = 0x0;
+  DDRC = 0xff; // output
+  DDRD = 0x00; // input
 
   set_led_state(0);
 
@@ -91,10 +96,13 @@ int main(void) {
 
   unsigned char led=0;
 
+  PORTC|=_BV(FACE_SELECT_PIN);
+  //PORTC&=~_BV(FACE_SELECT_PIN);
+
+
   while(1) {    
-    if (read_a()==receptor_guitar) {
-      set_led_state(1);
-    }
+    set_led_state(PIND&_BV(PAD_DETECT));
+
     _delay_ms(500);
     set_led_state(1);
     _delay_ms(20);
