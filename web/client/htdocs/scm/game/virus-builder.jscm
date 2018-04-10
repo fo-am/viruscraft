@@ -4,6 +4,9 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; virus builder
 
+(define receptor-col (vector 0.82 0.76 0.65))
+(define virus-col (vector 0.6 0.39 0.2))
+
 (define rad-conv 0.017453292)
 
 (define receptor-rotations
@@ -66,7 +69,7 @@
 					    (list-ref faceid->rotation virus-recep-id)))))
 	  (translate (vector 0 0.8 0))
 	  (scale (vector 0.3 0.3 0.3))
-	  (colour (vector 1 0 0))
+	  (colour receptor-col)
 	  (build-instance instance)))))
 
 
@@ -183,7 +186,7 @@
 		   (colour (rndvec))
 		   #t)
 		  (else
-		   (colour (vector 0.8 1 0))
+		   (colour receptor-col)
 		   #f)))))
 	   (when (and run (eq? canvas-mouse-state "down"))
 		 (msg "clicked")
@@ -197,7 +200,7 @@
 		       (shader-assign-compiled "virus")
 		       (translate builder-pos) 
 		       (scale (vector 2 2 2))
-		       (colour (vector 1 0 0))
+		       (colour virus-col)
 		       (load-primitive "models/ico.obj")))
   
   (set! receptor-circle (with-state (hide #t) (load-primitive "models/receptor-circle.obj")))
@@ -219,7 +222,7 @@
 	     (translate (vector 0 -0.7 0))
 	     (scale (vector 0.5 0.5 0.5))
 	     (rotate (vector 0 90 0))
-	     (colour (vector 1 1 0))
+	     (colour receptor-col)
 	     (load-primitive (list-ref button-objs i)))
 	    (list-ref button-fns i)))))
 
@@ -227,7 +230,7 @@
 	(with-state 
 	 (shader-assign-compiled "virus")
 	 (parent virus-builder)
-	 (colour (vector 0.8 1 0))
+	 (colour receptor-col)
 	 (load-primitive "models/ico.obj")))
   
   (set-canvas-drag-fn

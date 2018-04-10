@@ -175,18 +175,20 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define (make-popup textbox time) (list textbox time))
+(define (make-popup textbox type time) (list textbox time))
 (define (popup-textbox p) (list-ref p 0))
-(define (popup-time p) (list-ref p 1))
+(define (popup-type p) (list-ref p 1))
+(define (popup-time p) (list-ref p 2))
 
 (define popups-list '())
 
-(define (fire-popup! text-list)
+(define (fire-popup! type text-list)
   (set! popups-list (cons (make-popup 
 			   (make-textbox
 			    (/ screen-width 2) 300 
 			    "50pt Dosis" 30 "centre" 
 			    text-list)
+			   type
 			   (time)) 
 			  popups-list)))
 
@@ -195,9 +197,11 @@
     (let ((x (- (/ screen-width 2) 300)) (y (- (textbox-y tb) 100))
 	  (w 600) (h 200))
       (let ((grd (ctx.createLinearGradient x y (+ x w) (+ y h))))
-	(set! ctx.globalAlpha 0.7)
-	(grd.addColorStop 0 "#00ff00")
-	(grd.addColorStop 1 "#ffffff")
+	(set! ctx.globalAlpha 0.9)
+	(if (eq? (popup-type p) "bad")
+	    (grd.addColorStop 0 "#a93535")
+	    (grd.addColorStop 0 "#995e35"))
+	(grd.addColorStop 1 "#eeead1")
 	(set! ctx.fillStyle grd)
 	(ctx.fillRect x y w h)
 	(set! ctx.globalAlpha 1)

@@ -28,17 +28,37 @@
 (define age-window '())
 (define back-button '())
 
+(define highest-infections 0)
+(define highest-deaths 0)
+(define highest-age 0)
+
+(define current-infections 0)
+(define current-deaths 0)
+(define current-age 0)
+
+(define notified-high-infections #f)
+(define notified-high-deaths #f)
+(define notified-high-age #f)
+
+(define (reset-scores)
+  (set! current-infections 0)
+  (set! current-deaths 0)
+  (set! current-age 0)
+  (set! notified-high-infections #f)
+  (set! notified-high-deaths #f)
+  (set! notified-high-age #f))
+
 (define (init-play-mode)
+  (reset-scores)
+
   (set! back-button 
 	(make-image-button (- screen-width 100) 570 "hexbutton.png"
 			   "End" 
 			   (lambda (m)
-			     (msg "hello")
 			     (destroy-virus-builder)
-			     (destroy world-root)
-			  
+			     (destroy world-root)			  
 			     (play-mode-modify-finished m #t))))
-
+  
   (set! title-text 
 	(make-textbox 
 	 300 70
@@ -61,27 +81,47 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define death-count 0)
 
 (define (play-mode-update g)
   (virus-builder-update-buttons buttons)
   
   ;; keep track of deaths
-  (set! death-count 
+  (set! current-deaths
   	(foldl
   	 (lambda (host r)
   	   (if (and (not (host-alive? host))
   		    (host-infected? host))
   	       (+ r 1) r))
-  	 death-count
+  	 current-deaths
   	 (play-mode-population g)))
-  
+  (set! current-infections (population-num-infected (play-mode-population g)))
+  (set! current-age (play-mode-score g))
+
+  (when (> current-infections highest-infections) 
+	(set! highest-infections current-infections)
+	(when (not notified-high-infections) 
+	      (fire-popup! "good" (list "New highest infections!"))
+	      (set! notified-high-infections #t)))
+
+  (when (> current-deaths highest-deaths) 
+	(set! highest-deaths current-deaths)
+	(when (not notified-high-deaths) 
+	      (fire-popup! "good" (list "New highest deaths!"))
+	      (set! notified-high-deaths #t)))
+
+  (when (> current-age highest-age) 
+	(set! highest-age current-age)
+	(when (not notified-high-age) 
+	      (fire-popup! "good" (list "New highest age!"))
+	      (set! notified-high-age #t)))
+
   (image-button-update 
    back-button
    (cond
     ;; no hosts!
     ((zero? (length (play-mode-population g)))
-     (fire-popup! (list "The hosts all died out!"))
+     (fire-popup! "bad" (list "The hosts all died out!"))
+     (reset-scores)
      (make-play-mode
       (population-infect 
        (make-random-population 50 (play-mode-world-pos-checker g)) 
@@ -93,8 +133,8 @@
     ;; no infections
     ((zero? (population-num-infected (play-mode-population g)))
      (when (> (play-mode-score g) 100)
-	   (fire-popup! (list "Your virus died out!")))
-     (set! death-count 0)
+	   (fire-popup! "bad" (list "Your virus died out!")))
+     (reset-scores)
      (make-play-mode
       (population-infect 
        (play-mode-population g)
@@ -149,13 +189,45 @@
   (window-render! deaths-window)
   (window-render! age-window)
 
+
   (set! infect-window (make-window 20 500 180 160))
   (set! deaths-window (make-window 210 500 180 160))
   (set! age-window (make-window 400 500 180 160))
 
-  (ctx.fillText (+ "infected: " (population-num-infected (play-mode-population g))) 50 550)
-  (ctx.fillText (+ "deaths: " death-count) 250 550)
-  (ctx.fillText (+ "score: " (play-mode-score g)) 450 550)
+  (let ((y 550))
+
+  (ctx.fillText "Infections" 30 y)
+  (ctx.fillText "Deaths" 220 y)
+  (ctx.fillText "Age" 410 y)
+
+  (set! y (+ y 30))
+
+  (set! ctx.font "20pt Dosis")
+  (ctx.fillText "Current" 30 y)
+  (ctx.fillText "Current" 220 y)
+  (ctx.fillText "Current" 410 y)
+
+  (ctx.fillText (+ "" current-infections) (+ 30 90) y)
+  (ctx.fillText (+ "" current-deaths) (+ 220 90) y)
+  (ctx.fillText (+ "" (/ current-age 100)) (+ 410 90) y)
+
+  (set! y (+ y 30))
+
+  (set! ctx.font "20pt Dosis")
+  (ctx.fillText "Best" 30 y)
+  (ctx.fillText "Best" 220 y)
+  (ctx.fillText "Best" 410 y)
+
+  (ctx.fillText (+ "" highest-infections) (+ 30 90) y)
+  (ctx.fillText (+ "" highest-deaths) (+ 220 90) y)
+  (ctx.fillText (+ "" (/ highest-age 100)) (+ 410 90) y)
+
+  (set! y (+ y 30))
+
+  (set! ctx.font "20pt Dosis")
+  (ctx.fillText "individuals" 30 y)
+  (ctx.fillText "individuals" 220 y)
+  (ctx.fillText "million years" 410 y)
 
   (render-popups!))
 
