@@ -81,6 +81,7 @@
    (cond
     ;; no hosts!
     ((zero? (length (play-mode-population g)))
+     (fire-popup! (list "The hosts all died out!"))
      (make-play-mode
       (population-infect 
        (make-random-population 50 (play-mode-world-pos-checker g)) 
@@ -91,6 +92,8 @@
 
     ;; no infections
     ((zero? (population-num-infected (play-mode-population g)))
+     (when (> (play-mode-score g) 100)
+	   (fire-popup! (list "Your virus died out!")))
      (set! death-count 0)
      (make-play-mode
       (population-infect 
@@ -150,9 +153,9 @@
   (set! deaths-window (make-window 210 500 180 160))
   (set! age-window (make-window 400 500 180 160))
 
-
   (ctx.fillText (+ "infected: " (population-num-infected (play-mode-population g))) 50 550)
   (ctx.fillText (+ "deaths: " death-count) 250 550)
   (ctx.fillText (+ "score: " (play-mode-score g)) 450 550)
-  )
+
+  (render-popups!))
 

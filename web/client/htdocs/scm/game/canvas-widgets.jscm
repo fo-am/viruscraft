@@ -172,3 +172,42 @@
 		  (window-w w) (window-h w))
     (set! ctx.globalAlpha 1)
     (canvas-init-defaults)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define (make-popup textbox time) (list textbox time))
+(define (popup-textbox p) (list-ref p 0))
+(define (popup-time p) (list-ref p 1))
+
+(define popups-list '())
+
+(define (fire-popup! text-list)
+  (set! popups-list (cons (make-popup 
+			   (make-textbox
+			    (/ screen-width 2) 300 
+			    "50pt Dosis" 30 "centre" 
+			    text-list)
+			   (time)) 
+			  popups-list)))
+
+(define (render-popup! p)
+  (let ((tb (popup-textbox p)))
+    (let ((x (- (/ screen-width 2) 300)) (y (- (textbox-y tb) 100))
+	  (w 600) (h 200))
+      (let ((grd (ctx.createLinearGradient x y (+ x w) (+ y h))))
+	(set! ctx.globalAlpha 0.7)
+	(grd.addColorStop 0 "#00ff00")
+	(grd.addColorStop 1 "#ffffff")
+	(set! ctx.fillStyle grd)
+	(ctx.fillRect x y w h)
+	(set! ctx.globalAlpha 1)
+	(canvas-init-defaults)
+	(textbox-render! tb)))))
+
+(define popup-lifespan 5)
+
+(define (render-popups!)
+  (when (not (null? popups-list))
+	(render-popup! (car popups-list))
+	(when (> (- (time) (popup-time (car popups-list))) popup-lifespan)
+	      (set! popups-list (cdr popups-list)))))
