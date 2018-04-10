@@ -13,7 +13,9 @@
   (loading-mode-modify-ready m (and
 				(meshes-loaded?)
 				(textures-loaded?)
-				(shaders-loaded?))))
+				(shaders-loaded?)
+				(canvas-loaded?)
+				)))
 
 (define (loading-mode-render m)
   0)

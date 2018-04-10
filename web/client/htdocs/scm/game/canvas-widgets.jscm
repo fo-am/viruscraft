@@ -48,17 +48,88 @@
   (with-primitive 
    (mesh-button-prim b)
    (rotate (vector 1 1 0.5))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; unholy mix of 3d and 2d
+(define (make-image-button x y image-name text fn) 
+  (let ((image (find-image image-name image-lib)))
+    (list x y image text fn (/ image.width 2) (/ image.height 2))))
+
+(define (image-button-x b) (list-ref b 0))
+(define (image-button-y b) (list-ref b 1))
+(define (image-button-image b) (list-ref b 2))
+(define (image-button-text b) (list-ref b 3))
+(define (image-button-fn b) (list-ref b 4))
+(define (image-button-width b) (list-ref b 5))
+(define (image-button-height b) (list-ref b 6))
+
+(define (image-button-update b m)
+  (cond
+   ((inside-box?
+     canvas-mouse-x canvas-mouse-y
+     (- (image-button-x b) (image-button-width b)) 
+     (- (image-button-y b) (image-button-height b))
+     (* (image-button-width b) 2) 
+     (* (image-button-height b) 2))
+    (if canvas-mouse-clicked
+	(let ((fn (image-button-fn b))) 
+	  (set! canvas-event-occurred #t)
+	  (set! canvas-mouse-clicked #f)
+	  (fn m))
+	m))
+   (else m)))
   
+(define (image-button-render! b)
+  (ctx.save)
+  (ctx.translate 
+   (image-button-x b)
+   (image-button-y b))
+  (ctx.rotate (time))
+  (ctx.translate 
+   (- (image-button-width b))
+   (- (image-button-height b)))
+  (ctx.drawImage (image-button-image b) 0 0)
+  (ctx.restore)
+  
+  (let ((m (ctx.measureText (image-button-text b))))
+    (ctx.fillText 
+     (image-button-text b) 
+     (- (image-button-x b) (/ m.width 2)) 
+     (+ (image-button-y b) 10))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define (make-textbox x y style gap just text) (list x y style gap just text))
+
+(define (textbox-x t) (list-ref t 0))
+(define (textbox-y t) (list-ref t 1))
+(define (textbox-style t) (list-ref t 2))
+(define (textbox-gap t) (list-ref t 3))
+(define (textbox-just t) (list-ref t 4))
+(define (textbox-text t) (list-ref t 5))
+
+(define (textbox-render! s)
+  (set! ctx.font (textbox-style s))
+  (index-for-each
+   (lambda (i text)
+     (let ((m (ctx.measureText text)))
+       (ctx.fillText 
+	text
+	(- (textbox-x s) (/ m.width 2)) 
+	(+ (textbox-y s) (* i (textbox-gap s))))))
+   (textbox-text s))
+  (canvas-init-defaults))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define (make-slider x y w text p fn) (list x y w text p fn))
+(define (make-slider x y w p fn) (list x y w p fn))
 (define (slider-x s) (list-ref s 0))
 (define (slider-y s) (list-ref s 1))
 (define (slider-w s) (list-ref s 2))
-(define (slider-text s) (list-ref s 3))
-(define (slider-p s) (list-ref s 4))
-(define (slider-update-p s v) (list-replace s 4 v))
-(define (slider-fn s) (list-ref s 5))
+(define (slider-p s) (list-ref s 3))
+(define (slider-update-p s v) (list-replace s 3 v))
+(define (slider-fn s) (list-ref s 4))
 
 (define (slider-update s)
   (cond
@@ -76,17 +147,28 @@
   (ctx.moveTo (slider-x s) (slider-y s))
   (ctx.lineTo (+ (slider-x s) (slider-w s)) (slider-y s))
   (ctx.stroke)
-
   (ctx.beginPath)
   (ctx.moveTo (+ (slider-x s) (slider-p s)) (slider-y s))
-  (ctx.arc (+ (slider-x s) (slider-p s)) (slider-y s) 20 0 (* Math.PI 2))
+  (ctx.arc (+ (slider-x s) (slider-p s)) (slider-y s) 15 0 (* Math.PI 2))
   (ctx.closePath)
-  (ctx.fill)
+  (ctx.fill))
 
-  (let ((m (ctx.measureText (slider-text s))))
-    (ctx.fillText 
-     (slider-text s) 
-     (- (slider-x s) m.width) 
-     (+ (slider-y s) 20)))
+(define (make-window x y w h) (list x y w h))
 
-  )
+(define (window-x w) (list-ref w 0))
+(define (window-y w) (list-ref w 1))
+(define (window-w w) (list-ref w 2))
+(define (window-h w) (list-ref w 3))
+
+(define (window-render! w)
+  (let ((grd (ctx.createLinearGradient 
+	      (window-x w) (window-y w) 
+	      (+ (window-x w) (window-w w)) 0)))
+    (set! ctx.globalAlpha 0.2)
+    (grd.addColorStop 0 "#00ff00")
+    (grd.addColorStop 1 "#ffffff")
+    (set! ctx.fillStyle grd)
+    (ctx.fillRect (window-x w) (window-y w) 
+		  (window-w w) (window-h w))
+    (set! ctx.globalAlpha 1)
+    (canvas-init-defaults)))

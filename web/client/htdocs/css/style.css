@@ -1,5 +1,10 @@
 @import url('https://fonts.googleapis.com/css?family=Barrio|Comfortaa|Josefin+Sans');
 
+@font-face {
+    font-family: 'Dosis';
+    src: url('../fonts/Dosis-Regular.ttf');
+}
+
 body {
     /*font-family: 'Josefin Sans', sans-serif;*/
     font-family: 'Comfortaa', cursive;

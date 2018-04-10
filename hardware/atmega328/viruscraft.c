@@ -10,37 +10,21 @@
 //#define SINGLE_SENSOR
 #define I2C_ID 0x32
 
-// physical pins on port D
-#define SENSE_A_PORT PIND
-#define PIN_SENSE_A_0 PD0
-#define PIN_SENSE_A_1 PD1
-#define PIN_SENSE_A_2 PD2
-
-#define SENSE_B_PORT PIND
-#define PIN_SENSE_B_0 PD3
-#define PIN_SENSE_B_1 PD4
-#define PIN_SENSE_B_2 PD5
-
-// physical pins on port C
-#define SENSE_C_PORT PINC
-#define PIN_SENSE_C_0 PC0
-#define PIN_SENSE_C_1 PC1
-#define PIN_SENSE_C_2 PC2
-
 #define STATUS_PORT_D DDRC
 #define STATUS_PORT PORTC
 #define PIN_STATUS PC3
 
 unsigned char receptor_donut    = 0x0; // 000
-unsigned char receptor_angle    = 0x1; // 001
+unsigned char receptor_triangle = 0x1; // 001
 unsigned char receptor_circle   = 0x2; // 010
 unsigned char receptor_square   = 0x3; // 011
-unsigned char receptor_triangle = 0x4; // 100
+unsigned char receptor_angle    = 0x4; // 100
 unsigned char receptor_guitar   = 0x5; // 101
 unsigned char receptor_tee      = 0x6; // 110
 unsigned char receptor_none     = 99;
 
 unsigned char num_receptors=7;
+
 unsigned char thresh[] = {1,2,2,3,2,2,2,99};
 
 unsigned char filter_receptors(unsigned char a, unsigned char b, unsigned char c) {
@@ -53,19 +37,38 @@ unsigned char filter_receptors(unsigned char a, unsigned char b, unsigned char c
   return receptor_none;
 }
 
+// address registers
+// PB1 PB3 PB5 PB2
+//         00 01 02 03 04 05 06 07
+// PORT B: xx AA xx BB xx CC xx xx
+// PORT C: xx xx DD xx xx xx xx xx
+
+void set_addr(unsigned char addr) {
+  PORTB = (addr&0x01)<<1 |
+          (addr&0x02)<<2 |
+          (addr&0x04)<<2;
+  PORTC = (addr&0x08)>>1;
+}
+
+// receptor registers
+
+//          00 01 02 03 04 05 06 07
+// Port D: |A1 A2 A3|B3 B2 B1|C1 C2| 
+// Port C:  xx xx xx|C3|xx xx xx xx
+
 unsigned char read_a() {
-  unsigned int mask = _BV(PIN_SENSE_A_0)|_BV(PIN_SENSE_A_1)|_BV(PIN_SENSE_A_2);
-  return SENSE_A_PORT&0x7;
+  return PIND&0x07;
 }
 
 unsigned char read_b() {
-  unsigned int mask = PIN_SENSE_B_0|PIN_SENSE_B_1|PIN_SENSE_B_2;
-  return SENSE_B_PORT&mask;
+  // flipped, sigh...
+  return (PIND&0x20)>>5 |
+         (PIND&0x10)>>3 |
+         (PIND&0x08)>>1;
 }
 
 unsigned char read_c() {
-  unsigned int mask = PIN_SENSE_C_0|PIN_SENSE_C_1|PIN_SENSE_C_2;
-  return (SENSE_C_PORT&mask)>>3;
+  return ((PIND&0xC0)>>6) | ((PINC&0x08)>>1);
 }
 
 void set_led_state(unsigned char s) {
@@ -75,20 +78,16 @@ void set_led_state(unsigned char s) {
 
 ////////////////////////////////////////////////////////
 
-#define FACE_SELECT_PIN PC2
-#define PAD_DETECT PD7
-
 int main(void) {
   I2C_init(I2C_ID<<1); // initalize as slave with address 0x32
   
   sei();
   //   MCUSR = 0;
-  wdt_disable();
+  //wdt_disable();
   
-  DDRC = 0xff; // output
+  DDRC = 0x04;
   DDRD = 0x00; // input
-
-  set_led_state(0);
+  DDRB = 0x0f; // output
 
   for (int i=0; i<0xFF; i++) {
     i2cbuffer[i]=99;
@@ -96,17 +95,29 @@ int main(void) {
 
   unsigned char led=0;
 
-  PORTC|=_BV(FACE_SELECT_PIN);
+  //  PORTC|=_BV(FACE_SELECT_PIN);
   //PORTC&=~_BV(FACE_SELECT_PIN);
 
+  unsigned int count=0;
 
   while(1) {    
-    set_led_state(PIND&_BV(PAD_DETECT));
+    i2cbuffer[0]=count;
+    count++;
 
-    _delay_ms(500);
-    set_led_state(1);
-    _delay_ms(20);
-    set_led_state(0);
+    unsigned int bufferpos=1;
+    for (unsigned char addr=0; addr<2; addr++) {
+      set_addr(addr);
+      _delay_ms(250);
+      i2cbuffer[bufferpos++]=read_a();
+      i2cbuffer[bufferpos++]=read_b();
+      i2cbuffer[bufferpos++]=read_c();
+      _delay_ms(250);
+    }
+
+    //    _delay_ms(500);
+    //set_led_state(1);
+    //_delay_ms(20);
+    //set_led_state(0);
     //    wdt_reset();
   }
 }

@@ -36,7 +36,7 @@
 			        7  6  5  9  8
 			        2  1  0  4  3))
 
-(define builder-pos (vector -9 0 0))
+(define builder-pos (vector -9.5 1 0))
 
 (define virus-builder #f)
 (define receptor-circle #f)
@@ -103,14 +103,14 @@
 (define num-buttons 8)
 
 (define button-objs (list
-		     "models/builder-triangle.obj"
-		     "models/builder-corner.obj"
-		     "models/builder-guitar.obj"
-		     "models/builder-circle.obj"
-		     "models/builder-circle.obj"
-		     "models/builder-square.obj"
-		     "models/builder-tee.obj"
-		     "models/builder-donut.obj"))
+		     "models/receptor-triangle.obj"
+		     "models/receptor-triangle.obj"
+		     "models/receptor-circle.obj"
+		     "models/receptor-circle.obj"
+		     "models/receptor-square.obj"
+		     "models/receptor-square.obj"
+		     "models/receptor-donut.obj"
+		     "models/receptor-donut.obj"))
 
 (define button-fns (list 
 		    (lambda () (attach-virus-triangle))
@@ -215,8 +215,10 @@
 	     (translate builder-pos)
 	     (translate (vmul (vector (cos (* (/ i num-buttons) Math.PI 2))
 				      (sin (* (/ i num-buttons) Math.PI 2))
-				      0) 5))
-	     (scale (vector 0.25 0.25 0.25))
+				      0) 4))
+	     (translate (vector 0 -0.7 0))
+	     (scale (vector 0.5 0.5 0.5))
+	     (rotate (vector 0 90 0))
 	     (colour (vector 1 1 0))
 	     (load-primitive (list-ref button-objs i)))
 	    (list-ref button-fns i)))))

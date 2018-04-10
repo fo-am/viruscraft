@@ -8,6 +8,7 @@
 (load-texture "host-triangle3.png")
 (load-texture "host-square3.png")
 (load-texture "host-donut3.png")
+(load-texture "bg.png")
 
 (load-mesh-cache "models/ico.obj")
 (load-mesh-cache "models/receptor-square.obj")
@@ -53,3 +54,9 @@
 (shader-compile "virus" (list "p" "n" "t" "c")
 		"shaders/virus.vert"
 		"shaders/virus.frag")
+
+(load-images!
+ (list
+  "hexbutton.png")
+ (lambda ()
+   0))

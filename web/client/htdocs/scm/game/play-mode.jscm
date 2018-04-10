@@ -22,26 +22,37 @@
 (define (play-mode-finished? m) (list-ref m 6))
 (define (play-mode-modify-finished m v) (list-replace m 6 v))
 
+(define title-text '())
+(define infect-window '())
+(define deaths-window '())
+(define age-window '())
 (define back-button '())
 
 (define (init-play-mode)
-  (let ((mode-root (build-locator)))
-    (with-state
-     (parent mode-root)
-     (set! back-button 
-	   (make-mesh-button (vector -3 -6.5 0) "models/ico.obj"
-			     30 "End" 
-			     (lambda (m)
-			       (destroy-virus-builder)
-			       (destroy world-root)
-			       (destroy mode-root)
-			       (play-mode-modify-finished m #t))))))
-  
+  (set! back-button 
+	(make-image-button (- screen-width 100) 570 "hexbutton.png"
+			   "End" 
+			   (lambda (m)
+			     (msg "hello")
+			     (destroy-virus-builder)
+			     (destroy world-root)
+			  
+			     (play-mode-modify-finished m #t))))
 
+  (set! title-text 
+	(make-textbox 
+	 300 70
+	 "50pt Dosis" 30 "centre"
+	 (list "Evolve your virus")))
+
+  (set! infect-window (make-window 20 500 180 160))
+  (set! deaths-window (make-window 210 500 180 160))
+  (set! age-window (make-window 400 500 180 160))
+  
   (let ((wpc (build-world-position-checker world-units)))
     (build-virus-builder)
     (host-organism-load-models)
-
+    
     (make-play-mode
      (population-infect 
       (make-random-population 50 wpc) 
@@ -65,7 +76,7 @@
   	 death-count
   	 (play-mode-population g)))
   
-  (mesh-button-update 
+  (image-button-update 
    back-button
    (cond
     ;; no hosts!
@@ -129,14 +140,19 @@
    (concat (q->m world-q))))
 
 (define (play-mode-canvas-render g)
-  (ctx.clearRect 0 0 screen-width screen-height)	  
-  (set! ctx.fillStyle "#fff")
-  (set! ctx.strokeStyle "#fff")
+  (textbox-render! title-text)
+  (image-button-render! back-button)
+  (window-render! infect-window)
+  (window-render! deaths-window)
+  (window-render! age-window)
 
-  (mesh-button-render! back-button)
+  (set! infect-window (make-window 20 500 180 160))
+  (set! deaths-window (make-window 210 500 180 160))
+  (set! age-window (make-window 400 500 180 160))
 
-  (ctx.fillText (+ "score: " (play-mode-score g)) 54 140)
-  (ctx.fillText (+ "infected: " (population-num-infected (play-mode-population g))) 54 170)
-  (ctx.fillText (+ "deaths: " death-count) 54 200)
+
+  (ctx.fillText (+ "infected: " (population-num-infected (play-mode-population g))) 50 550)
+  (ctx.fillText (+ "deaths: " death-count) 250 550)
+  (ctx.fillText (+ "score: " (play-mode-score g)) 450 550)
   )
 

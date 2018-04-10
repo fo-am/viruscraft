@@ -24,8 +24,9 @@
   (set! canvas-drag-fn fn))
 
 (define (canvas-init-defaults)
-  (set! ctx.fillStyle "#fff")
-  (set! ctx.font "30pt Arial"))
+  (set! ctx.fillStyle "#000")
+  (set! ctx.font "30pt Dosis")
+  )
 
 (define (resize-canvas canvas) 
   ;; Lookup the size the browser is displaying the canvas.
@@ -40,6 +41,10 @@
 	  (set! screen-width canvas.width)
 	  (set! screen-height canvas.height)
 	  (canvas-init-defaults))))
+
+(set! window.onresize 
+      (lambda ()
+	(resize-canvas canvas)))
 
 (define (mouse-from-event canvas e state)
   (let ((rect (canvas.getBoundingClientRect)))
@@ -72,8 +77,6 @@
 	    (set! canvas-mouse-clicked #t)
 	    (set! canvas-mouse-clicked #f))
 
-	(msg canvas-mouse-clicked)
-	
 	(set! canvas-mouse-state state)))))
 
 (define (touch-from-event canvas e state)
@@ -86,6 +89,37 @@
     (set! canvas-mouse-zoom-delta delta)
     (set! canvas-mouse-zoom (+ canvas-mouse-zoom delta))
     (e.preventDefault)))
+
+(define image-lib ())
+(define loaded-images #f)
+
+(define (canvas-loaded?)
+  loaded-images)
+
+(define (find-image fn l)
+  (cond
+   ((null? l) #f)
+   ((eq? (car (car l)) fn) (cadr (car l)))
+   (else (find-image fn (cdr l)))))
+
+(define (load-image! fn finished images)
+  (let ((image (js "new Image()")))
+    (set! image.onload
+          (lambda ()
+            (console.log (+ "loaded " (+ "images/" fn)))
+            (set! image-lib (cons (list fn image) image-lib))
+            (when (eq? (length image-lib)
+                       (length images))
+		  (set! loaded-images #t)
+                  (finished))))
+;;    (console.log (+ "loading " (+ "images/" fn)))
+    (set! image.src (+ "images/" fn))))
+
+(define (load-images! l finished)
+  (for-each
+   (lambda (fn)
+     (load-image! fn finished l))
+   l))
 
 (define (canvas-setup)
   (canvas.addEventListener

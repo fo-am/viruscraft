@@ -3,12 +3,17 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(define title-text '())
+(define sealevel-text '())
 (define next-button '())
+(define last-button '())
+(define tl-window '())
+(define tr-window '())
+(define bl-window '())
+(define br-window '())
 
 (define (init-world-design-mode)
   (worldunit-load-models)
-  (msg "init world design world")
-
   (set! world-units (build-world-from-params 20))
 
   (set-canvas-drag-fn
@@ -18,38 +23,61 @@
 	     (let ((rot-axis (vcross drag (vector 0 0 -1))))
 	       (set! world-q (qmul world-q (qaxisangle (vnormalise rot-axis) 2))))))))
 
-  (let ((mode-root (build-locator)))
-    (with-state
-     (parent mode-root)
-     (set! next-button
-	   (make-mesh-button (vector 0 -6 0) "models/ico.obj"
-			     30 "Done" 
-			     (lambda (m)
-			       (msg "world design done pressed")
-			       (destroy mode-root)			       
-			       (world-design-mode-modify-ready m #t))))))
+  (set! title-text 
+	(make-textbox 
+	 (/ screen-width 2) 70
+	 "50pt Dosis" 30 "centre"
+	 (list "Build your world")))
+
+  (set! sealevel-text 
+	(make-textbox 
+	 100 150
+	 "30pt Dosis" 30 "centre"
+	 (list "Sea level")))
+  
+  (set! next-button 
+	(make-image-button 
+	 (+ (/ screen-width 2) 100) 600 "hexbutton.png"
+	 "Done" 
+	 (lambda (m)
+	   (world-design-mode-modify-ready m "next"))))
+  
+  (set! last-button 
+	(make-image-button 
+	 (- (/ screen-width 2) 100) 600 "hexbutton.png"
+	 "Back" 
+	 (lambda (m)
+	   (world-design-mode-modify-ready m "back"))))
+  
+  (set! tl-window (make-window 10 80 400 270))
+  (set! tr-window (make-window (- screen-width 410) 80 400 270))
+  (set! bl-window (make-window 10 380 400 270))
+  (set! br-window (make-window (- screen-width 410) 380 400 270))
+
   (list #f))
 
-(define (world-design-mode-ready? m) (list-ref m 0))
+(define (world-design-mode-ready m) (list-ref m 0))
 (define (world-design-mode-modify-ready m v) (list-replace m 0 v))
 
 (define (world-design-mode-update m)
   (set! sealevel-slider (slider-update sealevel-slider))
-  (mesh-button-update next-button m))
+  (image-button-update
+   next-button
+   (image-button-update last-button m)))
 
 (define (world-design-mode-render m)
   (with-primitive 
    world-root 
    (identity)
-   (translate (vector 5 0 0))
+   (translate (vector 0 0 0))
    (let ((s (+ (min (max 0.02 (* canvas-mouse-zoom 0.02)) 2) 0.7)))
-     (scale (vector s s s)))
+     (scale (vmul (vector s s s) 0.80)))
    (concat (q->m world-q))))
 
 (define last-v 0)
 
 (define sealevel-slider 
-  (make-slider 400 500 400 "Sea level" 0
+  (make-slider 50 280 300 0
 	       (lambda (v)
 		 (when (not (eq? v last-v))
 		       (set! last-v v)
@@ -58,9 +86,16 @@
 		       (set! world-units (build-world-from-params (/ v 4))))
 		 )))
 
+
 (define (world-design-mode-canvas-render m)
-  (set! sealevel-slider (slider-update sealevel-slider))
+  (window-render! tl-window)
+  (window-render! tr-window)
+  (window-render! bl-window)
+  (window-render! br-window)
+  
+  (textbox-render! title-text)
+  (textbox-render! sealevel-text)
   (set! sealevel-slider (slider-update sealevel-slider))
   (slider-render! sealevel-slider)
-  (mesh-button-render! next-button)
-  (ctx.fillText (+ "World Designer") 100 110))
+  (image-button-render! next-button)
+  (image-button-render! last-button))
