@@ -72,6 +72,8 @@
 	  (colour receptor-col)
 	  (build-instance instance)))))
 
+(define (clear-virus)
+  (set! virus (make-virus '())))
 
 (define (update-virus)
   (set! virus (make-virus 

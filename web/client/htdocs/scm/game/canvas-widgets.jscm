@@ -175,12 +175,15 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define (make-popup textbox type time) (list textbox time))
+(define (make-popup textbox type time) (list textbox type time))
 (define (popup-textbox p) (list-ref p 0))
 (define (popup-type p) (list-ref p 1))
 (define (popup-time p) (list-ref p 2))
 
 (define popups-list '())
+
+(define (clear-popups!)
+  (set! popups-list '()))
 
 (define (fire-popup! type text-list)
   (set! popups-list (cons (make-popup 
@@ -208,7 +211,7 @@
 	(canvas-init-defaults)
 	(textbox-render! tb)))))
 
-(define popup-lifespan 5)
+(define popup-lifespan 2)
 
 (define (render-popups!)
   (when (not (null? popups-list))

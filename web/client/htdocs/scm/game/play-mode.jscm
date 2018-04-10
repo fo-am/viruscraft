@@ -50,6 +50,8 @@
 
 (define (init-play-mode)
   (reset-scores)
+  (clear-virus)
+  (clear-popups!)
 
   (set! back-button 
 	(make-image-button (- screen-width 100) 570 "hexbutton.png"
