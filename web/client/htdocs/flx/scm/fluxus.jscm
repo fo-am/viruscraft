@@ -95,6 +95,9 @@
 (define (get-transform)
   (renderer-current-tx the-renderer))
 
+(define (get-global-transform)
+  (renderer-global-tx the-renderer))
+
 (define (camera-transform)
   (renderer-camera the-renderer))
 
@@ -124,6 +127,10 @@
 (define (primitive-screen-pos p)
   (project-point
    (with-primitive p (mtransform (get-transform) (vector 0 0 0)))))
+
+(define (primitive-global-screen-pos p)
+  (project-point
+   (with-primitive p (mtransform (get-global-transform) (vector 0 0 0)))))
 
 (define (scale v)
   (mat4.scale (renderer-current-tx the-renderer) v))

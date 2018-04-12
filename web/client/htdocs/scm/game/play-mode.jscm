@@ -31,22 +31,27 @@
 (define highest-infections 0)
 (define highest-deaths 0)
 (define highest-age 0)
+(define highest-jumps 0)
 
 (define current-infections 0)
 (define current-deaths 0)
 (define current-age 0)
+(define current-jumps 0)
 
 (define notified-high-infections #f)
 (define notified-high-deaths #f)
 (define notified-high-age #f)
+(define notified-jumps #f)
 
 (define (reset-scores)
   (set! current-infections 0)
   (set! current-deaths 0)
   (set! current-age 0)
+  (set! current-jumps 0)
   (set! notified-high-infections #f)
   (set! notified-high-deaths #f)
-  (set! notified-high-age #f))
+  (set! notified-high-age #f)
+  (set! notified-high-jumps #f))
 
 (define (init-play-mode)
   (reset-scores)
@@ -117,6 +122,12 @@
 	      (fire-popup! "good" (list "New highest age!"))
 	      (set! notified-high-age #t)))
 
+  (when (check-cross-species-infection!)
+	(set! current-jumps (+ current-jumps 1))
+	(when (< highest-jumps current-jumps)
+	      (set! highest-jumps current-jumps))
+	(fire-popup! "good" (list "Cross-species infection!")))
+
   (image-button-update 
    back-button
    (cond
@@ -138,9 +149,7 @@
 	   (fire-popup! "bad" (list "Your virus died out!")))
      (reset-scores)
      (make-play-mode
-      (population-infect 
-       (play-mode-population g)
-       virus infection-rate)
+      (population-infect-one (play-mode-population g) virus)
       (update-organisms 
        (play-mode-organisms g)
        (play-mode-population g)
@@ -184,17 +193,25 @@
      (scale (vector s s s)))
    (concat (q->m world-q))))
 
+
+(define (play-mode-render-host-info! g)
+  (let ((host (car (play-mode-population g))))
+    (let ((organism (ordered-list-search (play-mode-organisms g)
+					 (host-id host))))
+      (let ((p (primitive-global-screen-pos (organism-root organism))))
+	(ctx.stroke)
+	(ctx.beginPath)
+	(ctx.moveTo (vx p) (vy p))
+	(ctx.arc (vx p) (vy p) 35 0 (* Math.PI 2))
+	(ctx.closePath)
+	(ctx.stroke)))))
+
 (define (play-mode-canvas-render g)
   (textbox-render! title-text)
   (image-button-render! back-button)
   (window-render! infect-window)
   (window-render! deaths-window)
   (window-render! age-window)
-
-
-  (set! infect-window (make-window 20 500 180 160))
-  (set! deaths-window (make-window 210 500 180 160))
-  (set! age-window (make-window 400 500 180 160))
 
   (let ((y 550))
 
@@ -231,5 +248,8 @@
   (ctx.fillText "individuals" 220 y)
   (ctx.fillText "million years" 410 y)
 
-  (render-popups!))
+  (render-popups!)
+
+;;  (play-mode-render-host-info! g)
+  )
 

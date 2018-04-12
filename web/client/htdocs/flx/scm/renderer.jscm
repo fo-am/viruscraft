@@ -77,6 +77,12 @@
 	(state-tx (scenenode-state grabbed))
 	(state-tx (renderer-stack-top r)))))
 
+(define (renderer-global-tx r)
+  (let ((grabbed (renderer-grab-stack-top r)))
+    (if grabbed
+	(scenenode-global-tx grabbed)
+	(state-tx (renderer-stack-top r)))))
+
 (define (renderer-modify-current-state r fn)
   (let ((grabbed (renderer-grab-stack-top r)))
     ;; either modify the grabbed primitive or the stack top

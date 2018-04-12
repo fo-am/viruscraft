@@ -186,24 +186,32 @@
   (set! popups-list '()))
 
 (define (fire-popup! type text-list)
-  (set! popups-list (cons (make-popup 
-			   (make-textbox
-			    (/ screen-width 2) 300 
-			    "50pt Dosis" 30 "centre" 
-			    text-list)
-			   type
-			   (time)) 
-			  popups-list)))
+  (let ((x (if (eq? type "bad") (/ screen-width 2) 300))
+	(y (if (eq? type "bad") 300 500)))
+    (set! popups-list (cons (make-popup 
+			     (make-textbox
+			      x y 
+			      (if (eq? type "bad") 
+				  "50pt Dosis" 
+				  "20pt Dosis") 
+			      30 "centre" 
+			      text-list)
+			     type
+			     (time)) 
+			    popups-list))))
 
 (define (render-popup! p)
   (let ((tb (popup-textbox p)))
-    (let ((x (- (/ screen-width 2) 300)) (y (- (textbox-y tb) 100))
-	  (w 600) (h 200))
+    (let ((x (if (eq? (popup-type p) "bad")
+		 (- (/ screen-width 2) 300) 150)) 
+	  (y (- (textbox-y tb) (if (eq? (popup-type p) "bad") 100 50)))
+	  (w (if (eq? (popup-type p) "bad") 600 300)) 
+	  (h (if (eq? (popup-type p) "bad") 200 100)))
       (let ((grd (ctx.createLinearGradient x y (+ x w) (+ y h))))
 	(set! ctx.globalAlpha 0.9)
 	(if (eq? (popup-type p) "bad")
 	    (grd.addColorStop 0 "#a93535")
-	    (grd.addColorStop 0 "#995e35"))
+	    (grd.addColorStop 0 "#359935"))
 	(grd.addColorStop 1 "#eeead1")
 	(set! ctx.fillStyle grd)
 	(ctx.fillRect x y w h)
@@ -214,7 +222,7 @@
 (define popup-lifespan 2)
 
 (define (render-popups!)
+  (for-each (lambda (p) (render-popup! p)) popups-list)
   (when (not (null? popups-list))
-	(render-popup! (car popups-list))
 	(when (> (- (time) (popup-time (car popups-list))) popup-lifespan)
 	      (set! popups-list (cdr popups-list)))))

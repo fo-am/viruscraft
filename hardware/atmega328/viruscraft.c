@@ -38,7 +38,7 @@ unsigned char filter_receptors(unsigned char a, unsigned char b, unsigned char c
 }
 
 // address registers
-// PB1 PB3 PB5 PB2
+//            PB1 PB3 PB5 PB2
 //         00 01 02 03 04 05 06 07
 // PORT B: xx AA xx BB xx CC xx xx
 // PORT C: xx xx DD xx xx xx xx xx
@@ -87,7 +87,7 @@ int main(void) {
   
   DDRC = 0x04;
   DDRD = 0x00; // input
-  DDRB = 0x0f; // output
+  DDRB = 0xff; // output
 
   for (int i=0; i<0xFF; i++) {
     i2cbuffer[i]=99;
@@ -106,7 +106,14 @@ int main(void) {
 
     unsigned int bufferpos=1;
     for (unsigned char addr=0; addr<2; addr++) {
-      set_addr(addr);
+      //set_addr(addr);
+
+      if (addr==0) {
+	PORTB|=_BV(PB1);
+      } else {
+	PORTB&=~_BV(PB1);
+      }
+
       _delay_ms(250);
       i2cbuffer[bufferpos++]=read_a();
       i2cbuffer[bufferpos++]=read_b();
