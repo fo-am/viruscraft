@@ -135,10 +135,10 @@
      (touch-from-event canvas e "move")))      
   (canvas.addEventListener
    "mouseup" (lambda (e) (mouse-from-event canvas e "up")))
-  (canvas.addEventListener
-   "touchend" (lambda (e) (mouse-from-event canvas e "up")))
-  (canvas.addEventListener
-   "touchcancel" (lambda (e) (mouse-from-event canvas e "up")))
+;;  (canvas.addEventListener
+;;   "touchend" (lambda (e) (mouse-from-event canvas e "up")))
+;;  (canvas.addEventListener
+;;   "touchcancel" (lambda (e) (mouse-from-event canvas e "up")))
   (canvas.addEventListener "DOMMouseScroll" canvas-zoom)
   (canvas.addEventListener "mousewheel" canvas-zoom)
 
