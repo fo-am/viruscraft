@@ -39,6 +39,7 @@
    ((eq? mode mode-loading) 
     (cond 
      ((loading-mode-ready? current-mode)
+      (worldunit-load-models)
       (set! mode mode-title)
       (init-title-mode))
      (else (loading-mode-update current-mode))))
@@ -60,6 +61,7 @@
      ((eq? (world-design-mode-ready current-mode) "back")
       (msg "back")
       (destroy world-root)
+      (set! world-units #f)
       (set! mode mode-title)
       (init-title-mode))
      (else (world-design-mode-update current-mode))))

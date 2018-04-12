@@ -64,7 +64,7 @@
 			   "End" 
 			   (lambda (m)
 			     (destroy-virus-builder)
-			     (destroy world-root)			  
+			     (organisms-destroy (play-mode-organisms m))
 			     (play-mode-modify-finished m #t))))
   
   (set! title-text 

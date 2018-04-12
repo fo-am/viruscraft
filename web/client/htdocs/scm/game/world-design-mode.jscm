@@ -13,8 +13,8 @@
 (define br-window '())
 
 (define (init-world-design-mode)
-  (worldunit-load-models)
-  (set! world-units (build-world-from-params 20))
+  (when (not world-units)
+	(set! world-units (build-world-from-params 20)))
 
   (set-canvas-drag-fn
    (lambda ()
@@ -77,13 +77,12 @@
 (define last-v 0)
 
 (define sealevel-slider 
-  (make-slider 50 280 300 0
+  (make-slider 50 280 300 (- 300 90)
 	       (lambda (v)
 		 (when (not (eq? v last-v))
 		       (set! last-v v)
-		       (msg "slider design world")
 		       (destroy world-root)
-		       (set! world-units (build-world-from-params (/ v 4))))
+		       (set! world-units (build-world-from-params (- 100 (/ v 3)))))
 		 )))
 
 

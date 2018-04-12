@@ -117,15 +117,17 @@
 		     "models/receptor-donut.obj"
 		     "models/receptor-donut.obj"))
 
-(define button-fns (list 
-		    (lambda () (attach-virus-triangle))
-		    (lambda () (attach-virus-donut))
-		    (lambda () (attach-virus-donut))
-		    (lambda () (attach-virus-circle))
-		    (lambda () (attach-virus-donut))
-		    (lambda () (attach-virus-square))
-		    (lambda () (attach-virus-donut))
-		    (lambda () (attach-virus-donut))))
+(define button-fns 
+  (list 
+   (lambda () (attach-virus-triangle))
+   (lambda () (attach-virus-donut))
+   (lambda () (attach-virus-clear))
+   (lambda () (attach-virus-circle))
+   (lambda () (attach-virus-donut))
+   (lambda () (attach-virus-square))
+   (lambda () (attach-virus-donut))
+   (lambda () (attach-virus-donut))))
+
 (define (make-button prim fn) (list prim fn))
 (define (button-prim b) (list-ref b 0))
 (define (button-fn b) (list-ref b 1))
@@ -133,16 +135,18 @@
 (define buttons '())
 (define face-display #f)
 
+(define knobble-vec (vnormalise (vector 0 1 1)))
+
 (define (display-front-face)
   (define (_ n closest r)
     (cond
      ((> n (pdata-size)) r)
      ((> (vdot (mtransform (get-transform) (pdata-ref "n" n))
-	       (vector 0 1 0)) closest)
+	       knobble-vec) closest)
       ;; return average of these face points
       (_ (+ n 3) 
 	 (vdot (mtransform (get-transform) (pdata-ref "n" n))
-	       (vector 0 1 0))
+	       knobble-vec)
 	 (list
 	  ;; face id
 	  (/ n 3)
@@ -184,8 +188,8 @@
 		(with-primitive 
 		 (button-prim button)
 		 (cond 
-		  ((< dist 30) 
-		   (colour (rndvec))
+		  ((< dist 60) 
+		   (colour (vector 1 1 1))
 		   #t)
 		  (else
 		   (colour receptor-col)

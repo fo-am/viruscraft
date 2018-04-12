@@ -208,6 +208,7 @@
 (define (land-110? bary d) (and (> (vy bary) d) (< (vy bary) (- 1 d))))
 (define (land-011? bary d) (and (> (vx bary) d) (< (vx bary) (- 1 d))))
 (define (land-101? bary d) (and (> (vz bary) d) (< (vz bary) (- 1 d))))
+(define (land-111? bary d) (and (> (vx bary) d) (> (vy bary) d) (> (vz bary) d)))
 
 (define (build-world-position-checker world-units)
   (lambda (species-type location)
@@ -221,7 +222,7 @@
 	  (cond
 	   ((or (eq? species-type 'land2) (eq? species-type 'land))
 	    (cond
-	     ((eq? (unit-face-code unit) "111") #t)
+	     ((eq? (unit-face-code unit) "111") (land-111? bary 0.3))
 	     ((eq? (unit-face-code unit) "100") (land-100? bary 0.3))
 	     ((eq? (unit-face-code unit) "010") (land-010? bary 0.3))
 	     ((eq? (unit-face-code unit) "001") (land-001? bary 0.3))
@@ -238,5 +239,6 @@
 	     ((eq? (unit-face-code unit) "110") (not (land-110? bary 0.1)))
 	     ((eq? (unit-face-code unit) "011") (not (land-011? bary 0.1)))
 	     ((eq? (unit-face-code unit) "101") (not (land-101? bary 0.1)))
+	     ((eq? (unit-face-code unit) "111") (not (land-111? bary 0.1)))
 	     (else #f)))
 	   (else #f)))))))
