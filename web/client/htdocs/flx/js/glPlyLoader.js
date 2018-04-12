@@ -229,3 +229,11 @@ function load_ply(url, loadedfn) {
     xmlHttp.send();
 }
 
+function force_load_ply(url) {
+    var xmlHttp = new XMLHttpRequest();
+    xmlHttp.open( "GET", url, false );
+    xmlHttp.overrideMimeType("script");
+    xmlHttp.send( null );
+    var str=xmlHttp.responseText;
+    return inner_load_ply(xmlHttp.responseText);
+}

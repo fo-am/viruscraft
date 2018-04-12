@@ -176,6 +176,8 @@ void main() {
 
 (build units)
 
+(set-camera-transform (mat4.translate (camera-transform) (vector 0 0 10)))  
+
 (every-frame 
  (with-primitive root (rotate (vector -0.05 -0.1 0))))
 

@@ -318,6 +318,8 @@
   (set! frame (+ frame 1))
   )
 
+(set-camera-transform (mat4.translate (camera-transform) (vector 0 10 0)))  
+
 ;;(qslerp virus-src virus-dst virus-t))
 
 (every-frame (render))

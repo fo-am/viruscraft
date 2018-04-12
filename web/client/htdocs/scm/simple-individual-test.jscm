@@ -38,7 +38,7 @@
     ;;    (shader vertex-disc fragment-disc)
     (texture (load-texture (+ "host-" (symbol->string (host-receptor host)) "2.png")))
     (build-instance flag))
-   )))
+   ))
 
 (define (organism-id c) (list-ref c 0))
 (define (organism-flag c) (list-ref c 1))
@@ -117,7 +117,7 @@ void main()
     P = p;
     T = t;
     C = c;
-    L = vec3(6,12,-10)-p;
+    L = vec3(6,12,2)-p;
     N = normalize(vec3(NormalMatrix*vec4(n,1.0))); 
     gl_Position = ModelViewMatrix*vec4(p,1.0);
     V = CameraPos-vec3(gl_Position); 
@@ -447,9 +447,10 @@ void main() {
   (with-primitive clouds (rotate (vector 0 0.1 0)))
   (with-primitive cloud-shadow (rotate (vector 0 0.1 0)))
 
-;;  (set-camera-transform (mat4.rotateX (camera-transform) 0.01))  
   (set! frame (+ frame 1))
   )
+
+(set-camera-transform (mat4.translate (camera-transform) (vector 0 10 0)))  
 
 ;;(qslerp virus-src virus-dst virus-t))
 

@@ -100,6 +100,7 @@
   (with-state
    (parent world-root)
    (scale (vector 10 10 10))
+   (shader-assign-compiled "default")
    (index-map
     (lambda (i face-id)
       (let ((tx (with-primitive pentakis (get-face-transform face-id)))

@@ -40,13 +40,7 @@ input {
     width: 100%;
 }
 
-#webgl-canvas {
-    position: absolute;
-    left: 0px;
-    top: 0px;
-    width: 100vw;
-    height: 100vh;
-}
+#webgl-canvas { }
 
 #canvas {
     position: absolute;

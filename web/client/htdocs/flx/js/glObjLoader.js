@@ -9,6 +9,15 @@ function load_obj(url, loadedfn) {
     xmlHttp.send();
 }
 
+function force_load_obj(url) {
+    var xmlHttp = new XMLHttpRequest();
+    xmlHttp.open( "GET", url, false );
+    xmlHttp.overrideMimeType("script");
+    xmlHttp.send( null );
+    var str=xmlHttp.responseText;
+    return inner_load_obj(xmlHttp.responseText);
+}
+
 function inner_load_obj(string) {
     var lines = string.split("\n");
     var positions = [];

@@ -28,7 +28,8 @@
    ()
    (scenenode 0 (state gl) 0 '())
    ()
-   (vector 1 1 1)))
+   (vector 1 1 1)
+   45))
 
 (define (renderer-gl r) (list-ref r 0))
 (define (renderer-list r) (list-ref r 1))
@@ -51,6 +52,8 @@
 (define (renderer-modify-grab-stack r v) (list-replace r 10 v))
 (define (renderer-clear-colour r) (list-ref r 11))
 (define (renderer-modify-clear-colour r v) (list-replace r 11 v))
+(define (renderer-view-angle r) (list-ref r 12))
+(define (renderer-modify-view-angle r v) (list-replace r 12 v))
 
 (define (renderer-add r p)
   (renderer-modify-list r (cons p (renderer-list r))))
@@ -99,7 +102,7 @@
    r (cons
       ;; state, and a primitive to render in
       (list (state-clone (renderer-stack-top r)) p)
-      (renderer-immediate-prims r))))))
+      (renderer-immediate-prims r))))
 
 (define (renderer-immediate-clear r)
   (renderer-modify-immediate-prims r ()))
@@ -135,9 +138,13 @@
 		   (vz (renderer-clear-colour r))
 		   (list-ref (renderer-clear-colour r) 3))
     (gl.clear (js "gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT"))
-    (mat4.perspective 25 (/ gl.viewportWidth gl.viewportHeight) 0.1 1000.0
-		      (renderer-view r))
 
+
+    (mat4.perspective 
+     (renderer-view-angle r) 
+     (/ gl.viewportWidth gl.viewportHeight) 0.1 1000.0
+     (renderer-view r))
+    
     (gl.enable gl.BLEND)
     (gl.blendFunc gl.SRC_ALPHA gl.ONE_MINUS_SRC_ALPHA)
 

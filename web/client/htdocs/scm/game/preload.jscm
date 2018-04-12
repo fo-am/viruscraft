@@ -55,6 +55,10 @@
 		"shaders/virus.vert"
 		"shaders/virus.frag")
 
+(shader-compile "default" (list "p" "n" "t" "c")
+		"shaders/default.vert"
+		"shaders/default.frag")
+
 (load-images!
  (list
   "hexbutton.png")

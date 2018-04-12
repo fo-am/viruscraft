@@ -3,6 +3,7 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(load "scm/game/shaders.jscm")
 (load "scm/game/canvas.jscm")
 (load "scm/game/preload.jscm")
 (load "scm/game/spherical.jscm")
@@ -27,6 +28,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (clear-colour (vector 0.0 0.0 0.0))
+(set-camera-angle 25)
 (resize-glcanvas webgl-canvas)
 
 (define world-units #f)
