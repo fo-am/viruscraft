@@ -1,4 +1,4 @@
-precision mediump float;
+precision highp float;
 uniform sampler2D texture;
 uniform vec3 DiffuseColour;
 varying vec3 P;

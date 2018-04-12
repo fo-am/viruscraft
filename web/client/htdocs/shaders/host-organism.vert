@@ -1,4 +1,5 @@
-precision mediump float;
+/* precision needed for android devices */
+precision highp float;
 varying vec3 P;
 varying vec3 T;
 varying vec3 C;
