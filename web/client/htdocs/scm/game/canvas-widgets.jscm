@@ -5,6 +5,18 @@
   (and (and (> px x) (< px (+ x w)))
        (and (> py y) (< py (+ y h)))))
 
+
+(define (draw-circle x y radius)
+  (ctx.beginPath)
+  (ctx.arc x y radius 0 (* Math.PI 2))
+  (ctx.stroke))
+
+(define (draw-line x y x2 y2)
+  (ctx.beginPath)
+  (ctx.moveTo x y)
+  (ctx.lineTo x2 y2)
+  (ctx.stroke))
+
 ;; unholy mix of 3d and 2d
 (define (make-mesh-button pos mesh size text fn) 
   (let ((prim (with-state

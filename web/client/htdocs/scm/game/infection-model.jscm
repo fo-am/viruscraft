@@ -4,7 +4,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; the main infection and population model
 
-(define receptor-types (list 'circle 'triangle 'square 'donut))
+(define receptor-types (list 'circle 'triangle 'square 'donut 'tee 'angle 'guitar))
 (define host-species-types (list 'sea 'land 'land2))
 
 (define size-conv 0.003)
@@ -27,7 +27,7 @@
 
 (define new-organism-likelihood 3)
 (define mutation-rate 5)
-(define susceptibility-slope 2.5)
+(define susceptibility-slope 2)
 (define susceptibility-max-receptors 20)
 ;;(define susceptibility-prob-factor 0.2)
 (define max-pop-size 100)
@@ -294,7 +294,7 @@
 	   ;; temporary solution for this...
 	   (when (not (eq? (host-species host)
 			   (host-species other-host)))
-		 (set! cross-species-infection-happened #t))
+		 (set! cross-species-infection-happened (list (host-id other-host) (host-id host))))
 	   #t) 
 	 infection))
    #f

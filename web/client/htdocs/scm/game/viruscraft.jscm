@@ -78,7 +78,7 @@
   (set! current-mode (update current-mode))
   (resize-glcanvas webgl-canvas)
   (resize-canvas canvas)
-  
+
   (cond
    ((eq? mode mode-loading) (loading-mode-render current-mode))
    ((eq? mode mode-title) (title-mode-render current-mode))

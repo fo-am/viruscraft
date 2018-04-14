@@ -39,10 +39,13 @@
 
 	(texture (load-texture 
 		  (cond 
-		   ((eq? (host-receptor host) 'circle) "host-circle3.png")
-		   ((eq? (host-receptor host) 'triangle) "host-triangle3.png")
-		   ((eq? (host-receptor host) 'square) "host-square3.png")
-		   (else "host-donut3.png"))))
+		   ((eq? (host-receptor host) 'circle) "host-circle4.png")
+		   ((eq? (host-receptor host) 'triangle) "host-triangle4.png")
+		   ((eq? (host-receptor host) 'square) "host-square4.png")
+		   ((eq? (host-receptor host) 'tee) "host-tee4.png")
+		   ((eq? (host-receptor host) 'angle) "host-angle4.png")
+		   ((eq? (host-receptor host) 'guitar) "host-guitar4.png")
+		   (else "host-donut4.png"))))
 	
 	(build-instance 
 	 (cond ((eq? (host-species host) 'sea) (list-ref host-blends 0))
@@ -84,7 +87,10 @@
     (cond
      (organism
       (organism-update! organism host)
-      organisms)
+
+      (if (host-alive? host)
+	  organisms
+	  (ordered-list-remove organisms (host-id host))))
      (else
       (ordered-list-insert organisms (make-organism world-units host))))))
 
