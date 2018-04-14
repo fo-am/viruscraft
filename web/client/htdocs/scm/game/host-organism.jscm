@@ -28,8 +28,6 @@
        (with-state
 	(shader-assign-compiled "host-organism")
 
-	(shader-set! "speed" "f" (+ 3 (* 3 (rndf))))
-
 	(translate pos)
 	(when (not (eq? (host-species host) 'sea)) 
 	      (translate (vector 0 0 0.2)))
@@ -57,12 +55,13 @@
 (define (organism-id c) (list-ref c 0))
 (define (organism-root c) (list-ref c 1))
 
-(define (organism-update! organism host)
+(define (organism-update! organism host time)
   (cond 
    ((host-alive? host)
     (with-primitive 
      (organism-root organism)
-     (shader-set! "time" "f" (time))
+     (shader-set! "time" "f" time)
+     (shader-set-local! "speed" "f" (+ 3 (/ (modulo (host-id host) 10) 2)))
      (translate (vector 0 -0.025 0))
      (rotate (vector 0 0 (if (zero? (modulo (host-id host) 2)) 1 -1)))
      (when (host-infected? host) 
@@ -71,23 +70,22 @@
     ;; remove the primitive as we have died
     (destroy (organism-root organism)))))
 
-(define (organisms-update organisms host world-units)
+(define (organisms-update organisms host world-units time)
   (cond
    ((null? organisms) 
     (make-organism world-units host))
    ((eq? (organism-id (car organisms)) (host-id host))
-    (organism-update! (car organisms) host)
+    (organism-update! (car organisms) host time)
     ;; no change
     (car organisms))
    (else
     (organisms-update (cdr organisms) host world-units))))
 
-(define (organisms-update-fast organisms host world-units)
+(define (organisms-update-fast organisms host world-units time)
   (let ((organism (ordered-list-search organisms (host-id host))))
     (cond
      (organism
-      (organism-update! organism host)
-
+      (organism-update! organism host time)
       (if (host-alive? host)
 	  organisms
 	  (ordered-list-remove organisms (host-id host))))
@@ -100,10 +98,10 @@
      (destroy (organism-root organism)))
    organisms))
 
-(define (update-organisms organisms population world-units)
+(define (update-organisms organisms population world-units time)
   (foldl  
    (lambda (host organisms)
-     (organisms-update-fast organisms host world-units))
+     (organisms-update-fast organisms host world-units time))
    organisms
    population))
 

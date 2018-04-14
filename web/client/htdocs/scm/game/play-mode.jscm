@@ -160,7 +160,7 @@
       (update-organisms 
        (play-mode-organisms g)
        (play-mode-population g)
-       (play-mode-world-units g))
+       (play-mode-world-units g) (time))
       0 (play-mode-hi-score g)
       (play-mode-world-units g)
       (play-mode-world-pos-checker g)))
@@ -175,7 +175,7 @@
       (update-organisms 
        (play-mode-organisms g)
        (play-mode-population g)
-       (play-mode-world-units g))
+       (play-mode-world-units g) (time))
       (+ (play-mode-score g) 1)
       (if (> (play-mode-score g) (play-mode-hi-score g))
 	  (play-mode-score g)
@@ -227,11 +227,13 @@
 	(let ((pos1 (organism-pos g highlight-id1))
 	      (pos2 (organism-pos g highlight-id2)))
 	  (set! ctx.strokeStyle "#ffff00")
-	  (set! ctx.lineWidth 5)
+	  (set! ctx.lineWidth 3)
 	  (when pos1 (draw-circle (vx pos1) (vy pos1) 35))
 	  (when pos2 (draw-circle (vx pos2) (vy pos2) 35))
 	  (when (and pos1 pos2)
 		(draw-line (vx pos1) (vy pos1) (vx pos2) (vy pos2)))
+	  (set! ctx.strokeStyle "#000000")
+	  (set! ctx.lineWidth 1)
 	  )))
 
 (define (play-mode-canvas-render g)
