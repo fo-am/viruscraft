@@ -97,7 +97,7 @@
 (define (apply-uniform-items! gl shader ui)
   (for-each 
    (lambda (u)
-     (internal-shader-set! 
+     (internal-uniform! 
       gl 
       shader
       (uniform-item-name u) 
@@ -111,11 +111,10 @@
    ((eq? (uniform-item-name (car l)) (uniform-item-name ui))
     (cons ui (cdr l)))
    (else
-    (cons (car l) (add-uniform-items ui (cdr l))))))
+    (cons (car l) (set-uniform-item ui (cdr l))))))
 
 ;; todo: add matrices
-(define (internal-shader-set! gl shader name type value)
-  (gl.useProgram shader) 
+(define (internal-uniform! gl shader name type value)
   (cond
    ((number? value)
     (if (eq? type "f")

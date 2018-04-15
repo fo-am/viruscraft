@@ -14,6 +14,7 @@
 (define max-host-health 50)
 (define host-normal-growth 1) 
 (define host-infection-growth -0.1) ; not (* sus)
+(define host-decline-growth -0.1)
 (define host-health-start 10)
 (define host-decline-age 1000)
 (define host-spawn-min-distance 0.05)
@@ -127,7 +128,7 @@
   (cond
    ;; old age
    ((> (host-age host) host-decline-age) 
-    (max min-host-health (- (host-health host) host-normal-growth)))
+    (max min-host-health (+ (host-health host) host-decline-growth)))
    ((host-infected? host) 
     (max min-host-health (+ (host-health host) host-infection-growth))) ;; susceptibility
    ((>= (host-health host) max-host-health) max-host-health)
@@ -252,6 +253,12 @@
   (display (host-health host))(display " ")(display (host-location host))
   (newline))
 
+(define (host-search id l)
+  (cond
+   ((null? l) #f)
+   ((eq? (host-id (car l)) id) (car l))
+   (else (host-search id (cdr l)))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; main population
 
@@ -332,11 +339,20 @@
 	 host))
    population))
 
+(define infect-one-id 0)
+
+(define (check-infect-highlight-id!)
+  (let ((r infect-one-id))
+    (set! infect-one-id #f)
+    r))
+
 (define (population-infect-one population virus)
   (define (_ pop)
     (cond
      ((null? pop) '())
-     ((host-susceptible? (car pop) virus) 
+     ((host-susceptible? (car pop) virus)
+      (set! infect-one-id (host-id (car pop))) 
+      (msg infect-one-id)
       (cons (host-infect (car pop)) (cdr pop)))
      (else (cons (car pop) (_ (cdr pop))))))
   (_ population))

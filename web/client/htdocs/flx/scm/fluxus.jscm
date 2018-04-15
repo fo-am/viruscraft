@@ -180,25 +180,26 @@
 	    state
 	    (build-shader (renderer-gl the-renderer) names vert frag))))))
 
-;; setting uniforms - globally across all shared shader programs
-(define (shader-set! name type value)
+;; setting uniforms - this one sets the unform for this shader program
+;; affecting all primitives using it
+(define (shader-shared-uniform! name type value)
   (set! the-renderer 
 	(renderer-modify-current-state
 	 the-renderer
            (lambda (state)
 	     (let ((gl (renderer-gl the-renderer))
 		   (shader (state-shader state)))
-	       (internal-shader-set! gl shader name type value)
+	       (gl.useProgram shader) 
+	       (internal-uniform! gl shader name type value)
 	       state)))))
 
-;; setting uniforms - locally to this state only
-(define (shader-set-local! name type value)
+;; setting uniforms - locally to this primitive state only
+(define (shader-uniform! name type value)
   (set! the-renderer 
 	(renderer-modify-current-state
 	 the-renderer
            (lambda (state)
-	     (let ((gl (renderer-gl the-renderer))
-		   (shader (state-shader state)))
+	     (let ((gl (renderer-gl the-renderer)))
 	       (state-modify-uniform-items
 		state (set-uniform-item
 		       (make-uniform-item name type value)
