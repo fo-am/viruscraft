@@ -34,7 +34,7 @@
 (define world-units #f)
 (define current-mode (init-loading-mode))
 
-(define (update current-mode)
+(define (update current-mode)  
   (cond
    ((eq? mode mode-loading) 
     (cond 
