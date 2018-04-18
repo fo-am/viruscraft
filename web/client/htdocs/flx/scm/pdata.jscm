@@ -155,6 +155,9 @@
     (gl.useProgram shader)
     (gl.bindBuffer gl.ARRAY_BUFFER (pdata-vbo pdata))
 
+    ;; set uniforms
+    (apply-uniform-items! gl shader (state-uniform-items state))
+    
     ;; 12 bytes for 3 floats...
     (define total-bytes (* (length (pdata-names pdata)) 12))
 

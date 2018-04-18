@@ -115,9 +115,14 @@ int main(void) {
       }
 
       _delay_ms(250);
+
       i2cbuffer[bufferpos++]=read_a();
       i2cbuffer[bufferpos++]=read_b();
       i2cbuffer[bufferpos++]=read_c();
+
+      //i2cbuffer[bufferpos++]=
+      //	filter_receptors(read_a(),read_b(),read_c());
+
       _delay_ms(250);
     }
 

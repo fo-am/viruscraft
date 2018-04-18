@@ -88,9 +88,33 @@
 
       shader-program)))
 
+;; should presumably replace this stuff with uniform buffer objects?
+(define (make-uniform-item name type value) (list name type value))
+(define (uniform-item-name u) (list-ref u 0))
+(define (uniform-item-type u) (list-ref u 1))
+(define (uniform-item-value u) (list-ref u 2))
+
+(define (apply-uniform-items! gl shader ui)
+  (for-each 
+   (lambda (u)
+     (internal-uniform! 
+      gl 
+      shader
+      (uniform-item-name u) 
+      (uniform-item-type u)
+      (uniform-item-value u)))
+   ui))
+
+(define (set-uniform-item ui l)
+  (cond
+   ((null? l) (list ui))
+   ((eq? (uniform-item-name (car l)) (uniform-item-name ui))
+    (cons ui (cdr l)))
+   (else
+    (cons (car l) (set-uniform-item ui (cdr l))))))
+
 ;; todo: add matrices
-(define (internal-shader-set! gl shader name type value)
-  (gl.useProgram shader) 
+(define (internal-uniform! gl shader name type value)
   (cond
    ((number? value)
     (if (eq? type "f")

@@ -222,7 +222,7 @@
 	  (cond
 	   ((or (eq? species-type 'land2) (eq? species-type 'land))
 	    (cond
-	     ((eq? (unit-face-code unit) "111") (land-111? bary 0.3))
+	     ((eq? (unit-face-code unit) "111") #t)
 	     ((eq? (unit-face-code unit) "100") (land-100? bary 0.3))
 	     ((eq? (unit-face-code unit) "010") (land-010? bary 0.3))
 	     ((eq? (unit-face-code unit) "001") (land-001? bary 0.3))

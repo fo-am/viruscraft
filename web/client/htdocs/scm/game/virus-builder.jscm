@@ -46,6 +46,10 @@
 (define receptor-triangle #f)
 (define receptor-square #f)
 (define receptor-donut #f)
+(define receptor-angle #f)
+(define receptor-tee #f)
+(define receptor-guitar #f)
+(define receptor-clear #f)
 
 (define receptor-ids (build-list 20 (lambda (i) 0)))
 (define cur-receptor-types (build-list 20 (lambda (i) #f)))
@@ -67,8 +71,8 @@
 	  (parent virus-builder)
 	  (concat (minverse (q->m (list-ref receptor-rotations 
 					    (list-ref faceid->rotation virus-recep-id)))))
-	  (translate (vector 0 0.8 0))
-	  (scale (vector 0.3 0.3 0.3))
+	  (translate (vector 0 1.1 0))
+	  (scale (vector 0.1 0.1 0.1))
 	  (colour receptor-col)
 	  (build-instance instance)))))
 
@@ -87,6 +91,9 @@
 (define (attach-virus-triangle) (attach-virus receptor-triangle 'triangle) (update-virus))
 (define (attach-virus-square) (attach-virus receptor-square 'square) (update-virus))
 (define (attach-virus-donut) (attach-virus receptor-donut 'donut) (update-virus))
+(define (attach-virus-tee) (attach-virus receptor-tee 'tee) (update-virus))
+(define (attach-virus-angle) (attach-virus receptor-angle 'angle) (update-virus))
+(define (attach-virus-guitar) (attach-virus receptor-guitar 'guitar) (update-virus))
 
 (define (attach-virus-clear)
   (when (not (zero? (list-ref receptor-ids virus-recep-id)))
@@ -109,24 +116,24 @@
 
 (define button-objs (list
 		     "models/receptor-triangle.obj"
-		     "models/receptor-triangle.obj"
 		     "models/receptor-circle.obj"
-		     "models/receptor-circle.obj"
-		     "models/receptor-square.obj"
 		     "models/receptor-square.obj"
 		     "models/receptor-donut.obj"
-		     "models/receptor-donut.obj"))
+		     "models/receptor-tee.obj"
+		     "models/receptor-angle.obj"
+		     "models/receptor-clear.obj"
+		     "models/receptor-guitar.obj"))
 
 (define button-fns 
   (list 
    (lambda () (attach-virus-triangle))
-   (lambda () (attach-virus-donut))
-   (lambda () (attach-virus-clear))
    (lambda () (attach-virus-circle))
-   (lambda () (attach-virus-donut))
    (lambda () (attach-virus-square))
    (lambda () (attach-virus-donut))
-   (lambda () (attach-virus-donut))))
+   (lambda () (attach-virus-tee))
+   (lambda () (attach-virus-angle))
+   (lambda () (attach-virus-clear))
+   (lambda () (attach-virus-guitar))))
 
 (define (make-button prim fn) (list prim fn))
 (define (button-prim b) (list-ref b 0))
@@ -213,6 +220,10 @@
   (set! receptor-triangle (with-state (hide #t) (load-primitive "models/receptor-triangle.obj")))
   (set! receptor-square (with-state (hide #t) (load-primitive "models/receptor-square.obj")))
   (set! receptor-donut (with-state (hide #t) (load-primitive "models/receptor-donut.obj")))
+  (set! receptor-tee (with-state (hide #t) (load-primitive "models/receptor-tee.obj")))
+  (set! receptor-angle (with-state (hide #t) (load-primitive "models/receptor-angle.obj")))
+  (set! receptor-guitar (with-state (hide #t) (load-primitive "models/receptor-guitar.obj")))
+  (set! receptor-clear (with-state (hide #t) (load-primitive "models/receptor-clear.obj")))
 
   (set! buttons 
 	(build-list
@@ -224,10 +235,10 @@
 	     (translate builder-pos)
 	     (translate (vmul (vector (cos (* (/ i num-buttons) Math.PI 2))
 				      (sin (* (/ i num-buttons) Math.PI 2))
-				      0) 4))
-	     (translate (vector 0 -0.7 0))
-	     (scale (vector 0.5 0.5 0.5))
-	     (rotate (vector 0 90 0))
+				      0) 4.5))
+	     ;;(translate (vector 0 -0.7 0))
+	     (scale (vector 0.25 0.25 0.25))
+	     ;;(rotate (vector 0 90 0))
 	     (colour receptor-col)
 	     (load-primitive (list-ref button-objs i)))
 	    (list-ref button-fns i)))))

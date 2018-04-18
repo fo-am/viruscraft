@@ -28,3 +28,10 @@
 	 (else
 	  (_ mid end)))))))
   (_ 0 (length l)))
+
+;; can't think of a way to speed this up right now... :/
+(define (ordered-list-remove l id)
+  (cond
+   ((null? l) '())
+   ((eq? (car (car l)) id) (cdr l))
+   (else (cons (car l) (ordered-list-remove (cdr l) id)))))

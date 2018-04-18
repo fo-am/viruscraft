@@ -124,10 +124,15 @@
 (define (play-mode-update g)
   (virus-builder-update-buttons buttons)
 
+
   (when (> tangible-timer 50)
 	(set! tangible-timer 0)
 	(load-receptor-tangible))
   (set! tangible-timer (+ tangible-timer 1))
+
+;;  (when (eq? highlight-time 0)
+;;	(highlight-host! (choose (play-mode-population g))))
+
   
   ;; keep track of deaths
   (set! current-deaths
@@ -159,11 +164,16 @@
 	      (fire-popup! "good" (list "New highest age!"))
 	      (set! notified-high-age #t)))
 
-  (when (check-cross-species-infection!)
-	(set! current-jumps (+ current-jumps 1))
-	(when (< highest-jumps current-jumps)
-	      (set! highest-jumps current-jumps))
-	(fire-popup! "good" (list "Cross-species infection!")))
+  (let ((infect (check-infect-highlight-id!)))
+    (when infect (highlight-infect! infect)))
+
+  (let ((cross (check-cross-species-infection!)))
+    (when cross
+	  (set! current-jumps (+ current-jumps 1))
+	  (when (< highest-jumps current-jumps)
+		(set! highest-jumps current-jumps))
+	  (highlight-cross! cross)
+	  (fire-popup! "good" (list "Cross-species infection!"))))
 
   (image-button-update 
    back-button
@@ -190,7 +200,7 @@
       (update-organisms 
        (play-mode-organisms g)
        (play-mode-population g)
-       (play-mode-world-units g))
+       (play-mode-world-units g) (time))
       0 (play-mode-hi-score g)
       (play-mode-world-units g)
       (play-mode-world-pos-checker g)))
@@ -205,7 +215,7 @@
       (update-organisms 
        (play-mode-organisms g)
        (play-mode-population g)
-       (play-mode-world-units g))
+       (play-mode-world-units g) (time))
       (+ (play-mode-score g) 1)
       (if (> (play-mode-score g) (play-mode-hi-score g))
 	  (play-mode-score g)
@@ -230,18 +240,71 @@
      (scale (vector s s s)))
    (concat (q->m world-q))))
 
+(define highlight-time 0)
+(define highlight-id1 #f)
+(define highlight-id2 #f)
 
-(define (play-mode-render-host-info! g)
-  (let ((host (car (play-mode-population g))))
-    (let ((organism (ordered-list-search (play-mode-organisms g)
-					 (host-id host))))
-      (let ((p (primitive-global-screen-pos (organism-root organism))))
-	(ctx.stroke)
-	(ctx.beginPath)
-	(ctx.moveTo (vx p) (vy p))
-	(ctx.arc (vx p) (vy p) 35 0 (* Math.PI 2))
-	(ctx.closePath)
-	(ctx.stroke)))))
+(define (highlight-cross! host-id)
+  (set! highlight-time 1000)
+  (set! highlight-id1 (list-ref host-id 0))
+  (set! highlight-id2 (list-ref host-id 1)))
+
+(define (organism-pos g id)
+  (let ((organism 
+	 (ordered-list-search (play-mode-organisms g) id)))
+    (if organism
+	(primitive-global-screen-pos 
+	 (organism-root organism))
+	#f)))
+
+(define (render-highlight! g)
+  (when (> highlight-time 0)
+	(set! highlight-time (- highlight-time 1))
+	(let ((pos1 (organism-pos g highlight-id1))
+	      (pos2 (organism-pos g highlight-id2)))
+	  (set! ctx.strokeStyle "#ff0000")
+	  (set! ctx.lineWidth 3)
+	  (set! ctx.globalAlpha 0.6)
+	  (when pos1 (draw-circle (vx pos1) (vy pos1) 35))
+	  (when pos2 (draw-circle (vx pos2) (vy pos2) 35))
+	  (when (and pos1 pos2)
+		(draw-line (vx pos1) (vy pos1) (vx pos2) (vy pos2)))
+	  (set! ctx.strokeStyle "#000000")
+	  (set! ctx.lineWidth 1)
+	  (set! ctx.globalAlpha 1)
+	  )))
+
+(define infect-highlight-time 0)
+(define infect-highlight-id 0)
+
+(define (highlight-infect! host-id)
+  (set! infect-highlight-time 1000)
+  (set! infect-highlight-id host-id))
+
+(define (render-infect-highlight! g)
+  (when (> infect-highlight-time 0)
+	(set! infect-highlight-time (- infect-highlight-time 1))
+	(let ((pos (organism-pos g infect-highlight-id)))
+	  (set! ctx.strokeStyle "#ff0000")
+	  (set! ctx.lineWidth 3)
+	  (set! ctx.globalAlpha 0.6)
+	  (when pos (draw-circle (vx pos) (vy pos) 35))
+	  (set! ctx.strokeStyle "#000000")
+	  (set! ctx.lineWidth 1)
+	  (set! ctx.globalAlpha 1)
+	  )))
+
+(define host-info-id 0)
+
+(define (render-info! g)
+  (let ((pos (organism-pos g host-info-id))
+	(host (host-search host-info-id (play-mode-population g))))    
+    (if (not pos)
+	(set! host-info-id (host-id (choose (play-mode-population g))))
+	(ctx.fillText 
+	 (+ "" host-info-id ": " (host-health host)) 
+	 (vx pos)
+	 (vy pos)))))
 
 (define (play-mode-canvas-render g)
   (textbox-render! title-text)
@@ -291,7 +354,8 @@
   (ctx.fillText "million years" (list-ref x 2) y)
 
   (render-popups!)
-
-;;  (play-mode-render-host-info! g)
+  (render-highlight! g)
+  (render-infect-highlight! g)
+  ;;(render-info! g)
   )
 
