@@ -204,7 +204,7 @@
 			     (make-textbox
 			      x y 
 			      (if (eq? type "bad") 
-				  "50pt Dosis" 
+				  "30pt Dosis" 
 				  "20pt Dosis") 
 			      30 "centre" 
 			      text-list)
@@ -215,12 +215,12 @@
 (define (render-popup! p)
   (let ((tb (popup-textbox p)))
     (let ((x (if (eq? (popup-type p) "bad")
-		 (- (/ screen-width 2) 300) 150)) 
-	  (y (- (textbox-y tb) (if (eq? (popup-type p) "bad") 100 50)))
-	  (w (if (eq? (popup-type p) "bad") 600 300)) 
-	  (h (if (eq? (popup-type p) "bad") 200 100)))
+		 (- (/ screen-width 2) 200) 150)) 
+	  (y (- (textbox-y tb) (if (eq? (popup-type p) "bad") 50 50)))
+	  (w (if (eq? (popup-type p) "bad") 400 300)) 
+	  (h (if (eq? (popup-type p) "bad") 100 100)))
       (let ((grd (ctx.createLinearGradient x y (+ x w) (+ y h))))
-	(set! ctx.globalAlpha 0.9)
+	(set! ctx.globalAlpha 0.5)
 	(if (eq? (popup-type p) "bad")
 	    (grd.addColorStop 0 "#a93535")
 	    (grd.addColorStop 0 "#359935"))

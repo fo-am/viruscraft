@@ -192,7 +192,7 @@
    (identity)
    (translate builder-pos) 
    ;;(rotate (vector 80 0 -25))
-   (scale (vector 2 2 2))
+   (scale (vector 1.7 1.7 1.7))
    (concat (q->m virus-q)))
 
   (with-primitive 

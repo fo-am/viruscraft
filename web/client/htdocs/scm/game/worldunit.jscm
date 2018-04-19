@@ -21,31 +21,35 @@
 (define unit-models #f)
 
 (define (unit->model unit models)
-  (list-ref
-   models
-   (cond
-    ((eq? unit "000") 0)
-    ((eq? unit "010") 1)
-    ((eq? unit "001") 2)
-    ((eq? unit "011") 3)
-    ((eq? unit "100") 4)
-    ((eq? unit "110") 5)
-    ((eq? unit "101") 6)
-    (else 7))))
+  (choose
+   (list-ref
+    models
+    (cond
+     ((eq? unit "000") 0)
+     ((eq? unit "010") 1)
+     ((eq? unit "001") 2)
+     ((eq? unit "011") 3)
+     ((eq? unit "100") 4)
+     ((eq? unit "110") 5)
+     ((eq? unit "101") 6)
+     (else 7)))))
 
 (define pentakis #f)
 
 (define (worldunit-load-models)
   (set! unit-models 
 	(with-state (hide #t) 
-		    (list (load-ply-primitive (string-append "models/world-unit-" world-type "-000.ply"))
-			  (load-ply-primitive (string-append "models/world-unit-" world-type "-001.ply"))
-			  (load-ply-primitive (string-append "models/world-unit-" world-type "-010.ply"))
-			  (load-ply-primitive (string-append "models/world-unit-" world-type "-011.ply"))
-			  (load-ply-primitive (string-append "models/world-unit-" world-type "-100.ply"))
-			  (load-ply-primitive (string-append "models/world-unit-" world-type "-101.ply"))
-			  (load-ply-primitive (string-append "models/world-unit-" world-type "-110.ply"))
-			  (load-ply-primitive (string-append "models/world-unit-" world-type "-111.ply")))))
+		    (list 
+		     (list (load-ply-primitive (string-append "models/world-unit-" world-type "-000.ply")))
+		     (list (load-ply-primitive (string-append "models/world-unit-" world-type "-001-1.ply")))
+		     (list (load-ply-primitive (string-append "models/world-unit-" world-type "-010.ply")))
+		     (list (load-ply-primitive (string-append "models/world-unit-" world-type "-011.ply")))
+		     (list (load-ply-primitive (string-append "models/world-unit-" world-type "-100.ply")))
+		     (list (load-ply-primitive (string-append "models/world-unit-" world-type "-101.ply")))
+		     (list (load-ply-primitive (string-append "models/world-unit-" world-type "-110.ply")))
+		     (list (load-ply-primitive (string-append "models/world-unit-" world-type "-111-1.ply"))
+			   (load-ply-primitive (string-append "models/world-unit-" world-type "-111-2.ply"))
+			   (load-ply-primitive (string-append "models/world-unit-" world-type "-111-3.ply"))))))
   (set! pentakis 
 	(with-state
 	 (hide #t)
