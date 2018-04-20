@@ -50,10 +50,18 @@
   (cond
    ((eq? code 0)
     (attach-virus-donut))
+   ((eq? code 1)
+    (attach-virus-triangle))
    ((eq? code 2)
     (attach-virus-circle))
    ((eq? code 3)
     (attach-virus-square))
+   ((eq? code 4)
+    (attach-virus-angle))
+   ((eq? code 5)
+    (attach-virus-guitar))
+   ((eq? code 6)
+    (attach-virus-tee))
    (else
     (attach-virus-clear))))
 
