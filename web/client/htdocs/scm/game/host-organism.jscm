@@ -10,7 +10,7 @@
 (define (host-organism-load-models)
   (set! host-blends 
 	(list
-	 (blendshape (list "models/host-sea-1.ply" "models/host-sea-2.ply"))
+	 (blendshape (list "models/host-sea-2-1.ply" "models/host-sea-3-1.ply"))
 	 (blendshape (list "models/host-land-1.ply" "models/host-land-2.ply"))
 	 (blendshape (list "models/host-land2-1.ply" "models/host-land2-2.ply"))
 	 ;;   (blendshape (list "models/host-air-1.ply" "models/host-air-2.ply"))

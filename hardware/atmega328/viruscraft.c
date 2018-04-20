@@ -25,7 +25,7 @@ unsigned char receptor_none     = 99;
 
 unsigned char num_receptors=7;
 
-unsigned char thresh[] = {1,2,2,3,2,2,2,99};
+unsigned char thresh[] = {1,2,2,2,2,2,2,99};
 
 unsigned char filter_receptors(unsigned char a, unsigned char b, unsigned char c) {
   if (a==b==c) return a;
@@ -105,23 +105,32 @@ int main(void) {
     count++;
 
     unsigned int bufferpos=1;
-    for (unsigned char addr=0; addr<2; addr++) {
+    for (unsigned char addr=0; addr<3; addr++) {
       //set_addr(addr);
 
-      if (addr==0) {
-	PORTB|=_BV(PB1);
-      } else {
+      switch(addr) {
+      case 0: 
 	PORTB&=~_BV(PB1);
+	PORTB&=~_BV(PB3);
+	break;
+      case 1:
+	PORTB|=_BV(PB1); 
+	PORTB&=~_BV(PB3);
+	break;
+      case 2:
+	PORTB&=~_BV(PB1);
+	PORTB|=_BV(PB3); 
+	break;
       }
 
       _delay_ms(250);
 
-      i2cbuffer[bufferpos++]=read_a();
-      i2cbuffer[bufferpos++]=read_b();
-      i2cbuffer[bufferpos++]=read_c();
+      //i2cbuffer[bufferpos++]=read_a();
+      //i2cbuffer[bufferpos++]=read_b();
+      //i2cbuffer[bufferpos++]=read_c();
 
-      //i2cbuffer[bufferpos++]=
-      //	filter_receptors(read_a(),read_b(),read_c());
+      i2cbuffer[bufferpos++]=
+      	filter_receptors(read_a(),read_b(),read_c());
 
       _delay_ms(250);
     }
