@@ -44,6 +44,44 @@
 (define notified-high-age #f)
 (define notified-jumps #f)
 
+(define tangible-timer 0)
+
+(define (attach-from-code code)
+  (cond
+   ((eq? code 0)
+    (attach-virus-donut))
+   ((eq? code 1)
+    (attach-virus-triangle))
+   ((eq? code 2)
+    (attach-virus-circle))
+   ((eq? code 3)
+    (attach-virus-square))
+   ((eq? code 4)
+    (attach-virus-angle))
+   ((eq? code 5)
+    (attach-virus-guitar))
+   ((eq? code 6)
+    (attach-virus-tee))
+   (else
+    (attach-virus-clear))))
+
+(define (load-receptor-tangible)
+  (let ((xmlHttp (js "new XMLHttpRequest")))
+    (xmlHttp.addEventListener
+     "load"
+     (lambda ()
+       (let ((r (xmlHttp.responseText.split " ")))
+	 (msg r)
+	 (set! virus-recep-id 0)
+	 (attach-from-code (list-ref r 0))
+	 (set! virus-recep-id 1)
+	 (attach-from-code (list-ref r 1))
+	 (set! virus-recep-id 2)
+	 (attach-from-code (list-ref r 2)))))
+    (xmlHttp.open "GET" "receptors.txt")
+    (xmlHttp.overrideMimeType "script")
+    (xmlHttp.send)))
+
 (define (reset-scores)
   (set! current-infections 0)
   (set! current-deaths 0)
@@ -94,8 +132,15 @@
 (define (play-mode-update g)
   (virus-builder-update-buttons buttons)
 
+
+  (when (> tangible-timer 50)
+	(set! tangible-timer 0)
+	(load-receptor-tangible))
+  (set! tangible-timer (+ tangible-timer 1))
+
 ;;  (when (eq? highlight-time 0)
 ;;	(highlight-host! (choose (play-mode-population g))))
+
   
   ;; keep track of deaths
   (set! current-deaths
