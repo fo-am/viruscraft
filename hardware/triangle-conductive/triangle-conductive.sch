@@ -1,0 +1,276 @@
+EESchema Schematic File Version 2
+LIBS:power
+LIBS:device
+LIBS:switches
+LIBS:relays
+LIBS:motors
+LIBS:transistors
+LIBS:conn
+LIBS:linear
+LIBS:regul
+LIBS:74xx
+LIBS:cmos4000
+LIBS:adc-dac
+LIBS:memory
+LIBS:xilinx
+LIBS:microcontrollers
+LIBS:dsp
+LIBS:microchip
+LIBS:analog_switches
+LIBS:motorola
+LIBS:texas
+LIBS:intel
+LIBS:audio
+LIBS:interface
+LIBS:digital-audio
+LIBS:philips
+LIBS:display
+LIBS:cypress
+LIBS:siliconi
+LIBS:opto
+LIBS:atmel
+LIBS:contrib
+LIBS:valves
+EELAYER 25 0
+EELAYER END
+$Descr A4 11693 8268
+encoding utf-8
+Sheet 1 1
+Title ""
+Date ""
+Rev ""
+Comp ""
+Comment1 ""
+Comment2 ""
+Comment3 ""
+Comment4 ""
+$EndDescr
+$Comp
+L SW_DIP_x03 SW?
+U 1 1 5B0E7B69
+P 5350 2100
+F 0 "SW?" H 5350 2450 50  0000 C CNN
+F 1 "SW_DIP_x03" H 5350 1950 50  0000 C CNN
+F 2 "" H 5350 2100 50  0001 C CNN
+F 3 "" H 5350 2100 50  0001 C CNN
+	1    5350 2100
+	1    0    0    -1  
+$EndComp
+Connection ~ 5650 2000
+Connection ~ 5650 2100
+$Comp
+L D D?
+U 1 1 5B0E7C4B
+P 4900 1850
+F 0 "D?" H 4900 1950 50  0000 C CNN
+F 1 "D" H 4900 1750 50  0000 C CNN
+F 2 "" H 4900 1850 50  0001 C CNN
+F 3 "" H 4900 1850 50  0001 C CNN
+	1    4900 1850
+	-1   0    0    1   
+$EndComp
+$Comp
+L D D?
+U 1 1 5B0E7C96
+P 4900 2000
+F 0 "D?" H 4900 2100 50  0000 C CNN
+F 1 "D" V 4900 1900 50  0000 C CNN
+F 2 "" H 4900 2000 50  0001 C CNN
+F 3 "" H 4900 2000 50  0001 C CNN
+	1    4900 2000
+	-1   0    0    1   
+$EndComp
+$Comp
+L D D?
+U 1 1 5B0E7D04
+P 4900 2150
+F 0 "D?" H 4900 2250 50  0000 C CNN
+F 1 "D" H 4900 2050 50  0000 C CNN
+F 2 "" H 4900 2150 50  0001 C CNN
+F 3 "" H 4900 2150 50  0001 C CNN
+	1    4900 2150
+	-1   0    0    1   
+$EndComp
+Wire Wire Line
+	5050 1850 5050 1900
+Wire Wire Line
+	5050 2100 5050 2150
+Wire Wire Line
+	4750 2000 4550 2000
+Wire Wire Line
+	4550 2100 4750 2100
+Wire Wire Line
+	4750 2100 4750 2150
+$Comp
+L Conn_01x03 J?
+U 1 1 5B0E8074
+P 4350 2000
+F 0 "J?" H 4350 2200 50  0000 C CNN
+F 1 "Conn_01x03" H 4350 1800 50  0000 C CNN
+F 2 "" H 4350 2000 50  0001 C CNN
+F 3 "" H 4350 2000 50  0001 C CNN
+	1    4350 2000
+	-1   0    0    1   
+$EndComp
+Wire Wire Line
+	4550 1900 4750 1900
+Wire Wire Line
+	4750 1900 4750 1850
+$Comp
+L SW_DIP_x03 SW?
+U 1 1 5B0E8C00
+P 5350 2800
+F 0 "SW?" H 5350 3150 50  0000 C CNN
+F 1 "SW_DIP_x03" H 5350 2650 50  0000 C CNN
+F 2 "" H 5350 2800 50  0001 C CNN
+F 3 "" H 5350 2800 50  0001 C CNN
+	1    5350 2800
+	1    0    0    -1  
+$EndComp
+Connection ~ 5650 2700
+Connection ~ 5650 2800
+$Comp
+L D D?
+U 1 1 5B0E8C0F
+P 4900 2550
+F 0 "D?" H 4900 2650 50  0000 C CNN
+F 1 "D" H 4900 2450 50  0000 C CNN
+F 2 "" H 4900 2550 50  0001 C CNN
+F 3 "" H 4900 2550 50  0001 C CNN
+	1    4900 2550
+	-1   0    0    1   
+$EndComp
+$Comp
+L D D?
+U 1 1 5B0E8C15
+P 4900 2700
+F 0 "D?" H 4900 2800 50  0000 C CNN
+F 1 "D" V 4900 2600 50  0000 C CNN
+F 2 "" H 4900 2700 50  0001 C CNN
+F 3 "" H 4900 2700 50  0001 C CNN
+	1    4900 2700
+	-1   0    0    1   
+$EndComp
+$Comp
+L D D?
+U 1 1 5B0E8C1B
+P 4900 2850
+F 0 "D?" H 4900 2950 50  0000 C CNN
+F 1 "D" H 4900 2750 50  0000 C CNN
+F 2 "" H 4900 2850 50  0001 C CNN
+F 3 "" H 4900 2850 50  0001 C CNN
+	1    4900 2850
+	-1   0    0    1   
+$EndComp
+Wire Wire Line
+	5050 2550 5050 2600
+Wire Wire Line
+	5050 2800 5050 2850
+Wire Wire Line
+	4750 2700 4550 2700
+Wire Wire Line
+	4550 2800 4750 2800
+Wire Wire Line
+	4750 2800 4750 2850
+$Comp
+L Conn_01x03 J?
+U 1 1 5B0E8C26
+P 4350 2700
+F 0 "J?" H 4350 2900 50  0000 C CNN
+F 1 "Conn_01x03" H 4350 2500 50  0000 C CNN
+F 2 "" H 4350 2700 50  0001 C CNN
+F 3 "" H 4350 2700 50  0001 C CNN
+	1    4350 2700
+	-1   0    0    1   
+$EndComp
+Wire Wire Line
+	4550 2600 4750 2600
+Wire Wire Line
+	4750 2600 4750 2550
+$Comp
+L SW_DIP_x03 SW?
+U 1 1 5B0E8D11
+P 5350 3500
+F 0 "SW?" H 5350 3850 50  0000 C CNN
+F 1 "SW_DIP_x03" H 5350 3350 50  0000 C CNN
+F 2 "" H 5350 3500 50  0001 C CNN
+F 3 "" H 5350 3500 50  0001 C CNN
+	1    5350 3500
+	1    0    0    -1  
+$EndComp
+$Comp
+L Earth #PWR?
+U 1 1 5B0E8D17
+P 5650 3700
+F 0 "#PWR?" H 5650 3450 50  0001 C CNN
+F 1 "Earth" H 5650 3550 50  0001 C CNN
+F 2 "" H 5650 3700 50  0001 C CNN
+F 3 "" H 5650 3700 50  0001 C CNN
+	1    5650 3700
+	1    0    0    -1  
+$EndComp
+Connection ~ 5650 3400
+Connection ~ 5650 3500
+$Comp
+L D D?
+U 1 1 5B0E8D20
+P 4900 3250
+F 0 "D?" H 4900 3350 50  0000 C CNN
+F 1 "D" H 4900 3150 50  0000 C CNN
+F 2 "" H 4900 3250 50  0001 C CNN
+F 3 "" H 4900 3250 50  0001 C CNN
+	1    4900 3250
+	-1   0    0    1   
+$EndComp
+$Comp
+L D D?
+U 1 1 5B0E8D26
+P 4900 3400
+F 0 "D?" H 4900 3500 50  0000 C CNN
+F 1 "D" V 4900 3300 50  0000 C CNN
+F 2 "" H 4900 3400 50  0001 C CNN
+F 3 "" H 4900 3400 50  0001 C CNN
+	1    4900 3400
+	-1   0    0    1   
+$EndComp
+$Comp
+L D D?
+U 1 1 5B0E8D2C
+P 4900 3550
+F 0 "D?" H 4900 3650 50  0000 C CNN
+F 1 "D" H 4900 3450 50  0000 C CNN
+F 2 "" H 4900 3550 50  0001 C CNN
+F 3 "" H 4900 3550 50  0001 C CNN
+	1    4900 3550
+	-1   0    0    1   
+$EndComp
+Wire Wire Line
+	5050 3250 5050 3300
+Wire Wire Line
+	5050 3500 5050 3550
+Wire Wire Line
+	4750 3400 4550 3400
+Wire Wire Line
+	4550 3500 4750 3500
+Wire Wire Line
+	4750 3500 4750 3550
+$Comp
+L Conn_01x03 J?
+U 1 1 5B0E8D37
+P 4350 3400
+F 0 "J?" H 4350 3600 50  0000 C CNN
+F 1 "Conn_01x03" H 4350 3200 50  0000 C CNN
+F 2 "" H 4350 3400 50  0001 C CNN
+F 3 "" H 4350 3400 50  0001 C CNN
+	1    4350 3400
+	-1   0    0    1   
+$EndComp
+Wire Wire Line
+	4550 3300 4750 3300
+Wire Wire Line
+	4750 3300 4750 3250
+Connection ~ 5650 3300
+Connection ~ 5650 2600
+Wire Wire Line
+	5650 1900 5650 3700
+$EndSCHEMATC

@@ -112,7 +112,7 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define num-buttons 8)
+(define num-buttons 6)
 
 (define button-objs (list
 		     "models/receptor-triangle.obj"
@@ -120,9 +120,10 @@
 		     "models/receptor-square.obj"
 		     "models/receptor-donut.obj"
 		     "models/receptor-tee.obj"
-		     "models/receptor-angle.obj"
+		     ;;"models/receptor-angle.obj"
 		     "models/receptor-clear.obj"
-		     "models/receptor-guitar.obj"))
+		     ;;"models/receptor-guitar.obj"
+		     ))
 
 (define button-fns 
   (list 

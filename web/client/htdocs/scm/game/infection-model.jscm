@@ -4,7 +4,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; the main infection and population model
 
-(define receptor-types (list 'circle 'triangle 'square 'donut 'tee 'angle 'guitar))
+(define receptor-types (list 'circle 'triangle 'square 'donut 'tee))
 (define host-species-types (list 'sea 'land 'land2))
 
 (define size-conv 0.003)

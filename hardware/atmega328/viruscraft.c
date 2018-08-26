@@ -38,7 +38,7 @@ unsigned char filter_receptors(unsigned char a, unsigned char b, unsigned char c
 }
 
 // address registers
-//            PB1 PB3 PB5 PB2
+//            PB1 PB3 PB5 PC2
 //         00 01 02 03 04 05 06 07
 // PORT B: xx AA xx BB xx CC xx xx
 // PORT C: xx xx DD xx xx xx xx xx
