@@ -19,7 +19,7 @@ const int triples[] = {
 };
 
 const int absent_thresh = 700; // not used
-const int black_thresh = 100;
+const int black_thresh = 200;
 
 unsigned char receptor_donut    = 0x0; // 000
 unsigned char receptor_triangle = 0x1; // 001
