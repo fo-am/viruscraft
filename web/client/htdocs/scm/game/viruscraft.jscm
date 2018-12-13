@@ -17,13 +17,16 @@
 (load "scm/game/title-mode.jscm")
 (load "scm/game/world-design-mode.jscm")
 (load "scm/game/play-mode.jscm")
+(load "scm/game/exhib-mode.jscm")
 
 (define mode-loading 0)
 (define mode-title 1)
 (define mode-world-design 2)
 (define mode-play 3)
+(define mode-exhib 4)
 
 (define mode mode-loading)
+(define exhib-version #t)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -55,11 +58,14 @@
    ((eq? mode mode-world-design) 
     (cond 
      ((eq? (world-design-mode-ready current-mode) "next")
-      (msg "next")
-      (set! mode mode-play)
-      (init-play-mode))
+      (cond 
+       (exhib-version
+	(set! mode mode-exhib)
+	(init-exhib-mode))
+       (else
+	(set! mode mode-play)
+	(init-play-mode))))
      ((eq? (world-design-mode-ready current-mode) "back")
-      (msg "back")
       (destroy world-root)
       (set! world-units #f)
       (set! mode mode-title)
@@ -72,7 +78,9 @@
       (set! mode mode-world-design)
       (init-world-design-mode))
      (else
-      (play-mode-update current-mode))))))
+      (if exhib-version
+	  (exhib-mode-update current-mode)
+	  (play-mode-update current-mode)))))))
 
 (define (render)
   (set! current-mode (update current-mode))
@@ -83,6 +91,7 @@
    ((eq? mode mode-loading) (loading-mode-render current-mode))
    ((eq? mode mode-title) (title-mode-render current-mode))
    ((eq? mode mode-world-design) (world-design-mode-render current-mode))
+   ((eq? mode mode-exhib) (exhib-mode-render current-mode))
    (else (play-mode-render current-mode)))  
 
 
@@ -91,6 +100,7 @@
    ((eq? mode mode-loading) (loading-mode-canvas-render current-mode))
    ((eq? mode mode-title) (title-mode-canvas-render current-mode))
    ((eq? mode mode-world-design) (world-design-mode-canvas-render current-mode))
+   ((eq? mode mode-exhib) (exhib-mode-canvas-render current-mode))
    (else (play-mode-canvas-render current-mode)))  
   )
 

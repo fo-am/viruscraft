@@ -6,22 +6,22 @@
 (define world-zoom 0)
 (define virus (make-virus (list)))
 
-(define (make-play-mode population organisms score hi-score world-units world-pos-checker) 
+(define (make-exhib-mode population organisms score hi-score world-units world-pos-checker) 
   (list population organisms score hi-score world-units world-pos-checker #f))
 
-(define (play-mode-population m) (list-ref m 0))
-(define (play-mode-modify-population m v) (list-replace m 0 v))
-(define (play-mode-organisms m) (list-ref m 1))
-(define (play-mode-modify-organisms m v) (list-replace m 1 v))
-(define (play-mode-score m) (list-ref m 2))
-(define (play-mode-modify-score m v) (list-replace m 2 v))
-(define (play-mode-hi-score m) (list-ref m 3))
-(define (play-mode-modify-hi-score m v) (list-replace m 3 v))
-(define (play-mode-world-units m) (list-ref m 4))
-(define (play-mode-world-pos-checker m) (list-ref m 5))
-(define (play-mode-modify-world-pos-checker m v) (list-replace m 5 v))
-(define (play-mode-finished? m) (list-ref m 6))
-(define (play-mode-modify-finished m v) (list-replace m 6 v))
+(define (exhib-mode-population m) (list-ref m 0))
+(define (exhib-mode-modify-population m v) (list-replace m 0 v))
+(define (exhib-mode-organisms m) (list-ref m 1))
+(define (exhib-mode-modify-organisms m v) (list-replace m 1 v))
+(define (exhib-mode-score m) (list-ref m 2))
+(define (exhib-mode-modify-score m v) (list-replace m 2 v))
+(define (exhib-mode-hi-score m) (list-ref m 3))
+(define (exhib-mode-modify-hi-score m v) (list-replace m 3 v))
+(define (exhib-mode-world-units m) (list-ref m 4))
+(define (exhib-mode-world-pos-checker m) (list-ref m 5))
+(define (exhib-mode-modify-world-pos-checker m v) (list-replace m 5 v))
+(define (exhib-mode-finished? m) (list-ref m 6))
+(define (exhib-mode-modify-finished m v) (list-replace m 6 v))
 
 (define title-text '())
 (define infect-window '())
@@ -96,7 +96,7 @@
   (set! notified-high-age #f)
   (set! notified-high-jumps #f))
 
-(define (init-play-mode)
+(define (init-exhib-mode)
   (reset-scores)
   (clear-virus)
   (clear-popups!)
@@ -106,8 +106,8 @@
 			   "End" 
 			   (lambda (m)
 			     (destroy-virus-builder)
-			     (organisms-destroy (play-mode-organisms m))
-			     (play-mode-modify-finished m #t))))
+			     (organisms-destroy (exhib-mode-organisms m))
+			     (exhib-mode-modify-finished m #t))))
   
   (set! title-text 
 	(make-textbox 
@@ -124,7 +124,7 @@
     (build-virus-builder)
     (host-organism-load-models)
     
-    (make-play-mode
+    (make-exhib-mode
      (population-infect 
       (make-random-population 50 wpc) 
       virus infection-rate)
@@ -133,7 +133,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
-(define (play-mode-update g)
+(define (exhib-mode-update g)
   (virus-builder-update-buttons buttons)
 
 
@@ -143,7 +143,7 @@
 ;;  (set! tangible-timer (+ tangible-timer 1))
 
 ;;  (when (eq? highlight-time 0)
-;;	(highlight-host! (choose (play-mode-population g))))
+;;	(highlight-host! (choose (exhib-mode-population g))))
 
   
   ;; keep track of deaths
@@ -154,9 +154,9 @@
   		    (host-infected? host))
   	       (+ r 1) r))
   	 current-deaths
-  	 (play-mode-population g)))
-  (set! current-infections (population-num-infected (play-mode-population g)))
-  (set! current-age (play-mode-score g))
+  	 (exhib-mode-population g)))
+  (set! current-infections (population-num-infected (exhib-mode-population g)))
+  (set! current-age (exhib-mode-score g))
 
   (when (> current-infections highest-infections) 
 	(set! highest-infections current-infections)
@@ -192,51 +192,51 @@
    back-button
    (cond
     ;; no hosts!
-    ((zero? (length (play-mode-population g)))
+    ((zero? (length (exhib-mode-population g)))
      (fire-popup! "bad" (list "The hosts all died out!"))
      (reset-scores)
-     (make-play-mode
+     (make-exhib-mode
       (population-infect 
-       (make-random-population 50 (play-mode-world-pos-checker g)) 
+       (make-random-population 50 (exhib-mode-world-pos-checker g)) 
        virus infection-rate)
-      '() 0 (play-mode-hi-score g)
-      (play-mode-world-units g)
-      (play-mode-world-pos-checker g)))
+      '() 0 (exhib-mode-hi-score g)
+      (exhib-mode-world-units g)
+      (exhib-mode-world-pos-checker g)))
 
     ;; no infections
-    ((zero? (population-num-infected (play-mode-population g)))
-     (when (> (play-mode-score g) 100)
+    ((zero? (population-num-infected (exhib-mode-population g)))
+     (when (> (exhib-mode-score g) 100)
 	   (fire-popup! "bad" (list "Your virus died out!")))
      (reset-scores)
-     (make-play-mode
-      (population-infect-one (play-mode-population g) virus)
+     (make-exhib-mode
+      (population-infect-one (exhib-mode-population g) virus)
       (update-organisms 
-       (play-mode-organisms g)
-       (play-mode-population g)
-       (play-mode-world-units g) (time))
-      0 (play-mode-hi-score g)
-      (play-mode-world-units g)
-      (play-mode-world-pos-checker g)))
+       (exhib-mode-organisms g)
+       (exhib-mode-population g)
+       (exhib-mode-world-units g) (time))
+      0 (exhib-mode-hi-score g)
+      (exhib-mode-world-units g)
+      (exhib-mode-world-pos-checker g)))
 
     ;; normal
     (else
-     (make-play-mode
+     (make-exhib-mode
       (population-update 
-       (play-mode-population g) 
+       (exhib-mode-population g) 
        virus
-       (play-mode-world-pos-checker g))
+       (exhib-mode-world-pos-checker g))
       (update-organisms 
-       (play-mode-organisms g)
-       (play-mode-population g)
-       (play-mode-world-units g) (time))
-      (+ (play-mode-score g) 1)
-      (if (> (play-mode-score g) (play-mode-hi-score g))
-	  (play-mode-score g)
-	  (play-mode-hi-score g)) 
-      (play-mode-world-units g)
-      (play-mode-world-pos-checker g))))))
+       (exhib-mode-organisms g)
+       (exhib-mode-population g)
+       (exhib-mode-world-units g) (time))
+      (+ (exhib-mode-score g) 1)
+      (if (> (exhib-mode-score g) (exhib-mode-hi-score g))
+	  (exhib-mode-score g)
+	  (exhib-mode-hi-score g)) 
+      (exhib-mode-world-units g)
+      (exhib-mode-world-pos-checker g))))))
 
-(define (play-mode-render g)
+(define (exhib-mode-render g)
   (with-primitive 
    virus-builder
    (identity)
@@ -267,7 +267,7 @@
 					 (list-ref host-id 1))
 			 highlights))
 
-  (let ((host (host-search (car host-id) (play-mode-population g))))
+  (let ((host (host-search (car host-id) (exhib-mode-population g))))
     ;; convert from lat/lon to quaternion 
     (let ((latlng (host-location host)))
       (let ((x (/ (vx (host-location host)) Math.PI))
@@ -293,7 +293,7 @@
 
 (define (organism-pos g id)
   (let ((organism 
-	 (ordered-list-search (play-mode-organisms g) id)))
+	 (ordered-list-search (exhib-mode-organisms g) id)))
     (if organism
 	(primitive-global-screen-pos 
 	 (organism-root organism))
@@ -333,15 +333,15 @@
 
 (define (render-info! g)
   (let ((pos (organism-pos g host-info-id))
-	(host (host-search host-info-id (play-mode-population g))))    
+	(host (host-search host-info-id (exhib-mode-population g))))    
     (if (not pos)
-	(set! host-info-id (host-id (choose (play-mode-population g))))
+	(set! host-info-id (host-id (choose (exhib-mode-population g))))
 	(ctx.fillText 
 	 (+ "" host-info-id ": " (host-health host)) 
 	 (vx pos)
 	 (vy pos)))))
 
-(define (play-mode-canvas-render g)
+(define (exhib-mode-canvas-render g)
   (textbox-render! title-text)
   (image-button-render! back-button)
   (window-render! infect-window)
@@ -352,7 +352,7 @@
   (let ((y 550) (x (list 30 180 330 480))
 	(num-offs 70)) 
     
-    (set! ctx.font "20pt Dosis")
+  (set! ctx.font "20pt Dosis")
 
   (ctx.fillText "Infections" (list-ref x 0) y)
   (ctx.fillText "Deaths" (list-ref x 1) y)

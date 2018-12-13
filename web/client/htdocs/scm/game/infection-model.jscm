@@ -35,6 +35,10 @@
 
 (define infection-distance 0.2)
 
+;; hacky global state 
+(define cross-species-infection-happened #f)
+(define transmission-ids (list 0 0))
+
 ;;;;;;;;;;;;;;;;;;;
 ;; minimal geometry
 
@@ -281,8 +285,6 @@
    '()
    population))
 
-(define cross-species-infection-happened #f)
-
 (define (check-cross-species-infection!)
   (let ((r cross-species-infection-happened))
     (set! cross-species-infection-happened #f)
@@ -298,7 +300,8 @@
 			    (host-location other-host))
 		 infection-distance))
 	 (begin 
-	   ;; temporary solution for this...
+	   ;; set a bunch of globals to keep track of what's happening :[
+	   (set! transmission-ids (list (host-id host) (host-id other-host)))
 	   (when (not (eq? (host-species host)
 			   (host-species other-host)))
 		 (set! cross-species-infection-happened (list (host-id other-host) (host-id host))))
@@ -339,20 +342,13 @@
 	 host))
    population))
 
-(define infect-one-id 0)
-
-(define (check-infect-highlight-id!)
-  (let ((r infect-one-id))
-    (set! infect-one-id #f)
-    r))
-
+;; force an infection at the start of the game...
 (define (population-infect-one population virus)
   (define (_ pop)
     (cond
      ((null? pop) '())
      ((host-susceptible? (car pop) virus)
-      (set! infect-one-id (host-id (car pop))) 
-      (msg infect-one-id)
+      (set! transmission-ids (list (host-id (car pop)) (host-id (car pop)))) 
       (cons (host-infect (car pop)) (cdr pop)))
      (else (cons (car pop) (_ (cdr pop))))))
   (_ population))

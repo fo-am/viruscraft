@@ -55,6 +55,7 @@
 (define cur-receptor-types (build-list 20 (lambda (i) #f)))
 
 (define world-q (qaxisangle (vector 0 0 1) 0))
+(define world-target-q (qaxisangle (vector 0 0 1) 0))
 (define virus-q (qaxisangle (vector 0 0 1) 0))
 
 (define virus-recep-id 1)
