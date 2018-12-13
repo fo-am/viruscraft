@@ -3,8 +3,11 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(msg "loading canvas")
+(load "flx/scm/canvas.jscm")
+(load "flx/scm/canvas-widgets.jscm")
+
 (load "scm/game/shaders.jscm")
-(load "scm/game/canvas.jscm")
 (load "scm/game/preload.jscm")
 (load "scm/game/spherical.jscm")
 (load "scm/game/infection-model.jscm")
@@ -12,7 +15,6 @@
 (load "scm/game/host-organism.jscm")
 (load "scm/game/worldunit.jscm")
 (load "scm/game/virus-builder.jscm")
-(load "scm/game/canvas-widgets.jscm")
 (load "scm/game/loading-mode.jscm")
 (load "scm/game/title-mode.jscm")
 (load "scm/game/world-design-mode.jscm")
@@ -26,13 +28,15 @@
 (define mode-exhib 4)
 
 (define mode mode-loading)
-(define exhib-version #t)
+(define exhib-version #f)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (clear-colour (vector 0.0 0.0 0.0))
 (set-camera-angle 25)
+(set-camera-transform (mtranslate (midentity) (vector 0 0 -38)))
 (resize-glcanvas webgl-canvas)
+(set-font! "Dosis")
 
 (define world-units #f)
 (define current-mode (init-loading-mode))
@@ -86,6 +90,7 @@
   (set! current-mode (update current-mode))
   (resize-glcanvas webgl-canvas)
   (resize-canvas canvas)
+  (canvas-update-time)
 
   (cond
    ((eq? mode mode-loading) (loading-mode-render current-mode))

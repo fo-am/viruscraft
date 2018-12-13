@@ -103,7 +103,7 @@
 
   (set! back-button 
 	(make-image-button (- screen-width 100) 570 "hexbutton.png"
-			   "End" 
+			   "End" "spin"
 			   (lambda (m)
 			     (destroy-virus-builder)
 			     (organisms-destroy (exhib-mode-organisms m))
@@ -112,7 +112,7 @@
   (set! title-text 
 	(make-textbox 
 	 300 70
-	 "50pt Dosis" 30 "centre"
+	 "50pt" 30 "centre"
 	 (list "Evolve your virus")))
 
   (set! infect-window (make-window 20 510 140 140))

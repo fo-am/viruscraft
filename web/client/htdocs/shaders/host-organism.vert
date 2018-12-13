@@ -18,7 +18,7 @@ attribute vec3 n;
 attribute vec3 c;
 attribute vec3 p2;
 
-const float adult_age = 400.0;
+const float adult_age = 20.0;
 const float low_health = 10.0;
 const float min_scale = 0.3;
 

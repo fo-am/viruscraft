@@ -12,11 +12,11 @@
 ;; the host's spatial constants 
 (define min-host-health 0)
 (define max-host-health 50)
-(define host-normal-growth 1) 
-(define host-infection-growth -0.1) ; not (* sus)
-(define host-decline-growth -0.1)
+(define host-normal-growth 10) ;; units per second
+(define host-infection-growth -0.5) ; not (* sus)
+(define host-decline-growth -1)
 (define host-health-start 10)
-(define host-decline-age 1000)
+(define host-decline-age 60)
 (define host-spawn-min-distance 0.05)
 (define spawn-dist 0.2)
 (define host-spawn-dist-tries 5)
@@ -26,7 +26,7 @@
 (define host-loc-lng-start (* Math.PI 0))
 (define host-loc-lng-width (* Math.PI 2))
 
-(define new-organism-likelihood 3)
+(define new-organism-likelihood 3) ;; percent per second
 (define mutation-rate 5)
 (define susceptibility-slope 2)
 (define susceptibility-max-receptors 20)
@@ -132,11 +132,11 @@
   (cond
    ;; old age
    ((> (host-age host) host-decline-age) 
-    (max min-host-health (+ (host-health host) host-decline-growth)))
+    (max min-host-health (+ (host-health host) (* canvas-delta host-decline-growth))))
    ((host-infected? host) 
-    (max min-host-health (+ (host-health host) host-infection-growth))) ;; susceptibility
+    (max min-host-health (+ (host-health host) (* canvas-delta host-infection-growth)))) ;; susceptibility
    ((>= (host-health host) max-host-health) max-host-health)
-   (else (+ (host-health host) host-normal-growth))))
+   (else (+ (host-health host) (* canvas-delta host-normal-growth)))))
 
 (define (host-alive? host)
   (> (host-health host) min-host-health))
@@ -147,7 +147,7 @@
 (define (host-can-breed? host)
   (if (host-infected? host)
       #f ;; infected hosts can't reproduce
-      (< (random 100) new-organism-likelihood)))
+      (< (random 100) (* canvas-delta new-organism-likelihood))))
 
 ;; check if a point is within bounding box and 
 ;; far enough away from other hosts
@@ -205,7 +205,7 @@
       (else #f))
      (host-location host) ;; can't move
      (host-calculate-health host susceptibility)
-     (+ (host-age host) 1))))
+     (+ (host-age host) canvas-delta))))
 
 ;; for background infection, doesn't check sus
 (define (host-infect host)

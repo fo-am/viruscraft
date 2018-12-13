@@ -3,7 +3,10 @@
 
 (define infection-rate 10)
 (define max-transmission-highlights 5)
+(define game-over-time 5)
+
 (define world-zoom 0)
+(define game-started #f)
 (define virus (make-virus (list)))
 
 (define (make-play-mode population organisms score hi-score world-units world-pos-checker) 
@@ -46,6 +49,7 @@
 (define notified-jumps #f)
 
 (define tangible-timer 0)
+(define end-game-timer 1000)
 
 ;; so we can check when infected-id changes
 (define last-transmission-id 0)
@@ -103,7 +107,7 @@
 
   (set! back-button 
 	(make-image-button (- screen-width 100) 570 "hexbutton.png"
-			   "End" 
+			   "End" "spin"
 			   (lambda (m)
 			     (destroy-virus-builder)
 			     (organisms-destroy (play-mode-organisms m))
@@ -112,8 +116,11 @@
   (set! title-text 
 	(make-textbox 
 	 300 70
-	 "50pt Dosis" 30 "centre"
+	 "50pt" 30 "centre"
 	 (list "Evolve your virus")))
+
+  (set! end-game-timer 1000)
+  (set! game-started #f)
 
   (set! infect-window (make-window 20 510 140 140))
   (set! deaths-window (make-window 170 510 140 140))
@@ -188,28 +195,38 @@
 		(set! highest-jumps current-jumps))
 	  (fire-popup! "good" (list "Cross-species infection!"))))
 
+  (let ((num-infections (population-num-infected (play-mode-population g))))
+    (when (> num-infections 0) (set! game-started #t))
+
   (image-button-update 
    back-button
    (cond
+    ;; delayed game end...
+    ((< end-game-timer 999)
+     (set! end-game-timer (- end-game-timer canvas-delta))
+     (cond 
+      ((< end-game-timer 0)
+       (destroy-virus-builder)
+       (organisms-destroy (play-mode-organisms g))
+       (play-mode-modify-finished g #t))
+      (else g)))
+
     ;; no hosts!
-    ((zero? (length (play-mode-population g)))
+    ((and (zero? (length (play-mode-population g)))
+	  (> end-game-timer 999))
      (fire-popup! "bad" (list "The hosts all died out!"))
      (reset-scores)
-     (make-play-mode
-      (population-infect 
-       (make-random-population 50 (play-mode-world-pos-checker g)) 
-       virus infection-rate)
-      '() 0 (play-mode-hi-score g)
-      (play-mode-world-units g)
-      (play-mode-world-pos-checker g)))
+     (set! end-game-timer game-over-time)
+     g)
 
-    ;; no infections
-    ((zero? (population-num-infected (play-mode-population g)))
-     (when (> (play-mode-score g) 100)
-	   (fire-popup! "bad" (list "Your virus died out!")))
-     (reset-scores)
+    ;; not started and no infections yet...
+    ((and (not game-started)
+	  (zero? num-infections))
      (make-play-mode
-      (population-infect-one (play-mode-population g) virus)
+      (population-update 
+       (population-infect-one (play-mode-population g) virus)
+       virus
+       (play-mode-world-pos-checker g))      
       (update-organisms 
        (play-mode-organisms g)
        (play-mode-population g)
@@ -218,6 +235,16 @@
       (play-mode-world-units g)
       (play-mode-world-pos-checker g)))
 
+
+    ;; game started but no infections
+    ((and game-started
+	  (zero? num-infections)
+	  (> end-game-timer 999))
+     (fire-popup! "bad" (list "Your virus died out!"))
+     (reset-scores)
+     (set! end-game-timer game-over-time)
+     g)
+    
     ;; normal
     (else
      (make-play-mode
@@ -234,7 +261,7 @@
 	  (play-mode-score g)
 	  (play-mode-hi-score g)) 
       (play-mode-world-units g)
-      (play-mode-world-pos-checker g))))))
+      (play-mode-world-pos-checker g)))))))
 
 (define (play-mode-render g)
   (with-primitive 
