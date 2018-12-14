@@ -1,0 +1,74 @@
+;; -*- mode: scheme; -*-
+;; Viruscraft Copyright (C) 2018 FoAM Kernow
+
+(define virus-name "")
+(define virus (make-virus (list)))
+(define scores-list (list))
+(define hiscores-display (list))
+
+(define (make-stats-mode name scores) 
+  (list name scores #f))
+
+(define (stats-mode-name m) (list-ref m 0))
+(define (stats-mode-scores m) (list-ref m 1))
+(define (stats-mode-finished? m) (list-ref m 2))
+(define (stats-mode-modify-finished m v) (list-replace m 2 v))
+
+(define current-score-position -1)
+
+(define (get-score-position score scores)
+  (foldl
+   (lambda (s r)
+     (if (> s score) (+ r 1) r))
+   0
+   scores))
+
+(define (init-stats-mode name scores)
+  (set! back-button 
+	(make-image-button (- screen-width 100) 570 "hexbutton.png"
+			   "End" "spin"
+			   (lambda (m)
+			     (destroy-virus-builder)
+			     (stats-mode-modify-finished m #t))))
+
+  (server-call-ret
+   "scores" (list) 
+   (lambda (data)
+     (set! scores-list (JSON.parse data))))
+
+  (server-call-ret
+   "hiscores" (list) 
+   (lambda (data)
+     (set! hiscores-display (JSON.parse data))))
+  
+  (make-stats-mode name scores))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+(define (stats-mode-update g)
+  (image-button-update back-button g))
+
+(define (stats-mode-render g)
+  (with-primitive 
+   virus-builder
+   (identity)
+   (translate builder-pos) 
+   (rotate (vector 80 (time) -25))
+   (scale (vector 1.7 1.7 1.7))
+   (concat (q->m virus-q))))
+
+(define (stats-mode-canvas-render g)
+  (set! ctx.font "25pt Dosis")
+  (ctx.fillText (string-append "You were playing: ") 20 30)
+  (set! ctx.fillStyle "#f00")
+  (ctx.fillText (string-append (stats-mode-name g) " virus") 250 30)
+  (set! ctx.fillStyle "#000")
+  (ctx.fillText (string-append "You survived " (trunc (scores-age (stats-mode-scores g))) " million years") 20 65)
+  (image-button-render! back-button)
+  ;;(render-hiscores)
+  ;;(render-popups!)
+  ;;(render-transmission-highlight! g)
+  ;;(render-info! g)
+  )
+

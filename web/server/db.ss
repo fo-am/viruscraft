@@ -47,9 +47,17 @@
           name age infections deaths jumps time))
 
 (define (get-hiscores db)
+  (define count 0)
   (map
    (lambda (i)
-     (list (vector-ref i 0) (vector-ref i 1)))
-   (cdr (select db "select name, age, infections, deaths, jumps from virus order by age desc limit 100;"))))
+     (set! count (+ count 1))
+     (list count (vector-ref i 0) (vector-ref i 1)))
+   (cdr (select db "select name, age, infections, deaths, jumps from virus order by age desc;"))))
+
+(define (get-scores db)
+  (map
+   (lambda (i)
+     (vector-ref i 0))
+   (cdr (select db "select age from virus order by age desc;"))))
 
 

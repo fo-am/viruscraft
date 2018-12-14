@@ -13,7 +13,7 @@
 (define min-host-health 0)
 (define max-host-health 50)
 (define host-normal-growth 10) ;; units per second
-(define host-infection-growth -0.5) ; not (* sus)
+(define host-infection-growth -7.5) ; not (* sus)
 (define host-decline-growth -1)
 (define host-health-start 10)
 (define host-decline-age 60)

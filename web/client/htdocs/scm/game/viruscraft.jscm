@@ -21,6 +21,7 @@
 (load "scm/game/world-design-mode.jscm")
 (load "scm/game/play-mode.jscm")
 (load "scm/game/exhib-mode.jscm")
+(load "scm/game/stats-mode.jscm")
 (load "scm/game/diseases.jscm")
 
 (define mode-loading 0)
@@ -28,6 +29,7 @@
 (define mode-world-design 2)
 (define mode-play 3)
 (define mode-exhib 4)
+(define mode-stats 5)
 
 (define mode mode-loading)
 (define exhib-version #f)
@@ -77,12 +79,22 @@
       (set! mode mode-title)
       (init-title-mode))
      (else (world-design-mode-update current-mode))))
-   
+
+   ((eq? mode mode-stats) 
+    (cond
+     ((stats-mode-finished? current-mode)
+      (set! mode mode-world-design)
+      (init-world-design-mode))
+    (else
+     (stats-mode-update current-mode))))
+
    (else 
     (cond 
      ((play-mode-finished? current-mode)
-      (set! mode mode-world-design)
-      (init-world-design-mode))
+      (destroy world-root)
+      (set! mode mode-stats)
+      (init-stats-mode (play-mode-virus-name current-mode)
+		       (play-mode-scores current-mode)))
      (else
       (if exhib-version
 	  (exhib-mode-update current-mode)
@@ -99,8 +111,8 @@
    ((eq? mode mode-title) (title-mode-render current-mode))
    ((eq? mode mode-world-design) (world-design-mode-render current-mode))
    ((eq? mode mode-exhib) (exhib-mode-render current-mode))
+   ((eq? mode mode-stats) (stats-mode-render current-mode))
    (else (play-mode-render current-mode)))  
-
 
   (ctx.clearRect 0 0 screen-width screen-height)	  
   (cond
@@ -108,9 +120,9 @@
    ((eq? mode mode-title) (title-mode-canvas-render current-mode))
    ((eq? mode mode-world-design) (world-design-mode-canvas-render current-mode))
    ((eq? mode mode-exhib) (exhib-mode-canvas-render current-mode))
+   ((eq? mode mode-stats) (stats-mode-canvas-render current-mode))
    (else (play-mode-canvas-render current-mode)))  
   )
-
 
 ;;(with-primitive world-root (rotate (vector 90 0 0)))
 (canvas-setup)

@@ -76,6 +76,13 @@
     (lambda (req)
       (pluto-response
        (scheme->json (get-hiscores db)))))
+
+   (register
+    (req 'scores '())
+    (lambda (req)
+      (pluto-response
+       (scheme->json (get-scores db)))))
+
    ))
 
 (define (start request)
