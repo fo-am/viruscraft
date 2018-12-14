@@ -33,7 +33,7 @@
 ;;(define susceptibility-prob-factor 0.2)
 (define max-pop-size 100)
 
-(define infection-distance 0.2)
+(define infection-distance 0.5)
 
 ;; hacky global state 
 (define cross-species-infection-happened #f)
@@ -103,6 +103,8 @@
 
 ;;;;;;;;;;;;;;;;;;;
 ;; host model
+
+;; need tradeoff 
 
 ;; returns the susceptibility of the host of infection to the supplied virus
 ;; susceptibility will range from 0..1 with 0 being completely immune

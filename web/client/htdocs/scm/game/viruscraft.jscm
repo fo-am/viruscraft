@@ -6,6 +6,7 @@
 (msg "loading canvas")
 (load "flx/scm/canvas.jscm")
 (load "flx/scm/canvas-widgets.jscm")
+(load "flx/scm/network.jscm")
 
 (load "scm/game/shaders.jscm")
 (load "scm/game/preload.jscm")
@@ -20,6 +21,7 @@
 (load "scm/game/world-design-mode.jscm")
 (load "scm/game/play-mode.jscm")
 (load "scm/game/exhib-mode.jscm")
+(load "scm/game/diseases.jscm")
 
 (define mode-loading 0)
 (define mode-title 1)
@@ -68,7 +70,7 @@
 	(init-exhib-mode))
        (else
 	(set! mode mode-play)
-	(init-play-mode))))
+	(init-play-mode (gen-disease-name)))))
      ((eq? (world-design-mode-ready current-mode) "back")
       (destroy world-root)
       (set! world-units #f)

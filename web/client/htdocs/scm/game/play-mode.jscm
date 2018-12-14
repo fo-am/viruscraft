@@ -7,6 +7,7 @@
 
 (define world-zoom 0)
 (define game-started #f)
+(define virus-name "")
 (define virus (make-virus (list)))
 
 (define (make-play-mode population organisms score hi-score world-units world-pos-checker) 
@@ -33,20 +34,10 @@
 (define jumps-window '())
 (define back-button '())
 
-(define highest-infections 0)
-(define highest-deaths 0)
-(define highest-age 0)
-(define highest-jumps 0)
-
 (define current-infections 0)
 (define current-deaths 0)
 (define current-age 0)
 (define current-jumps 0)
-
-(define notified-high-infections #f)
-(define notified-high-deaths #f)
-(define notified-high-age #f)
-(define notified-jumps #f)
 
 (define tangible-timer 0)
 (define end-game-timer 1000)
@@ -90,17 +81,24 @@
     (xmlHttp.overrideMimeType "script")
     (xmlHttp.send)))
 
+(define (record-virus)
+  (server-call
+   "virus"
+   (list (list "name" virus-name)
+	 (list "age" current-age)
+	 (list "infections" current-infections)
+	 (list "deaths" current-deaths)
+	 (list "jumps" current-jumps)
+	 (list "time" (Date.now)))))
+
 (define (reset-scores)
   (set! current-infections 0)
   (set! current-deaths 0)
   (set! current-age 0)
-  (set! current-jumps 0)
-  (set! notified-high-infections #f)
-  (set! notified-high-deaths #f)
-  (set! notified-high-age #f)
-  (set! notified-high-jumps #f))
+  (set! current-jumps 0))
 
-(define (init-play-mode)
+(define (init-play-mode disease-name)
+  (set! virus-name disease-name)
   (reset-scores)
   (clear-virus)
   (clear-popups!)
@@ -115,9 +113,9 @@
   
   (set! title-text 
 	(make-textbox 
-	 300 70
-	 "50pt" 30 "centre"
-	 (list "Evolve your virus")))
+	 (/ screen-width 2) 40
+	 "30pt" 20 "centre"
+	 (list (string-append "New outbreak of: " disease-name " virus"))))
 
   (set! end-game-timer 1000)
   (set! game-started #f)
@@ -162,37 +160,18 @@
   	       (+ r 1) r))
   	 current-deaths
   	 (play-mode-population g)))
-  (set! current-infections (population-num-infected (play-mode-population g)))
+
   (set! current-age (play-mode-score g))
-
-  (when (> current-infections highest-infections) 
-	(set! highest-infections current-infections)
-	(when (not notified-high-infections) 
-	      (fire-popup! "good" (list "New highest infections!"))
-	      (set! notified-high-infections #t)))
-
-  (when (> current-deaths highest-deaths) 
-	(set! highest-deaths current-deaths)
-	(when (not notified-high-deaths) 
-	      (fire-popup! "good" (list "New highest deaths!"))
-	      (set! notified-high-deaths #t)))
-
-  (when (> current-age highest-age) 
-	(set! highest-age current-age)
-	(when (not notified-high-age) 
-	      (fire-popup! "good" (list "New highest age!"))
-	      (set! notified-high-age #t)))
 
   ;; do we have a new infection?
   (when (not (eq? last-transmission-id (car transmission-ids)))
+	(set! current-infections (+ current-infections 1))
 	(highlight-transmission! g transmission-ids)
 	(set! last-transmission-id (car transmission-ids)))
 
   (let ((cross (check-cross-species-infection!)))
     (when cross
 	  (set! current-jumps (+ current-jumps 1))
-	  (when (< highest-jumps current-jumps)
-		(set! highest-jumps current-jumps))
 	  (fire-popup! "good" (list "Cross-species infection!"))))
 
   (let ((num-infections (population-num-infected (play-mode-population g))))
@@ -215,7 +194,8 @@
     ((and (zero? (length (play-mode-population g)))
 	  (> end-game-timer 999))
      (fire-popup! "bad" (list "The hosts all died out!"))
-     (reset-scores)
+     (record-virus)
+     (reset-scores)     
      (set! end-game-timer game-over-time)
      g)
 
@@ -241,6 +221,7 @@
 	  (zero? num-infections)
 	  (> end-game-timer 999))
      (fire-popup! "bad" (list "Your virus died out!"))
+     (record-virus)
      (reset-scores)
      (set! end-game-timer game-over-time)
      g)
@@ -256,7 +237,7 @@
        (play-mode-organisms g)
        (play-mode-population g)
        (play-mode-world-units g) (time))
-      (+ (play-mode-score g) 1)
+      (+ (play-mode-score g) canvas-delta)
       (if (> (play-mode-score g) (play-mode-hi-score g))
 	  (play-mode-score g)
 	  (play-mode-hi-score g)) 
@@ -377,7 +358,7 @@
   (window-render! jumps-window)
 
   (let ((y 550) (x (list 30 180 330 480))
-	(num-offs 70)) 
+	(num-offs 0)) 
     
     (set! ctx.font "20pt Dosis")
 
@@ -389,27 +370,11 @@
   (set! y (+ y 30))
 
   (set! ctx.font "15pt Dosis")
-  (ctx.fillText "Current" (list-ref x 0) y)
-  (ctx.fillText "Current" (list-ref x 1) y)
-  (ctx.fillText "Current" (list-ref x 2) y)
-  (ctx.fillText "Current" (list-ref x 3) y)
 
   (ctx.fillText (+ "" current-infections) (+ (list-ref x 0) num-offs) y)
   (ctx.fillText (+ "" current-deaths) (+ (list-ref x 1) num-offs) y)
-  (ctx.fillText (+ "" (/ current-age 100)) (+ (list-ref x 2) num-offs) y)
+  (ctx.fillText (+ "" (trunc current-age)) (+ (list-ref x 2) num-offs) y)
   (ctx.fillText (+ "" current-jumps) (+ (list-ref x 3) num-offs) y)
-
-  (set! y (+ y 30))
-
-  (ctx.fillText "Best" (list-ref x 0) y)
-  (ctx.fillText "Best" (list-ref x 1) y)
-  (ctx.fillText "Best" (list-ref x 2) y)
-  (ctx.fillText "Best" (list-ref x 3) y)
-
-  (ctx.fillText (+ "" highest-infections) (+ (list-ref x 0) num-offs) y)
-  (ctx.fillText (+ "" highest-deaths) (+ (list-ref x 1) num-offs) y)
-  (ctx.fillText (+ "" (/ highest-age 100)) (+ (list-ref x 2) num-offs) y)
-  (ctx.fillText (+ "" highest-jumps) (+ (list-ref x 3) num-offs) y)
 
   (set! y (+ y 30))
 
