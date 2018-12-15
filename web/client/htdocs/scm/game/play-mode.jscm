@@ -116,7 +116,7 @@
 	(make-image-button (- screen-width 100) 570 "hexbutton.png"
 			   "End" "spin"
 			   (lambda (m)
-			     ;;(destroy-virus-builder)
+			     (destroy-virus-buttons)
 			     (organisms-destroy (play-mode-organisms m))
 			     (play-mode-modify-finished m #t))))
   
@@ -201,7 +201,7 @@
        (set! end-game-timer (- end-game-timer canvas-delta))
        (cond 
 	((< end-game-timer 0)
-	 ;;(destroy-virus-builder)
+	 (destroy-virus-buttons)
 	 (organisms-destroy (play-mode-organisms g))
 	 (play-mode-modify-finished g #t))
 	(else g)))
@@ -392,9 +392,8 @@
    (highscore-get-n-less-than n v l)))
 
 (define (render-hiscores g)
-  (msg (play-mode-virus-name g))
   (set! ctx.font "20pt Dosis")
-  (ctx.fillText "High scores: virus ages in millions of years" 20 520)   
+  (ctx.fillText "How your virus compares to others" 20 520)   
   (set! ctx.font "15pt Dosis")
   (let ((displayed #f)
 	(age (scores-age (play-mode-scores g))))
@@ -420,7 +419,7 @@
   (set! ctx.fillStyle "#f00")
   (ctx.fillText (string-append (play-mode-virus-name g) " virus") 225 30)
   (set! ctx.fillStyle "#000")
-  (ctx.fillText (string-append "You are " (trunc (scores-age (play-mode-scores g))) " million years old") 20 65)
+  (ctx.fillText (string-append "You are " (trunc (scores-age (play-mode-scores g))) " days old") 20 65)
   (image-button-render! back-button)
   (when game-started (render-hiscores g))
   (render-popups!)

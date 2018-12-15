@@ -92,6 +92,7 @@
     (cond 
      ((play-mode-finished? current-mode)
       (destroy world-root)
+      (set! world-units #f)
       (set! mode mode-stats)
       (init-stats-mode (play-mode-virus-name current-mode)
 		       (play-mode-scores current-mode)))

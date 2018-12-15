@@ -273,3 +273,10 @@
      (destroy (button-prim button)))
    buttons)
   (destroy virus-builder))
+
+(define (destroy-virus-buttons)
+  (destroy face-display)
+  (for-each 
+   (lambda (button)
+     (destroy (button-prim button)))
+   buttons))
