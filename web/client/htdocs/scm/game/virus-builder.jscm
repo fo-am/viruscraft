@@ -120,10 +120,8 @@
 		     "models/receptor-circle.obj"
 		     "models/receptor-square.obj"
 		     "models/receptor-donut.obj"
-		     "models/receptor-tee.obj"
-		     ;;"models/receptor-angle.obj"
 		     "models/receptor-clear.obj"
-		     ;;"models/receptor-guitar.obj"
+		     "models/receptor-guitar.obj"
 		     ))
 
 (define button-fns 
@@ -132,8 +130,6 @@
    (lambda () (attach-virus-circle))
    (lambda () (attach-virus-square))
    (lambda () (attach-virus-donut))
-   (lambda () (attach-virus-tee))
-   (lambda () (attach-virus-angle))
    (lambda () (attach-virus-clear))
    (lambda () (attach-virus-guitar))))
 
@@ -210,6 +206,8 @@
    buttons))
 
 (define (build-virus-builder)
+  (msg "build-virus-builder")
+  (msg virus)
   (set! virus-builder (with-state 
 		       (shader-assign-compiled "virus")
 		       (translate builder-pos) 
@@ -264,7 +262,8 @@
 		((> virus-dist 300)
 		 (set! world-q (qmul world-q (qaxisangle (vnormalise rot-axis) 2))))		   
 		(else 0)))))))
-  
+  (attach-virus-clear-all)  
+  (msg virus)
   )
 
 (define (destroy-virus-builder)

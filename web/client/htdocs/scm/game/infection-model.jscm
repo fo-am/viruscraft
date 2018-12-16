@@ -4,8 +4,9 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; the main infection and population model
 
-(define receptor-types (list 'circle 'triangle 'square 'donut 'tee))
+(define receptor-types (list 'circle 'triangle 'square 'donut 'guitar))
 (define host-species-types (list 'sea 'land 'land2))
+(define virus-max-receptors 20)
 
 (define size-conv 0.003)
 
@@ -13,13 +14,14 @@
 (define min-host-health 0)
 (define max-host-health 50)
 (define host-normal-growth 10) ;; units per second
-(define host-infection-growth -7.5) ; not (* sus)
-(define host-decline-growth -1)
+(define host-infection-decline -30) ; (* deadliness)
+(define host-age-decline -1)
 (define host-health-start 10)
 (define host-decline-age 60)
 (define host-spawn-min-distance 0.05)
 (define spawn-dist 0.2)
 (define host-spawn-dist-tries 5)
+(define infect-likelihood-mult 10) ;; per second mult
 
 (define host-loc-lat-start (* Math.PI 0))
 (define host-loc-lat-width (* Math.PI 1))
@@ -27,9 +29,9 @@
 (define host-loc-lng-width (* Math.PI 2))
 
 (define new-organism-likelihood 3) ;; percent per second
-(define mutation-rate 5)
+(define mutation-rate 10)
 (define susceptibility-slope 2)
-(define susceptibility-max-receptors 20)
+
 ;;(define susceptibility-prob-factor 0.2)
 (define max-pop-size 100)
 
@@ -44,9 +46,14 @@
 
 
 (define (sq x) (* x x))
+
 (define (vec2-dist a b)
   (sqrt (+ (sq (- (vx a) (vx b)))
 	   (sq (- (vy a) (vy b))))))
+
+(define (vec2-squashed-dist a b)
+  (sqrt (+ (sq (- (vx a) (vx b)))
+	   (sq (/ (- (vy a) (vy b)) 2)))))
 
 (define two-pi (* 2 3.141))
 
@@ -80,6 +87,11 @@
 	(set! c (+ c 1))
 	(append (build-list f (lambda (_) (list-ref receptor-types c))) r))
       '() freq))))
+
+;; this is simply based on the number of receptors to provide
+;; a cost for generalist viruses
+(define (virus-deadliness virus)
+  (pow (/ (length (virus-keys virus)) virus-max-receptors) 2))
   
 ;;;;;;;;;;;;;;;;;;;
 ;; host
@@ -120,7 +132,7 @@
 	 (+ r (if (eq? key (host-receptor host)) 1 0)))
        0
        (virus-keys virus))
-      susceptibility-max-receptors)
+      virus-max-receptors)
    susceptibility-slope))
 
 (define (host-susceptible? host virus)
@@ -130,13 +142,18 @@
 ;; reproduction and death of host organism
 
 ;; returns an updated health based on infection and age constraints
-(define (host-calculate-health host susceptibility)
+(define (host-calculate-health host susceptibility deadliness)
+  ;;(msg (* host-infection-decline deadliness))
   (cond
    ;; old age
    ((> (host-age host) host-decline-age) 
-    (max min-host-health (+ (host-health host) (* canvas-delta host-decline-growth))))
+    (max min-host-health (+ (host-health host) (* canvas-delta host-age-decline))))
    ((host-infected? host) 
-    (max min-host-health (+ (host-health host) (* canvas-delta host-infection-growth)))) ;; susceptibility
+    ;; uniform reduction in health no matter how susceptible
+    ;; might be better to change this see todo
+    (max min-host-health 
+	 (+ (host-health host) 
+	    (* canvas-delta host-infection-decline deadliness))))
    ((>= (host-health host) max-host-health) max-host-health)
    (else (+ (host-health host) (* canvas-delta host-normal-growth)))))
 
@@ -146,10 +163,12 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; creating new organism
 
+;;  (if (host-infected? host))
+;;      #f ;; infected hosts can't reproduce
+
 (define (host-can-breed? host)
-  (if (host-infected? host)
-      #f ;; infected hosts can't reproduce
-      (< (random 100) (* canvas-delta new-organism-likelihood))))
+  ;; infected hosts CAN reproduce to make it easier...
+  (< (random 100) (* canvas-delta new-organism-likelihood)))
 
 ;; check if a point is within bounding box and 
 ;; far enough away from other hosts
@@ -160,7 +179,7 @@
 	   (< (vy location) (+ host-loc-lng-start host-loc-lng-width)))
       (foldl
        (lambda (host r)
-	 (if (and r (> (vec2-dist (host-location host) location) 
+	 (if (and r (> (vec2-squashed-dist (host-location host) location) 
 		       threshold))
 	     #t #f))
        #t
@@ -202,11 +221,11 @@
      (cond
       ((host-infected? host) #t)
       ;; randomise check based on suscept
-      ((< (rndf) susceptibility)
+      ((< (rndf) (* canvas-delta susceptibility infect-likelihood-mult))
        (population-is-infection-present? host population))
       (else #f))
      (host-location host) ;; can't move
-     (host-calculate-health host susceptibility)
+     (host-calculate-health host susceptibility (virus-deadliness virus))
      (+ (host-age host) canvas-delta))))
 
 ;; for background infection, doesn't check sus
@@ -298,7 +317,7 @@
    (lambda (other-host infection)
      (if (and (not infection)
               (host-infected? other-host)
-	      (< (vec2-dist (host-location host) 
+	      (< (vec2-squashed-dist (host-location host) 
 			    (host-location other-host))
 		 infection-distance))
 	 (begin 
@@ -309,6 +328,18 @@
 		 (set! cross-species-infection-happened (list (host-id other-host) (host-id host))))
 	   #t) 
 	 infection))
+   #f
+   population))
+
+(define (population-in-infection-range? host population)
+  (foldl
+   (lambda (other-host infection)
+     (if (and (not infection)
+              (host-infected? other-host)
+	      (< (vec2-squashed-dist (host-location host) 
+			    (host-location other-host))
+		 infection-distance))
+	   #t infection))
    #f
    population))
 

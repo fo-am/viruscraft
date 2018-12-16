@@ -39,6 +39,7 @@
 (load-mesh-cache "models/world-unit-two-111-3.ply")
 
 (load-mesh-cache "models/pentakis-rings2.ply")
+(load-mesh-cache "models/pentakis-rings3.ply")
 
 (load-mesh-cache "models/host-sea-2-1.ply")
 (load-mesh-cache "models/host-sea-3-1.ply")

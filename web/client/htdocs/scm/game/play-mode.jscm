@@ -263,6 +263,8 @@
 	(play-mode-world-pos-checker g)
 	(play-mode-virus-name g)))))))
 
+(define world-rotate-q (qaxisangle (vector 0 1 0) 0))
+
 (define (play-mode-render g)
   (with-primitive 
    virus-builder
@@ -271,15 +273,20 @@
    ;;(rotate (vector 80 0 -25))
    (scale (vector 1.7 1.7 1.7))
    (concat (q->m virus-q)))
-
+  
   (with-primitive 
    world-root 
    (identity)
    (translate (vector 5 0 0))
    (let ((s (+ (min (max 0.02 (* canvas-mouse-zoom 0.02)) 2) 0.7)))
      (scale (vector s s s)))
-   (set! world-q (qslerp world-q world-target-q 0.01)) 
-   (concat (q->m world-q))))
+   (cond 
+    ((> (+ last-highlight-time 10) (time))
+     (set! world-q (qslerp world-q world-target-q 0.01)))    
+    (else
+     (set! world-q (qmul world-q (qaxisangle (vector 0 1 0) 0.25)))))   
+   (set! world-rotate-q (qslerp world-rotate-q world-q 0.01))
+   (concat (q->m world-rotate-q))))
 
 (define (make-highlight time id1 id2) (list time id1 id2))
 (define (highlight-time h) (list-ref h 0))
@@ -287,13 +294,15 @@
 (define (highlight-id2 h) (list-ref h 2))
 
 (define highlights '())
+(define last-highlight-time 0)
+(define highlight-duration 5)
 
 (define (highlight-transmission! g host-id)
-  (set! highlights (cons (make-highlight 1000 
+  (set! highlights (cons (make-highlight highlight-duration 
 					 (list-ref host-id 0)
 					 (list-ref host-id 1))
 			 highlights))
-
+  (set! last-highlight-time (time))  
   (let ((host (host-search (car host-id) (play-mode-population g))))
     ;; convert from lat/lon to quaternion 
     (let ((latlng (host-location host)))
@@ -301,10 +310,10 @@
 	    (y (/ (vy (host-location host)) (* 2 Math.PI))))
 	;; these numbers are slightly arbitrary, as (I think)
 	;; the original positioning comes from the texture map
-
+	
 	;; y rotates x (1 is top 0 is bottom pole)
 	;; x must rotate in y
-
+	
 	(set! world-target-q
 	      (qmul
 	       (qaxisangle 
@@ -326,6 +335,7 @@
 	 (organism-root organism))
 	#f)))
 
+
 (define (render-transmission-highlight! g)
   (set! highlights
 	(foldl
@@ -337,7 +347,7 @@
 		     (pos2 (organism-pos g (highlight-id2 hl))))
 		 (set! ctx.strokeStyle "#ff0000")
 		 (set! ctx.lineWidth 3)
-		 (set! ctx.globalAlpha 0.6)
+		 (set! ctx.globalAlpha (/ (highlight-time hl) highlight-duration)) 
 		 (when pos1 (draw-circle (vx pos1) (vy pos1) 35))
 		 (when pos2 (draw-circle (vx pos2) (vy pos2) 35))
 		 (when (and pos1 pos2)
@@ -348,7 +358,7 @@
 		 ;; return new one
 		 (cons
 		  (make-highlight
-		   (- (highlight-time hl) 1)
+		   (- (highlight-time hl) canvas-delta)
 		   (highlight-id1 hl)
 		   (highlight-id2 hl))
 		  r))

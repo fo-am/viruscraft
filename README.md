@@ -6,6 +6,12 @@ In this project we ask - what determines the ability of a virus to infect some h
 
 https://fo.am/viruscraft/
 
+# todo
+
+- add host extinct/virus extinct to score record
+- add virus description to score record
+- increase death rate with susceptibility? highly specialised = quicker extinction
+
 # Parameters 
 
 These are ones that can be tweaked & need to be checked:

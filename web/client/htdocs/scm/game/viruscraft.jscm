@@ -20,7 +20,7 @@
 (load "scm/game/title-mode.jscm")
 (load "scm/game/world-design-mode.jscm")
 (load "scm/game/play-mode.jscm")
-(load "scm/game/exhib-mode.jscm")
+;;(load "scm/game/exhib-mode.jscm")
 (load "scm/game/stats-mode.jscm")
 (load "scm/game/diseases.jscm")
 
@@ -66,13 +66,8 @@
    ((eq? mode mode-world-design) 
     (cond 
      ((eq? (world-design-mode-ready current-mode) "next")
-      (cond 
-       (exhib-version
-	(set! mode mode-exhib)
-	(init-exhib-mode))
-       (else
-	(set! mode mode-play)
-	(init-play-mode (gen-disease-name)))))
+      (set! mode mode-play)
+      (init-play-mode (gen-disease-name)))
      ((eq? (world-design-mode-ready current-mode) "back")
       (destroy world-root)
       (set! world-units #f)
@@ -97,9 +92,7 @@
       (init-stats-mode (play-mode-virus-name current-mode)
 		       (play-mode-scores current-mode)))
      (else
-      (if exhib-version
-	  (exhib-mode-update current-mode)
-	  (play-mode-update current-mode)))))))
+      (play-mode-update current-mode))))))
 
 (define (render)
   (set! current-mode (update current-mode))
