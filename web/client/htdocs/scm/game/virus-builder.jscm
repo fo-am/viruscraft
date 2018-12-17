@@ -56,7 +56,8 @@
 
 (define world-q (qaxisangle (vector 0 0 1) 0))
 (define world-target-q (qaxisangle (vector 0 0 1) 0))
-(define virus-q (qaxisangle (vector 0 0 1) 0))
+;;(define virus-q (qaxisangle (vector 0 0 1) 0))
+(define virus-q (list 0.36714833974838257 -0.7898207902908325 0.4157268702983856 0.26181119680404663))
 
 (define virus-recep-id 1)
 
@@ -87,8 +88,8 @@
 		  (if type (cons type r) r))
 		'()
 		cur-receptor-types)))
-  (msg "recording mutation")
-  (record-mutation))
+  (when (not exhib-version)
+	(record-mutation)))
 
 (define (attach-virus-circle) (attach-virus receptor-circle 'circle) (update-virus))
 (define (attach-virus-triangle) (attach-virus receptor-triangle 'triangle) (update-virus))
@@ -224,6 +225,7 @@
   (set! receptor-guitar (with-state (hide #t) (load-primitive "models/receptor-guitar.obj")))
   (set! receptor-clear (with-state (hide #t) (load-primitive "models/receptor-clear.obj")))
 
+  (when (not exhib-version)
   (set! buttons 
 	(build-list
 	 num-buttons
@@ -240,10 +242,11 @@
 	     ;;(rotate (vector 0 90 0))
 	     (colour receptor-col)
 	     (load-primitive (list-ref button-objs i)))
-	    (list-ref button-fns i)))))
+	    (list-ref button-fns i))))))
 
   (set! face-display 
-	(with-state 
+	(with-state
+	 ;;(when exhib-version (hide #t))
 	 (shader-assign-compiled "virus")
 	 (parent virus-builder)
 	 (colour receptor-col)
@@ -262,9 +265,7 @@
 		((> virus-dist 300)
 		 (set! world-q (qmul world-q (qaxisangle (vnormalise rot-axis) 2))))		   
 		(else 0)))))))
-  (attach-virus-clear-all)  
-  (msg virus)
-  )
+  (attach-virus-clear-all))
 
 (define (destroy-virus-builder)
   (for-each 

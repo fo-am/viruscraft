@@ -56,35 +56,40 @@
 (define (attach-from-code code)
   (cond
    ((eq? code 0)
-    (attach-virus-donut))
+    (attach-virus-clear))
    ((eq? code 1)
-    (attach-virus-triangle))
-   ((eq? code 2)
-    (attach-virus-circle))
-   ((eq? code 3)
     (attach-virus-square))
-   ((eq? code 4)
-    (attach-virus-angle))
-   ((eq? code 5)
+   ((eq? code 2)
     (attach-virus-guitar))
+   ((eq? code 3)
+    (attach-virus-triangle))
+   ((eq? code 5)
+    (attach-virus-circle))
    ((eq? code 6)
-    (attach-virus-tee))
+    (attach-virus-donut))
    (else
     (attach-virus-clear))))
+
+(define last-tangible "")
+
+(define tangible-order->face-id
+  (list 12 7 2 3 8 13 9 4 1 0))
 
 (define (load-receptor-tangible)
   (let ((xmlHttp (js "new XMLHttpRequest")))
     (xmlHttp.addEventListener
      "load"
      (lambda ()
-       (let ((r (xmlHttp.responseText.split " ")))
-	 (msg r)
-	 (set! virus-recep-id 0)
-	 (attach-from-code (list-ref r 0))
-	 (set! virus-recep-id 1)
-	 (attach-from-code (list-ref r 1))
-	 (set! virus-recep-id 2)
-	 (attach-from-code (list-ref r 2)))))
+       (when (not (eq? last-tangible xmlHttp.responseText))
+	     (set! last-tangible xmlHttp.responseText)
+	     (msg last-tangible)
+	     (let ((r (last-tangible.split " ")))
+	       (index-for-each
+		(lambda (i r)
+		  (set! virus-recep-id (list-ref tangible-order->face-id i))
+		  (attach-from-code r))
+		r))
+	     (record-mutation))))
     (xmlHttp.open "GET" "receptors.txt")
     (xmlHttp.overrideMimeType "script")
     (xmlHttp.send)))
@@ -95,11 +100,9 @@
    (list (list "name" name)
 	 (list "time" (Date.now)))
    (lambda (data)
-     (msg (JSON.parse data))
      (set! current-virus-id (car (JSON.parse data))))))
 
 (define (record-virus g)
-  (msg "record-virus calling")
   (server-call
    "record-virus"
    (list (list "virus-id" current-virus-id)
@@ -109,15 +112,14 @@
 	 (list "jumps" (scores-jumps (play-mode-scores g))))))
 
 (define (record-mutation)
-  (msg current-virus-id)
   (server-call
    "record-mutation"
    (list (list "virus-id" current-virus-id)
-	 (list "receptors" (dbg (foldl (lambda (r s)
-					 (string-append 
-					  s (if (not r) "none" r) 
-					  " "))
-				       "" cur-receptor-types)))
+	 (list "receptors" (foldl (lambda (r s)
+				    (string-append 
+				     s (if (not r) "none" r) 
+				     " "))
+				  "" cur-receptor-types))
 	 (list "time" (Date.now)))))
 
 (define (get-score-position score scores)
@@ -169,16 +171,15 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
 (define (play-mode-update g)
   (virus-builder-update-buttons buttons)
 
-;;  (when (> tangible-timer 50)
-;;	(set! tangible-timer 0)
-;;	(load-receptor-tangible))
-;;  (set! tangible-timer (+ tangible-timer 1))
+  (when (and exhib-version (> tangible-timer 0.5))
+	(set! tangible-timer 0)
+	(load-receptor-tangible))
+  (set! tangible-timer (+ tangible-timer canvas-delta))
 
-;;  (when (eq? highlight-time 0)
+  ;;  (when (eq? highlight-time 0)
 ;;	(highlight-host! (choose (play-mode-population g))))
 
   
@@ -448,7 +449,8 @@
   (ctx.fillText (string-append (play-mode-virus-name g) " virus") 225 30)
   (set! ctx.fillStyle "#000")
   (ctx.fillText (string-append "You are " (trunc (scores-age (play-mode-scores g))) " days old") 20 65)
-  (image-button-render! back-button)
+  (when (not exhib-version)
+	(image-button-render! back-button))
   (when game-started (render-hiscores g))
   (render-popups!)
   (render-transmission-highlight! g)

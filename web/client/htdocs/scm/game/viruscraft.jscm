@@ -32,7 +32,7 @@
 (define mode-stats 5)
 
 (define mode mode-loading)
-(define exhib-version #f)
+(define exhib-version #t)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -78,8 +78,15 @@
    ((eq? mode mode-stats) 
     (cond
      ((stats-mode-finished? current-mode)
-      (set! mode mode-world-design)
-      (init-world-design-mode))
+      (cond
+       (exhib-version
+	(when (not world-units)
+	      (set! world-units (build-world-from-params 20)))
+	(set! mode mode-play)
+	(init-play-mode (gen-disease-name)))
+       (else
+	(set! mode mode-world-design)
+	(init-world-design-mode))))
     (else
      (stats-mode-update current-mode))))
 
