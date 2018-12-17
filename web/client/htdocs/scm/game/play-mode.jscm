@@ -135,7 +135,8 @@
 
   (when (> tangible-timer 50)
 	(set! tangible-timer 0)
-	(load-receptor-tangible))
+	(load-receptor-tangible)
+	)
   (set! tangible-timer (+ tangible-timer 1))
 
 ;;  (when (eq? highlight-time 0)
