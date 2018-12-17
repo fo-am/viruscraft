@@ -68,8 +68,9 @@
 	   (translate (vector 0 -0.025 0))
 	   (rotate (vector 0 0 (if (zero? (modulo (host-id host) 2)) 1 -1))))
 
-     (when (population-in-infection-range? host population)
-	   (colour (vector 2 2 0.5)))
+     ;; uncomment to view infection range
+     ;;(when (population-in-infection-range? host population)
+     ;;      (colour (vector 2 2 0.5)))
 
      (when (host-infected? host) 
 	   (colour (vector 2 0.5 0.5)))))	   

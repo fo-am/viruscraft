@@ -11,6 +11,7 @@
 (define scores-list (list))
 (define hiscores-display (list))
 (define current-virus-id -1)
+(define camera-drift 0.01)
 
 (define (make-play-mode population organisms scores world-units world-pos-checker virus-name) 
   (list population organisms scores world-units world-pos-checker virus-name #f))
@@ -305,10 +306,10 @@
      (scale (vector s s s)))
    (cond 
     ((> (+ last-highlight-time 10) (time))
-     (set! world-q (qslerp world-q world-target-q 0.1)))    
+     (set! world-q (qslerp world-q world-target-q camera-drift)))    
     (else
      (set! world-q (qmul world-q (qaxisangle (vector 0 1 0) 0.25)))))   
-   (set! world-rotate-q (qslerp world-rotate-q world-q 0.1))
+   (set! world-rotate-q (qslerp world-rotate-q world-q camera-drift))
    (concat (q->m world-rotate-q))))
 
 (define (make-highlight time id1 id2) (list time id1 id2))
@@ -331,24 +332,18 @@
     (let ((latlng (host-location host)))
       (let ((x (/ (vx (host-location host)) Math.PI))
 	    (y (/ (vy (host-location host)) (* 2 Math.PI))))
-	;; these numbers are slightly arbitrary, as (I think)
-	;; the original positioning comes from the texture map
-	
-	;; y rotates x (1 is top 0 is bottom pole)
-	;; x must rotate in y
-	
+	;; these numbers are slightly arbitrary, as
+	;; the positioning is based on the texture mapping	
+	;; x rotates y world axis	
+	;; y rotates x world axis (where 1 is top 0 is bottom pole)
 	(set! world-target-q
 	      (qmul
 	       (qaxisangle 
 		(vector 0 1 0)
-		(- (* x -360) 15))
-	       
+		(- (* x -360) 15))	       
 	       (qaxisangle 
 		(vector 1 0 0)
-	       	(+ 180 (* 180 (- (- y) 0.5))))
-	       
-	       ))
-	))))
+	       	(+ 180 (* 180 (- (- y) 0.5))))))))))
 
 (define (organism-pos g id)
   (let ((organism 
