@@ -54,7 +54,7 @@
 	(with-state
 	 (hide #t)
 	 (scale (vector 6.9 6.9 6.9))
-	 (load-ply-primitive "models/pentakis-rings2.ply"))))
+	 (load-ply-primitive "models/pentakis-rings3.ply"))))
   
 
 (define (longest a b c)

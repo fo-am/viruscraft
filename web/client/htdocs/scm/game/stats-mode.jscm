@@ -1,0 +1,108 @@
+;; -*- mode: scheme; -*-
+;; Viruscraft Copyright (C) 2018 FoAM Kernow
+
+(define virus-name "")
+(define virus (make-virus (list)))
+(define scores-list (list))
+(define hiscores-display (list))
+
+(define (make-stats-mode name scores) 
+  (list name scores #f))
+
+(define (stats-mode-name m) (list-ref m 0))
+(define (stats-mode-scores m) (list-ref m 1))
+(define (stats-mode-finished? m) (list-ref m 2))
+(define (stats-mode-modify-finished m v) (list-replace m 2 v))
+
+(define current-score-position -1)
+
+(define (get-score-position score scores)
+  (foldl
+   (lambda (s r)
+     (if (> s score) (+ r 1) r))
+   0
+   scores))
+
+(define (render-stats-hiscores g)
+  (set! ctx.font "20pt Dosis")
+  (ctx.fillText "Top 20 viruses (by age)" 850 100)   
+  (set! ctx.font "15pt Dosis")
+  (let ((displayed #f)
+	(age (scores-age (play-mode-scores g))))
+    (index-for-each
+     (lambda (i hiscore)
+       (let ((score (list-ref hiscore 2))
+	     (y (+ 150 (* (if displayed (+ i 1) i) 20))))
+	 (when (and (not displayed) (< score age))
+	       (set! ctx.fillStyle "#f00")
+	       (set! displayed #t)
+	       (set! y (+ y 20))
+	       (ctx.fillText (string-append (car hiscore) ": " (play-mode-virus-name g) " virus " 
+					    (trunc age))
+			     850 (+ 150 (* i 20))))
+	 (set! ctx.fillStyle "#000")
+	 (ctx.fillText (+ (if displayed (+ (car hiscore) 1) (car hiscore)) ": " (list-ref hiscore 1) " virus " (trunc score))
+		       850 y)))
+     (chop-front 20 hiscores-display))))
+
+
+(define (init-stats-mode name scores)
+  (set! back-button 
+	(make-image-button (- screen-width 100) 570 "hexbutton.png"
+			   "End" "spin"
+			   (lambda (m)
+			     (destroy-virus-builder)
+			     (stats-mode-modify-finished m #t))))
+
+  ;; (server-call-ret
+  ;;  "scores" (list) 
+  ;;  (lambda (data)
+  ;;    (set! scores-list (JSON.parse data))
+  ;;    (set! current-score-position 
+  ;; 	   (get-score-position 
+  ;; 	    (scores-age (stats-mode-scores g)) scores-list))))
+
+  (server-call-ret
+   "hiscores" (list) 
+   (lambda (data)
+     (set! hiscores-display (JSON.parse data))))
+  
+  (make-stats-mode name scores))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define (stats-mode-update g)
+  (image-button-update back-button g))
+
+(define (stats-mode-render g)
+  (with-primitive 
+   virus-builder
+   (identity)
+   (translate builder-pos) 
+   (rotate (vector 80 (* 3 (time)) (* 13.4 (time))))
+   (scale (vector 1.7 1.7 1.7))
+   (concat (q->m virus-q))))
+
+(define (stats-mode-canvas-render g)
+  (set! ctx.font "25pt Dosis")
+  (ctx.fillText (string-append "You created: ") 20 100)
+  (set! ctx.fillStyle "#f00")
+  (ctx.fillText (string-append (stats-mode-name g) " virus") 190 100)
+  (set! ctx.fillStyle "#000")
+  (ctx.fillText (string-append "You survived " (trunc (scores-age (stats-mode-scores g))) " days") 160 390)
+
+  (let ((infections (scores-infections (stats-mode-scores g)))
+	(deaths (scores-deaths (stats-mode-scores g)))
+	(jumps (scores-jumps (stats-mode-scores g)))) 
+    (ctx.fillText (string-append "Infected " infections (if (eq? infections 1) " creature" " creatures")) 160 430)
+    (ctx.fillText (string-append "Caused " deaths (if (eq? deaths 1) " death" " deaths")) 160 470)
+    (ctx.fillText (string-append "Jumped specties " jumps (if (eq? jumps 1) " time" " times")) 160 510))
+  (ctx.fillText (string-append "High scores position: " (+ current-score-position 1)) 160 550)
+  (image-button-render! back-button)
+
+  (render-stats-hiscores g)
+  ;;(render-popups!)
+  ;;(render-transmission-highlight! g)
+  ;;(render-info! g)
+  )
+

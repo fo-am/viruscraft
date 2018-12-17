@@ -3,8 +3,12 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(msg "loading canvas")
+(load "flx/scm/canvas.jscm")
+(load "flx/scm/canvas-widgets.jscm")
+(load "flx/scm/network.jscm")
+
 (load "scm/game/shaders.jscm")
-(load "scm/game/canvas.jscm")
 (load "scm/game/preload.jscm")
 (load "scm/game/spherical.jscm")
 (load "scm/game/infection-model.jscm")
@@ -12,24 +16,31 @@
 (load "scm/game/host-organism.jscm")
 (load "scm/game/worldunit.jscm")
 (load "scm/game/virus-builder.jscm")
-(load "scm/game/canvas-widgets.jscm")
 (load "scm/game/loading-mode.jscm")
 (load "scm/game/title-mode.jscm")
 (load "scm/game/world-design-mode.jscm")
 (load "scm/game/play-mode.jscm")
+;;(load "scm/game/exhib-mode.jscm")
+(load "scm/game/stats-mode.jscm")
+(load "scm/game/diseases.jscm")
 
 (define mode-loading 0)
 (define mode-title 1)
 (define mode-world-design 2)
 (define mode-play 3)
+(define mode-exhib 4)
+(define mode-stats 5)
 
 (define mode mode-loading)
+(define exhib-version #f)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (clear-colour (vector 0.0 0.0 0.0))
 (set-camera-angle 25)
+(set-camera-transform (mtranslate (midentity) (vector 0 0 -38)))
 (resize-glcanvas webgl-canvas)
+(set-font! "Dosis")
 
 (define world-units #f)
 (define current-mode (init-loading-mode))
@@ -55,22 +66,31 @@
    ((eq? mode mode-world-design) 
     (cond 
      ((eq? (world-design-mode-ready current-mode) "next")
-      (msg "next")
       (set! mode mode-play)
-      (init-play-mode))
+      (init-play-mode (gen-disease-name)))
      ((eq? (world-design-mode-ready current-mode) "back")
-      (msg "back")
       (destroy world-root)
       (set! world-units #f)
       (set! mode mode-title)
       (init-title-mode))
      (else (world-design-mode-update current-mode))))
-   
+
+   ((eq? mode mode-stats) 
+    (cond
+     ((stats-mode-finished? current-mode)
+      (set! mode mode-world-design)
+      (init-world-design-mode))
+    (else
+     (stats-mode-update current-mode))))
+
    (else 
     (cond 
      ((play-mode-finished? current-mode)
-      (set! mode mode-world-design)
-      (init-world-design-mode))
+      (destroy world-root)
+      (set! world-units #f)
+      (set! mode mode-stats)
+      (init-stats-mode (play-mode-virus-name current-mode)
+		       (play-mode-scores current-mode)))
      (else
       (play-mode-update current-mode))))))
 
@@ -78,22 +98,25 @@
   (set! current-mode (update current-mode))
   (resize-glcanvas webgl-canvas)
   (resize-canvas canvas)
+  (canvas-update-time)
 
   (cond
    ((eq? mode mode-loading) (loading-mode-render current-mode))
    ((eq? mode mode-title) (title-mode-render current-mode))
    ((eq? mode mode-world-design) (world-design-mode-render current-mode))
+   ((eq? mode mode-exhib) (exhib-mode-render current-mode))
+   ((eq? mode mode-stats) (stats-mode-render current-mode))
    (else (play-mode-render current-mode)))  
-
 
   (ctx.clearRect 0 0 screen-width screen-height)	  
   (cond
    ((eq? mode mode-loading) (loading-mode-canvas-render current-mode))
    ((eq? mode mode-title) (title-mode-canvas-render current-mode))
    ((eq? mode mode-world-design) (world-design-mode-canvas-render current-mode))
+   ((eq? mode mode-exhib) (exhib-mode-canvas-render current-mode))
+   ((eq? mode mode-stats) (stats-mode-canvas-render current-mode))
    (else (play-mode-canvas-render current-mode)))  
   )
-
 
 ;;(with-primitive world-root (rotate (vector 90 0 0)))
 (canvas-setup)

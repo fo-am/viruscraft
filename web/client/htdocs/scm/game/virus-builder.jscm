@@ -39,7 +39,7 @@
 			        7  6  5  9  8
 			        2  1  0  4  3))
 
-(define builder-pos (vector -9.5 1 0))
+(define builder-pos (vector -9.5 2 0))
 
 (define virus-builder #f)
 (define receptor-circle #f)
@@ -55,6 +55,7 @@
 (define cur-receptor-types (build-list 20 (lambda (i) #f)))
 
 (define world-q (qaxisangle (vector 0 0 1) 0))
+(define world-target-q (qaxisangle (vector 0 0 1) 0))
 (define virus-q (qaxisangle (vector 0 0 1) 0))
 
 (define virus-recep-id 1)
@@ -85,7 +86,9 @@
 		(lambda (type r) 
 		  (if type (cons type r) r))
 		'()
-		cur-receptor-types))))
+		cur-receptor-types)))
+  (msg "recording mutation")
+  (record-mutation))
 
 (define (attach-virus-circle) (attach-virus receptor-circle 'circle) (update-virus))
 (define (attach-virus-triangle) (attach-virus receptor-triangle 'triangle) (update-virus))
@@ -112,17 +115,16 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define num-buttons 8)
+(define num-buttons 6)
 
 (define button-objs (list
 		     "models/receptor-triangle.obj"
 		     "models/receptor-circle.obj"
 		     "models/receptor-square.obj"
 		     "models/receptor-donut.obj"
-		     "models/receptor-tee.obj"
-		     "models/receptor-angle.obj"
 		     "models/receptor-clear.obj"
-		     "models/receptor-guitar.obj"))
+		     "models/receptor-guitar.obj"
+		     ))
 
 (define button-fns 
   (list 
@@ -130,8 +132,6 @@
    (lambda () (attach-virus-circle))
    (lambda () (attach-virus-square))
    (lambda () (attach-virus-donut))
-   (lambda () (attach-virus-tee))
-   (lambda () (attach-virus-angle))
    (lambda () (attach-virus-clear))
    (lambda () (attach-virus-guitar))))
 
@@ -262,7 +262,8 @@
 		((> virus-dist 300)
 		 (set! world-q (qmul world-q (qaxisangle (vnormalise rot-axis) 2))))		   
 		(else 0)))))))
-  
+  (attach-virus-clear-all)  
+  (msg virus)
   )
 
 (define (destroy-virus-builder)
@@ -271,3 +272,10 @@
      (destroy (button-prim button)))
    buttons)
   (destroy virus-builder))
+
+(define (destroy-virus-buttons)
+  (destroy face-display)
+  (for-each 
+   (lambda (button)
+     (destroy (button-prim button)))
+   buttons))

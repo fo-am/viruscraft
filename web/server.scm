@@ -34,7 +34,7 @@
 ;;(unsafe!)
 ;;(define setuid (get-ffi-obj 'setuid #f (_fun _int -> _int)))
 
-(define db-name "butterflies.db")
+(define db-name "viruscraft.db")
 (define db #f)
 
 (if (file-exists? (string->path db-name))
@@ -47,8 +47,6 @@
       (setup db)))
 
 (open-log "log.txt")
-
-(display (get-game-params db))(newline)
 
 (define (pluto-response txt)
   (let ((p (response/full
@@ -68,73 +66,23 @@
       (pluto-response (scheme->json '("hello")))))
 
    (register
-    (req 'get-morphs '(type))
-    (lambda (req type)
-      (pluto-response (scheme->json (get-morphs db type)))))
+    (req 'register-virus '(name time))
+    (lambda (req name time)
+      (let* ((id (insert-virus db name time)))
+	(pluto-response (scheme->json (list id))))))
 
    (register
-    (req 'update-morph '())
-    (lambda (req)
-      (if (not (assq 'delete (request-bindings req)))
-          (update-morph
-           db
-           (cdr (assq 'id (request-bindings req)))
-           (cdr (assq 'probability (request-bindings req)))
-           (let ((t (assq 'active (request-bindings req)))) (if t 1 0))
-           ;(let ((t (assq 'can_be_toxic (request-bindings req)))) (if t 1 0))
-           ;(cdr (assq 'wing_shape (request-bindings req)))
-           )
-          (delete-morph
-           db (cdr (assq 'id (request-bindings req)))))
-      (redirect-to "admin.html")))
-
+    (req 'record-virus '(virus-id age infections deaths jumps))
+    (lambda (req virus-id age infections deaths jumps)
+      (update-virus db virus-id age infections deaths jumps)
+      (pluto-response (scheme->json (list 0)))))
+   
    (register
-    (req 'add-morph '())
-    (lambda (req)
-      (match (bindings-assq #"texture_name" (request-bindings/raw req))
-             ((struct binding:file (id filename headers content))
-              (let ((fn (bytes->string/utf-8 filename)))
-                (when (not (equal? fn ""))
-                      (with-output-to-file
-                          (string-append "textures/uploads/" fn) #:exists 'replace
-                          (lambda ()
-                            (write-bytes content)))
-                      (insert-morph
-                       db fn 1 1 1 1
-                       (cdr (assq 'type (request-bindings req))))))))
-      (redirect-to "admin.html")))
-
-   (register
-    (req 'upload '())
-    (lambda (req)
-      (match (bindings-assq #"binary" (request-bindings/raw req))
-             ((struct binding:file (id filename headers content))
-              (with-output-to-file
-                  (string-append "files/" (bytes->string/utf-8 filename)) #:exists 'replace
-                  (lambda ()
-                    (write-bytes content)))))
-      (pluto-response (scheme->json '("ok")))))
-
-   (register
-    (req 'player '(played_before age_range))
-    (lambda (req played_before age_range)
-      (display (list played_before age_range))(newline)
-      (let* ((id (insert-player db played_before age_range)))
-        (pluto-response (scheme->json (list id))))))
-
-   (register
-    (req 'eaten '(player_id morph toxic time_stamp game toxic_morph))
-    (lambda (req player_id morph toxic time_stamp game toxic_morph)
-      (let* ((id (insert-eaten db player_id morph toxic time_stamp game toxic_morph)))
-        (pluto-response (scheme->json '())))))
-
-   (register
-    (req 'score '(player_id score))
-    (lambda (req player-id score)
-      (set-player-score db player-id score)
-      (pluto-response
-       (scheme->json (list)))))
-
+    (req 'record-mutation '(virus-id receptors time))
+    (lambda (req virus-id receptors time)
+      (let* ((id (insert-mutation db virus-id receptors time)))
+	(pluto-response (scheme->json (list id))))))
+   
    (register
     (req 'hiscores '())
     (lambda (req)
@@ -142,54 +90,12 @@
        (scheme->json (get-hiscores db)))))
 
    (register
-    (req 'player-name '(player_id player_name))
-    (lambda (req player_id player_name)
-      (insert-player-name db player_id player_name)
-      (pluto-response (scheme->json '()))))
-
-   (register
-    (req 'nuke-data '())
+    (req 'scores '())
     (lambda (req)
-      (nuke db)
-      (redirect-to "admin.html")))
-
-   (register
-    (req 'set-game-param '())
-    (lambda (req)
-      (set-game-param
-       db
-       (cdr (assq 'key (request-bindings req)))
-       (cdr (assq 'value (request-bindings req))))
-      (redirect-to "admin.html")))
-
-   (register
-    (req 'get-game-param '(key value))
-    (lambda (req key value)
-
-
-      (pluto-response (get-game-param db key value))))
-
-   (register
-    (req 'get-game-params '())
-    (lambda (req)
-      (pluto-response (scheme->json (get-game-params db)))))
-
-   (register
-    (req 'get-data '(table-id))
-    (lambda (req table-id)
-      (let ((table-id (string->number table-id)))
-      (display table-id)(newline)
       (pluto-response
-       (table->csv
-        db
-        (cond
-         ;; attempt at security...
-         ((eq? table-id 0) "eaten")
-         ((eq? table-id 1) "player")
-         ((eq? table-id 2) "player_name")
-         ((eq? table-id 3) "morph")
-         ((eq? table-id 4) "hiscores")))))))))
+       (scheme->json (get-scores db)))))
 
+   ))
 
 (define (start request)
   (let ((values (url-query (request-uri request))))
@@ -223,7 +129,8 @@
  start
  ;; port number is read from command line as argument
  ;; ie: ./server.scm 8080
- #:listen-ip "10.42.0.1"
+;; #:listen-ip "10.42.0.1"
+ #:listen-ip "localhost"
  #:port (string->number (command-line #:args (port) port))
  #:command-line? #t
  #:servlet-path "/game"

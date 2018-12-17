@@ -1,0 +1,5 @@
+symptom
+virus
+disease
+condition
+malaise

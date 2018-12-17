@@ -1,0 +1,3 @@
+[submodule "web/client/htdocs/flx"]
+	path = web/client/htdocs/flx
+	url = git@github.com:fo-am/flx.git

@@ -2,49 +2,56 @@
 ;; Viruscraft Copyright (C) 2018 FoAM Kernow
 
 (define infection-rate 10)
-(define world-zoom 0)
-(define virus (make-virus (list)))
+(define max-transmission-highlights 5)
+(define game-over-time 5)
 
-(define (make-play-mode population organisms score hi-score world-units world-pos-checker) 
-  (list population organisms score hi-score world-units world-pos-checker #f))
+(define world-zoom 0)
+(define game-started #f)
+(define virus (make-virus (list)))
+(define scores-list (list))
+(define hiscores-display (list))
+(define current-virus-id -1)
+(define camera-drift 0.01)
+
+(define (make-play-mode population organisms scores world-units world-pos-checker virus-name) 
+  (list population organisms scores world-units world-pos-checker virus-name #f))
 
 (define (play-mode-population m) (list-ref m 0))
 (define (play-mode-modify-population m v) (list-replace m 0 v))
 (define (play-mode-organisms m) (list-ref m 1))
 (define (play-mode-modify-organisms m v) (list-replace m 1 v))
-(define (play-mode-score m) (list-ref m 2))
-(define (play-mode-modify-score m v) (list-replace m 2 v))
-(define (play-mode-hi-score m) (list-ref m 3))
-(define (play-mode-modify-hi-score m v) (list-replace m 3 v))
-(define (play-mode-world-units m) (list-ref m 4))
-(define (play-mode-world-pos-checker m) (list-ref m 5))
-(define (play-mode-modify-world-pos-checker m v) (list-replace m 5 v))
+(define (play-mode-scores m) (list-ref m 2))
+(define (play-mode-modify-scores m v) (list-replace m 2 v))
+(define (play-mode-world-units m) (list-ref m 3))
+(define (play-mode-world-pos-checker m) (list-ref m 4))
+(define (play-mode-modify-world-pos-checker m v) (list-replace m 4 v))
+(define (play-mode-virus-name m) (list-ref m 5))
 (define (play-mode-finished? m) (list-ref m 6))
 (define (play-mode-modify-finished m v) (list-replace m 6 v))
 
-(define title-text '())
-(define infect-window '())
-(define deaths-window '())
-(define age-window '())
-(define jumps-window '())
-(define back-button '())
+(define (scores-age s) (list-ref s 0))
+(define (scores-modify-age s v) (list-replace s 0 v))
+(define (scores-infections s) (list-ref s 1))
+(define (scores-modify-infections s v) (list-replace s 1 v))
+(define (scores-deaths s) (list-ref s 2))
+(define (scores-modify-deaths s v) (list-replace s 2 v))
+(define (scores-jumps s) (list-ref s 3))
+(define (scores-modify-jumps s v) (list-replace s 3 v))
 
-(define highest-infections 0)
-(define highest-deaths 0)
-(define highest-age 0)
-(define highest-jumps 0)
+(define (scores-update s infections deaths jumps)
+  (list
+   (+ (scores-age s) canvas-delta)
+   infections
+   deaths
+   jumps))
 
-(define current-infections 0)
-(define current-deaths 0)
-(define current-age 0)
-(define current-jumps 0)
-
-(define notified-high-infections #f)
-(define notified-high-deaths #f)
-(define notified-high-age #f)
-(define notified-jumps #f)
+(define current-score-position -1)
 
 (define tangible-timer 0)
+(define end-game-timer 1000)
+
+;; so we can check when infected-id changes
+(define last-transmission-id 0)
 
 (define (attach-from-code code)
   (cond
@@ -82,39 +89,73 @@
     (xmlHttp.overrideMimeType "script")
     (xmlHttp.send)))
 
-(define (reset-scores)
-  (set! current-infections 0)
-  (set! current-deaths 0)
-  (set! current-age 0)
-  (set! current-jumps 0)
-  (set! notified-high-infections #f)
-  (set! notified-high-deaths #f)
-  (set! notified-high-age #f)
-  (set! notified-high-jumps #f))
+(define (register-virus name)
+  (server-call-ret
+   "register-virus"
+   (list (list "name" name)
+	 (list "time" (Date.now)))
+   (lambda (data)
+     (msg (JSON.parse data))
+     (set! current-virus-id (car (JSON.parse data))))))
 
-(define (init-play-mode)
-  (reset-scores)
+(define (record-virus g)
+  (msg "record-virus calling")
+  (server-call
+   "record-virus"
+   (list (list "virus-id" current-virus-id)
+	 (list "age" (scores-age (play-mode-scores g)))
+	 (list "infections" (scores-infections (play-mode-scores g)))
+	 (list "deaths" (scores-deaths (play-mode-scores g)))
+	 (list "jumps" (scores-jumps (play-mode-scores g))))))
+
+(define (record-mutation)
+  (msg current-virus-id)
+  (server-call
+   "record-mutation"
+   (list (list "virus-id" current-virus-id)
+	 (list "receptors" (dbg (foldl (lambda (r s)
+					 (string-append 
+					  s (if (not r) "none" r) 
+					  " "))
+				       "" cur-receptor-types)))
+	 (list "time" (Date.now)))))
+
+(define (get-score-position score scores)
+  (foldl
+   (lambda (s r)
+     (if (> s score) (+ r 1) r))
+   0
+   scores))
+
+(define (init-play-mode virus-name)
+  (register-virus virus-name)
   (clear-virus)
   (clear-popups!)
 
+  (fire-popup! "good" (list "Can you evolve a long lived" 
+			    "succesful virus?"))
+  (fire-popup! "good" (list "Add a ligand to start"))
+  
   (set! back-button 
 	(make-image-button (- screen-width 100) 570 "hexbutton.png"
-			   "End" 
+			   "End" "spin"
 			   (lambda (m)
-			     (destroy-virus-builder)
+			     (destroy-virus-buttons)
 			     (organisms-destroy (play-mode-organisms m))
 			     (play-mode-modify-finished m #t))))
   
-  (set! title-text 
-	(make-textbox 
-	 300 70
-	 "50pt Dosis" 30 "centre"
-	 (list "Evolve your virus")))
+  (set! end-game-timer 1000)
+  (set! game-started #f)
 
-  (set! infect-window (make-window 20 510 140 140))
-  (set! deaths-window (make-window 170 510 140 140))
-  (set! age-window (make-window 320 510 140 140))
-  (set! jumps-window (make-window 470 510 140 140))
+  (server-call-ret
+   "scores" (list) 
+   (lambda (data)
+     (set! scores-list (JSON.parse data))))
+
+  (server-call-ret
+   "hiscores" (list) 
+   (lambda (data)
+     (set! hiscores-display (JSON.parse data))))
   
   (let ((wpc (build-world-position-checker world-units)))
     (build-virus-builder)
@@ -124,7 +165,7 @@
      (population-infect 
       (make-random-population 50 wpc) 
       virus infection-rate)
-     '() 0 0 world-units wpc)))
+     '() 0 world-units wpc virus-name)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -132,105 +173,121 @@
 (define (play-mode-update g)
   (virus-builder-update-buttons buttons)
 
-
-  (when (> tangible-timer 50)
-	(set! tangible-timer 0)
-	(load-receptor-tangible)
-	)
-  (set! tangible-timer (+ tangible-timer 1))
+;;  (when (> tangible-timer 50)
+;;	(set! tangible-timer 0)
+;;	(load-receptor-tangible))
+;;  (set! tangible-timer (+ tangible-timer 1))
 
 ;;  (when (eq? highlight-time 0)
 ;;	(highlight-host! (choose (play-mode-population g))))
 
   
   ;; keep track of deaths
-  (set! current-deaths
+  (define new-deaths
   	(foldl
   	 (lambda (host r)
   	   (if (and (not (host-alive? host))
   		    (host-infected? host))
   	       (+ r 1) r))
-  	 current-deaths
+  	 (scores-deaths (play-mode-scores g))
   	 (play-mode-population g)))
-  (set! current-infections (population-num-infected (play-mode-population g)))
-  (set! current-age (play-mode-score g))
 
-  (when (> current-infections highest-infections) 
-	(set! highest-infections current-infections)
-	(when (not notified-high-infections) 
-	      (fire-popup! "good" (list "New highest infections!"))
-	      (set! notified-high-infections #t)))
+  (define new-infections (scores-infections (play-mode-scores g)))
+  (define new-jumps (scores-jumps (play-mode-scores g)))
 
-  (when (> current-deaths highest-deaths) 
-	(set! highest-deaths current-deaths)
-	(when (not notified-high-deaths) 
-	      (fire-popup! "good" (list "New highest deaths!"))
-	      (set! notified-high-deaths #t)))
-
-  (when (> current-age highest-age) 
-	(set! highest-age current-age)
-	(when (not notified-high-age) 
-	      (fire-popup! "good" (list "New highest age!"))
-	      (set! notified-high-age #t)))
-
-  (let ((infect (check-infect-highlight-id!)))
-    (when infect (highlight-infect! infect)))
+  ;; do we have a new infection?
+  (when (not (eq? last-transmission-id (car transmission-ids)))
+	(set! new-infections (+ new-infections 1))
+	(highlight-transmission! g transmission-ids)
+	(set! last-transmission-id (car transmission-ids)))
 
   (let ((cross (check-cross-species-infection!)))
     (when cross
-	  (set! current-jumps (+ current-jumps 1))
-	  (when (< highest-jumps current-jumps)
-		(set! highest-jumps current-jumps))
-	  (highlight-cross! cross)
+	  (set! new-jumps (+ new-jumps 1))
 	  (fire-popup! "good" (list "Cross-species infection!"))))
 
-  (image-button-update 
-   back-button
-   (cond
-    ;; no hosts!
-    ((zero? (length (play-mode-population g)))
-     (fire-popup! "bad" (list "The hosts all died out!"))
-     (reset-scores)
-     (make-play-mode
-      (population-infect 
-       (make-random-population 50 (play-mode-world-pos-checker g)) 
-       virus infection-rate)
-      '() 0 (play-mode-hi-score g)
-      (play-mode-world-units g)
-      (play-mode-world-pos-checker g)))
+  ;; check for score position improvment
+  (let ((position-now (get-score-position (scores-age (play-mode-scores g)) scores-list)))
+    (when (not (eq? position-now current-score-position))
+	  (when (not (eq? current-score-position -1))
+		(fire-popup! "position-score" (list "Your virus is now at position" (+ "" current-score-position))))
+	  (set! current-score-position position-now)))
+  
+  
+  (let ((num-infections (population-num-infected (play-mode-population g))))
+    (when (> num-infections 0) (set! game-started #t))
 
-    ;; no infections
-    ((zero? (population-num-infected (play-mode-population g)))
-     (when (> (play-mode-score g) 100)
-	   (fire-popup! "bad" (list "Your virus died out!")))
-     (reset-scores)
-     (make-play-mode
-      (population-infect-one (play-mode-population g) virus)
-      (update-organisms 
-       (play-mode-organisms g)
-       (play-mode-population g)
-       (play-mode-world-units g) (time))
-      0 (play-mode-hi-score g)
-      (play-mode-world-units g)
-      (play-mode-world-pos-checker g)))
+    (image-button-update 
+     back-button
+     (cond
+      ;; delayed game end...
+      ((< end-game-timer 999)
+       (set! end-game-timer (- end-game-timer canvas-delta))
+       (cond 
+	((< end-game-timer 0)
+	 (destroy-virus-buttons)
+	 (organisms-destroy (play-mode-organisms g))
+	 (play-mode-modify-finished g #t))
+	(else g)))
 
-    ;; normal
-    (else
-     (make-play-mode
-      (population-update 
-       (play-mode-population g) 
-       virus
-       (play-mode-world-pos-checker g))
-      (update-organisms 
-       (play-mode-organisms g)
-       (play-mode-population g)
-       (play-mode-world-units g) (time))
-      (+ (play-mode-score g) 1)
-      (if (> (play-mode-score g) (play-mode-hi-score g))
-	  (play-mode-score g)
-	  (play-mode-hi-score g)) 
-      (play-mode-world-units g)
-      (play-mode-world-pos-checker g))))))
+      ;; no hosts!
+      ((and (zero? (length (play-mode-population g)))
+	    (> end-game-timer 999))
+       (fire-popup! "bad" (list "The hosts all died out!"
+				"Your virus is extinct"))
+       
+       (record-virus g)
+       (set! end-game-timer game-over-time)
+       g)
+
+      ;; not started and no infections yet...
+      ((and (not game-started)
+	    (zero? num-infections))
+       (make-play-mode
+	(population-update 
+	 (population-infect-one (play-mode-population g) virus)
+	 virus
+	 (play-mode-world-pos-checker g))      
+	(update-organisms 
+	 (play-mode-organisms g)
+	 (play-mode-population g)
+	 (play-mode-world-units g) (time))
+	(list 0 0 0 0) 
+	(play-mode-world-units g)
+	(play-mode-world-pos-checker g)
+	(play-mode-virus-name g)))
+      
+
+      ;; game started but no infections
+      ((and game-started
+	    (zero? num-infections)
+	    (> end-game-timer 999))
+       (fire-popup! "bad" (list "Your virus died out!"))
+       (record-virus g)
+       (set! end-game-timer game-over-time)
+       g)
+      
+      ;; normal
+      (else
+       (make-play-mode
+	(population-update 
+	 (play-mode-population g) 
+	 virus
+	 (play-mode-world-pos-checker g))
+	(update-organisms 
+	 (play-mode-organisms g)
+	 (play-mode-population g)
+	 (play-mode-world-units g) (time))
+	(scores-update
+	 (play-mode-scores g) 
+	 new-infections
+	 new-deaths
+	 new-jumps)
+	(play-mode-world-units g)
+	(play-mode-world-pos-checker g)
+	(play-mode-virus-name g)))))))
+
+(define world-rotate-q (qaxisangle (vector 0 1 0) 0))
 
 (define (play-mode-render g)
   (with-primitive 
@@ -240,23 +297,53 @@
    ;;(rotate (vector 80 0 -25))
    (scale (vector 1.7 1.7 1.7))
    (concat (q->m virus-q)))
-
+  
   (with-primitive 
    world-root 
    (identity)
    (translate (vector 5 0 0))
    (let ((s (+ (min (max 0.02 (* canvas-mouse-zoom 0.02)) 2) 0.7)))
      (scale (vector s s s)))
-   (concat (q->m world-q))))
+   (cond 
+    ((> (+ last-highlight-time 10) (time))
+     (set! world-q (qslerp world-q world-target-q camera-drift)))    
+    (else
+     (set! world-q (qmul world-q (qaxisangle (vector 0 1 0) 0.25)))))   
+   (set! world-rotate-q (qslerp world-rotate-q world-q camera-drift))
+   (concat (q->m world-rotate-q))))
 
-(define highlight-time 0)
-(define highlight-id1 #f)
-(define highlight-id2 #f)
+(define (make-highlight time id1 id2) (list time id1 id2))
+(define (highlight-time h) (list-ref h 0))
+(define (highlight-id1 h) (list-ref h 1))
+(define (highlight-id2 h) (list-ref h 2))
 
-(define (highlight-cross! host-id)
-  (set! highlight-time 1000)
-  (set! highlight-id1 (list-ref host-id 0))
-  (set! highlight-id2 (list-ref host-id 1)))
+(define highlights '())
+(define last-highlight-time 0)
+(define highlight-duration 5)
+
+(define (highlight-transmission! g host-id)
+  (set! highlights (cons (make-highlight highlight-duration 
+					 (list-ref host-id 0)
+					 (list-ref host-id 1))
+			 highlights))
+  (set! last-highlight-time (time))  
+  (let ((host (host-search (car host-id) (play-mode-population g))))
+    ;; convert from lat/lon to quaternion 
+    (let ((latlng (host-location host)))
+      (let ((x (/ (vx (host-location host)) Math.PI))
+	    (y (/ (vy (host-location host)) (* 2 Math.PI))))
+	;; these numbers are slightly arbitrary, as
+	;; the positioning is based on the texture mapping	
+	;; x rotates y world axis	
+	;; y rotates x world axis (where 1 is top 0 is bottom pole)
+	(set! world-target-q
+	      (qmul
+	       (qaxisangle 
+		(vector 0 1 0)
+		(- (* x -360) 15))	       
+	       (qaxisangle 
+		(vector 1 0 0)
+	       	(+ 180 (* 180 (- (- y) 0.5))))))))))
 
 (define (organism-pos g id)
   (let ((organism 
@@ -266,42 +353,36 @@
 	 (organism-root organism))
 	#f)))
 
-(define (render-highlight! g)
-  (when (> highlight-time 0)
-	(set! highlight-time (- highlight-time 1))
-	(let ((pos1 (organism-pos g highlight-id1))
-	      (pos2 (organism-pos g highlight-id2)))
-	  (set! ctx.strokeStyle "#ff0000")
-	  (set! ctx.lineWidth 3)
-	  (set! ctx.globalAlpha 0.6)
-	  (when pos1 (draw-circle (vx pos1) (vy pos1) 35))
-	  (when pos2 (draw-circle (vx pos2) (vy pos2) 35))
-	  (when (and pos1 pos2)
-		(draw-line (vx pos1) (vy pos1) (vx pos2) (vy pos2)))
-	  (set! ctx.strokeStyle "#000000")
-	  (set! ctx.lineWidth 1)
-	  (set! ctx.globalAlpha 1)
-	  )))
 
-(define infect-highlight-time 0)
-(define infect-highlight-id 0)
-
-(define (highlight-infect! host-id)
-  (set! infect-highlight-time 1000)
-  (set! infect-highlight-id host-id))
-
-(define (render-infect-highlight! g)
-  (when (> infect-highlight-time 0)
-	(set! infect-highlight-time (- infect-highlight-time 1))
-	(let ((pos (organism-pos g infect-highlight-id)))
-	  (set! ctx.strokeStyle "#ff0000")
-	  (set! ctx.lineWidth 3)
-	  (set! ctx.globalAlpha 0.6)
-	  (when pos (draw-circle (vx pos) (vy pos) 35))
-	  (set! ctx.strokeStyle "#000000")
-	  (set! ctx.lineWidth 1)
-	  (set! ctx.globalAlpha 1)
-	  )))
+(define (render-transmission-highlight! g)
+  (set! highlights
+	(foldl
+	 (lambda (hl r)
+	   (if (and (> (highlight-time hl) 0)
+		    (< (length r) max-transmission-highlights))
+	       ;; render it
+	       (let ((pos1 (organism-pos g (highlight-id1 hl)))
+		     (pos2 (organism-pos g (highlight-id2 hl))))
+		 (set! ctx.strokeStyle "#ff0000")
+		 (set! ctx.lineWidth 3)
+		 (set! ctx.globalAlpha (/ (highlight-time hl) highlight-duration)) 
+		 (when pos1 (draw-circle (vx pos1) (vy pos1) 35))
+		 (when pos2 (draw-circle (vx pos2) (vy pos2) 35))
+		 (when (and pos1 pos2)
+		       (draw-line (vx pos1) (vy pos1) (vx pos2) (vy pos2)))
+		 (set! ctx.strokeStyle "#000000")
+		 (set! ctx.lineWidth 1)
+		 (set! ctx.globalAlpha 1)
+		 ;; return new one
+		 (cons
+		  (make-highlight
+		   (- (highlight-time hl) canvas-delta)
+		   (highlight-id1 hl)
+		   (highlight-id2 hl))
+		  r))
+	       r)) ;; it's gone...	   
+	 '()
+	 highlights)))
 
 (define host-info-id 0)
 
@@ -315,56 +396,62 @@
 	 (vx pos)
 	 (vy pos)))))
 
-(define (play-mode-canvas-render g)
-  (textbox-render! title-text)
-  (image-button-render! back-button)
-  (window-render! infect-window)
-  (window-render! deaths-window)
-  (window-render! age-window)
-  (window-render! jumps-window)
+(define (chop-front n l)
+  (cond
+    ((null? l) '())
+    ((zero? n) '())
+    (else (cons (car l) (chop-front (- n 1) (cdr l))))))
 
-  (let ((y 550) (x (list 30 180 330 480))
-	(num-offs 70)) 
-    
+(define (highscore-get-n-greater-than n v l)
+  (cond
+    ((null? l) '())
+    ((> (list-ref (car l) 2) v) (chop-front n l))
+    (else (highscore-get-n-greater-than n v (cdr l))))) 
+
+(define (highscore-get-n-less-than n v l)
+  (cond
+    ((null? l) '())
+    ((<= (list-ref (car l) 2) v) (chop-front n l))
+    (else (highscore-get-n-less-than n v (cdr l))))) 
+
+(define (highscore-get-n-around n v l)
+  (append
+   (reverse (highscore-get-n-greater-than n v (reverse l)))
+   (highscore-get-n-less-than n v l)))
+
+(define (render-hiscores g)
   (set! ctx.font "20pt Dosis")
-
-  (ctx.fillText "Infections" (list-ref x 0) y)
-  (ctx.fillText "Deaths" (list-ref x 1) y)
-  (ctx.fillText "Age" (list-ref x 2) y)
-  (ctx.fillText "Host jumps" (list-ref x 3) y)
-
-  (set! y (+ y 30))
-
+  (ctx.fillText "How your virus compares to others" 20 520)   
   (set! ctx.font "15pt Dosis")
-  (ctx.fillText "Current" (list-ref x 0) y)
-  (ctx.fillText "Current" (list-ref x 1) y)
-  (ctx.fillText "Current" (list-ref x 2) y)
-  (ctx.fillText "Current" (list-ref x 3) y)
+  (let ((displayed #f)
+	(age (scores-age (play-mode-scores g))))
+    (index-for-each
+     (lambda (i hiscore)
+       (let ((score (list-ref hiscore 2))
+	     (y (+ 550 (* (if displayed (+ i 1) i) 20))))
+	 (when (and (not displayed) (< score age))
+	       (set! ctx.fillStyle "#f00")
+	       (set! displayed #t)
+	       (set! y (+ y 20))
+	       (ctx.fillText (string-append (car hiscore) ": " (play-mode-virus-name g) " virus " 
+					    (trunc age))
+			     20 (+ 550 (* i 20))))
+	 (set! ctx.fillStyle "#000")
+	 (ctx.fillText (+ (if displayed (+ (car hiscore) 1) (car hiscore)) ": " (list-ref hiscore 1) " virus " (trunc score))
+		       20 y)))
+     (highscore-get-n-around 3 age hiscores-display))))
 
-  (ctx.fillText (+ "" current-infections) (+ (list-ref x 0) num-offs) y)
-  (ctx.fillText (+ "" current-deaths) (+ (list-ref x 1) num-offs) y)
-  (ctx.fillText (+ "" (/ current-age 100)) (+ (list-ref x 2) num-offs) y)
-  (ctx.fillText (+ "" current-jumps) (+ (list-ref x 3) num-offs) y)
-
-  (set! y (+ y 30))
-
-  (ctx.fillText "Best" (list-ref x 0) y)
-  (ctx.fillText "Best" (list-ref x 1) y)
-  (ctx.fillText "Best" (list-ref x 2) y)
-  (ctx.fillText "Best" (list-ref x 3) y)
-
-  (ctx.fillText (+ "" highest-infections) (+ (list-ref x 0) num-offs) y)
-  (ctx.fillText (+ "" highest-deaths) (+ (list-ref x 1) num-offs) y)
-  (ctx.fillText (+ "" (/ highest-age 100)) (+ (list-ref x 2) num-offs) y)
-  (ctx.fillText (+ "" highest-jumps) (+ (list-ref x 3) num-offs) y)
-
-  (set! y (+ y 30))
-
-  (ctx.fillText "million years" (list-ref x 2) y)
-
+(define (play-mode-canvas-render g)
+  (set! ctx.font "25pt Dosis")
+  (ctx.fillText (string-append "You are playing: ") 20 30)
+  (set! ctx.fillStyle "#f00")
+  (ctx.fillText (string-append (play-mode-virus-name g) " virus") 225 30)
+  (set! ctx.fillStyle "#000")
+  (ctx.fillText (string-append "You are " (trunc (scores-age (play-mode-scores g))) " days old") 20 65)
+  (image-button-render! back-button)
+  (when game-started (render-hiscores g))
   (render-popups!)
-  (render-highlight! g)
-  (render-infect-highlight! g)
+  (render-transmission-highlight! g)
   ;;(render-info! g)
   )
 

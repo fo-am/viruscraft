@@ -56,7 +56,7 @@
 (define (organism-id c) (list-ref c 0))
 (define (organism-root c) (list-ref c 1))
 
-(define (organism-update! organism host time)
+(define (organism-update! organism host time population)
   (cond 
    ((host-alive? host)
     (with-primitive 
@@ -67,28 +67,33 @@
      (when (> (host-health host) 10)
 	   (translate (vector 0 -0.025 0))
 	   (rotate (vector 0 0 (if (zero? (modulo (host-id host) 2)) 1 -1))))
+
+     ;; uncomment to view infection range
+     ;;(when (population-in-infection-range? host population)
+     ;;      (colour (vector 2 2 0.5)))
+
      (when (host-infected? host) 
 	   (colour (vector 2 0.5 0.5)))))	   
    (else
     ;; remove the primitive as we have died
     (destroy (organism-root organism)))))
 
-(define (organisms-update organisms host world-units time)
+(define (organisms-update organisms host world-units time population)
   (cond
    ((null? organisms) 
     (make-organism world-units host))
    ((eq? (organism-id (car organisms)) (host-id host))
-    (organism-update! (car organisms) host time)
+    (organism-update! (car organisms) host time population)
     ;; no change
     (car organisms))
    (else
-    (organisms-update (cdr organisms) host world-units time))))
+    (organisms-update (cdr organisms) host world-units time population))))
 
-(define (organisms-update-fast organisms host world-units time)
+(define (organisms-update-fast organisms host world-units time population)
   (let ((organism (ordered-list-search organisms (host-id host))))
     (cond
      (organism
-      (organism-update! organism host time)
+      (organism-update! organism host time population)
       (if (host-alive? host)
 	  organisms
 	  (ordered-list-remove organisms (host-id host))))
@@ -105,7 +110,7 @@
 ;;  (shader-shared-uniform! "time" "f" time)
   (foldl  
    (lambda (host organisms)
-     (organisms-update-fast organisms host world-units time))
+     (organisms-update-fast organisms host world-units time population))
    organisms
    population))
 

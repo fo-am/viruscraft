@@ -1,0 +1,395 @@
+;; -*- mode: scheme; -*-
+;; Viruscraft Copyright (C) 2018 FoAM Kernow
+
+(define infection-rate 10)
+(define max-transmission-highlights 5)
+(define world-zoom 0)
+(define virus (make-virus (list)))
+
+(define (make-exhib-mode population organisms score hi-score world-units world-pos-checker) 
+  (list population organisms score hi-score world-units world-pos-checker #f))
+
+(define (exhib-mode-population m) (list-ref m 0))
+(define (exhib-mode-modify-population m v) (list-replace m 0 v))
+(define (exhib-mode-organisms m) (list-ref m 1))
+(define (exhib-mode-modify-organisms m v) (list-replace m 1 v))
+(define (exhib-mode-score m) (list-ref m 2))
+(define (exhib-mode-modify-score m v) (list-replace m 2 v))
+(define (exhib-mode-hi-score m) (list-ref m 3))
+(define (exhib-mode-modify-hi-score m v) (list-replace m 3 v))
+(define (exhib-mode-world-units m) (list-ref m 4))
+(define (exhib-mode-world-pos-checker m) (list-ref m 5))
+(define (exhib-mode-modify-world-pos-checker m v) (list-replace m 5 v))
+(define (exhib-mode-finished? m) (list-ref m 6))
+(define (exhib-mode-modify-finished m v) (list-replace m 6 v))
+
+(define title-text '())
+(define infect-window '())
+(define deaths-window '())
+(define age-window '())
+(define jumps-window '())
+(define back-button '())
+
+(define highest-infections 0)
+(define highest-deaths 0)
+(define highest-age 0)
+(define highest-jumps 0)
+
+(define current-infections 0)
+(define current-deaths 0)
+(define current-age 0)
+(define current-jumps 0)
+
+(define notified-high-infections #f)
+(define notified-high-deaths #f)
+(define notified-high-age #f)
+(define notified-jumps #f)
+
+(define tangible-timer 0)
+
+;; so we can check when infected-id changes
+(define last-transmission-id 0)
+
+(define (attach-from-code code)
+  (cond
+   ((eq? code 0)
+    (attach-virus-donut))
+   ((eq? code 1)
+    (attach-virus-triangle))
+   ((eq? code 2)
+    (attach-virus-circle))
+   ((eq? code 3)
+    (attach-virus-square))
+   ((eq? code 4)
+    (attach-virus-angle))
+   ((eq? code 5)
+    (attach-virus-guitar))
+   ((eq? code 6)
+    (attach-virus-tee))
+   (else
+    (attach-virus-clear))))
+
+(define (load-receptor-tangible)
+  (let ((xmlHttp (js "new XMLHttpRequest")))
+    (xmlHttp.addEventListener
+     "load"
+     (lambda ()
+       (let ((r (xmlHttp.responseText.split " ")))
+	 (msg r)
+	 (set! virus-recep-id 0)
+	 (attach-from-code (list-ref r 0))
+	 (set! virus-recep-id 1)
+	 (attach-from-code (list-ref r 1))
+	 (set! virus-recep-id 2)
+	 (attach-from-code (list-ref r 2)))))
+    (xmlHttp.open "GET" "receptors.txt")
+    (xmlHttp.overrideMimeType "script")
+    (xmlHttp.send)))
+
+(define (reset-scores)
+  (set! current-infections 0)
+  (set! current-deaths 0)
+  (set! current-age 0)
+  (set! current-jumps 0)
+  (set! notified-high-infections #f)
+  (set! notified-high-deaths #f)
+  (set! notified-high-age #f)
+  (set! notified-high-jumps #f))
+
+(define (init-exhib-mode)
+  (reset-scores)
+  (clear-virus)
+  (clear-popups!)
+
+  (set! back-button 
+	(make-image-button (- screen-width 100) 570 "hexbutton.png"
+			   "End" "spin"
+			   (lambda (m)
+			     (destroy-virus-builder)
+			     (organisms-destroy (exhib-mode-organisms m))
+			     (exhib-mode-modify-finished m #t))))
+  
+  (set! title-text 
+	(make-textbox 
+	 300 70
+	 "50pt" 30 "centre"
+	 (list "Evolve your virus")))
+
+  (set! infect-window (make-window 20 510 140 140))
+  (set! deaths-window (make-window 170 510 140 140))
+  (set! age-window (make-window 320 510 140 140))
+  (set! jumps-window (make-window 470 510 140 140))
+  
+  (let ((wpc (build-world-position-checker world-units)))
+    (build-virus-builder)
+    (host-organism-load-models)
+    
+    (make-exhib-mode
+     (population-infect 
+      (make-random-population 50 wpc) 
+      virus infection-rate)
+     '() 0 0 world-units wpc)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+(define (exhib-mode-update g)
+  (virus-builder-update-buttons buttons)
+
+
+;;  (when (> tangible-timer 50)
+;;	(set! tangible-timer 0)
+;;	(load-receptor-tangible))
+;;  (set! tangible-timer (+ tangible-timer 1))
+
+;;  (when (eq? highlight-time 0)
+;;	(highlight-host! (choose (exhib-mode-population g))))
+
+  
+  ;; keep track of deaths
+  (set! current-deaths
+  	(foldl
+  	 (lambda (host r)
+  	   (if (and (not (host-alive? host))
+  		    (host-infected? host))
+  	       (+ r 1) r))
+  	 current-deaths
+  	 (exhib-mode-population g)))
+  (set! current-infections (population-num-infected (exhib-mode-population g)))
+  (set! current-age (exhib-mode-score g))
+
+  (when (> current-infections highest-infections) 
+	(set! highest-infections current-infections)
+	(when (not notified-high-infections) 
+	      (fire-popup! "good" (list "New highest infections!"))
+	      (set! notified-high-infections #t)))
+
+  (when (> current-deaths highest-deaths) 
+	(set! highest-deaths current-deaths)
+	(when (not notified-high-deaths) 
+	      (fire-popup! "good" (list "New highest deaths!"))
+	      (set! notified-high-deaths #t)))
+
+  (when (> current-age highest-age) 
+	(set! highest-age current-age)
+	(when (not notified-high-age) 
+	      (fire-popup! "good" (list "New highest age!"))
+	      (set! notified-high-age #t)))
+
+  ;; do we have a new infection?
+  (when (not (eq? last-transmission-id (car transmission-ids)))
+	(highlight-transmission! g transmission-ids)
+	(set! last-transmission-id (car transmission-ids)))
+
+  (let ((cross (check-cross-species-infection!)))
+    (when cross
+	  (set! current-jumps (+ current-jumps 1))
+	  (when (< highest-jumps current-jumps)
+		(set! highest-jumps current-jumps))
+	  (fire-popup! "good" (list "Cross-species infection!"))))
+
+  (image-button-update 
+   back-button
+   (cond
+    ;; no hosts!
+    ((zero? (length (exhib-mode-population g)))
+     (fire-popup! "bad" (list "The hosts all died out!"))
+     (reset-scores)
+     (make-exhib-mode
+      (population-infect 
+       (make-random-population 50 (exhib-mode-world-pos-checker g)) 
+       virus infection-rate)
+      '() 0 (exhib-mode-hi-score g)
+      (exhib-mode-world-units g)
+      (exhib-mode-world-pos-checker g)))
+
+    ;; no infections
+    ((zero? (population-num-infected (exhib-mode-population g)))
+     (when (> (exhib-mode-score g) 100)
+	   (fire-popup! "bad" (list "Your virus died out!")))
+     (reset-scores)
+     (make-exhib-mode
+      (population-infect-one (exhib-mode-population g) virus)
+      (update-organisms 
+       (exhib-mode-organisms g)
+       (exhib-mode-population g)
+       (exhib-mode-world-units g) (time))
+      0 (exhib-mode-hi-score g)
+      (exhib-mode-world-units g)
+      (exhib-mode-world-pos-checker g)))
+
+    ;; normal
+    (else
+     (make-exhib-mode
+      (population-update 
+       (exhib-mode-population g) 
+       virus
+       (exhib-mode-world-pos-checker g))
+      (update-organisms 
+       (exhib-mode-organisms g)
+       (exhib-mode-population g)
+       (exhib-mode-world-units g) (time))
+      (+ (exhib-mode-score g) 1)
+      (if (> (exhib-mode-score g) (exhib-mode-hi-score g))
+	  (exhib-mode-score g)
+	  (exhib-mode-hi-score g)) 
+      (exhib-mode-world-units g)
+      (exhib-mode-world-pos-checker g))))))
+
+(define (exhib-mode-render g)
+  (with-primitive 
+   virus-builder
+   (identity)
+   (translate builder-pos) 
+   ;;(rotate (vector 80 0 -25))
+   (scale (vector 1.7 1.7 1.7))
+   (concat (q->m virus-q)))
+
+  (with-primitive 
+   world-root 
+   (identity)
+   (translate (vector 5 0 0))
+   (let ((s (+ (min (max 0.02 (* canvas-mouse-zoom 0.02)) 2) 0.7)))
+     (scale (vector s s s)))
+   (set! world-q (qslerp world-q world-target-q 0.01)) 
+   (concat (q->m world-q))))
+
+(define (make-highlight time id1 id2) (list time id1 id2))
+(define (highlight-time h) (list-ref h 0))
+(define (highlight-id1 h) (list-ref h 1))
+(define (highlight-id2 h) (list-ref h 2))
+
+(define highlights '())
+
+(define (highlight-transmission! g host-id)
+  (set! highlights (cons (make-highlight 1000 
+					 (list-ref host-id 0)
+					 (list-ref host-id 1))
+			 highlights))
+
+  (let ((host (host-search (car host-id) (exhib-mode-population g))))
+    ;; convert from lat/lon to quaternion 
+    (let ((latlng (host-location host)))
+      (let ((x (/ (vx (host-location host)) Math.PI))
+	    (y (/ (vy (host-location host)) (* 2 Math.PI))))
+	;; these numbers are slightly arbitrary, as (I think)
+	;; the original positioning comes from the texture map
+
+	;; y rotates x (1 is top 0 is bottom pole)
+	;; x must rotate in y
+
+	(set! world-target-q
+	      (qmul
+	       (qaxisangle 
+		(vector 0 1 0)
+		(+ (* x 360) 120))
+	       
+	       (qaxisangle 
+		(vector 1 0 0)
+		(+ 180 (* 180 (- (- y) 0.5))))
+	       
+	       ))
+	))))
+
+(define (organism-pos g id)
+  (let ((organism 
+	 (ordered-list-search (exhib-mode-organisms g) id)))
+    (if organism
+	(primitive-global-screen-pos 
+	 (organism-root organism))
+	#f)))
+
+(define (render-transmission-highlight! g)
+  (set! highlights
+	(foldl
+	 (lambda (hl r)
+	   (if (and (> (highlight-time hl) 0)
+		    (< (length r) max-transmission-highlights))
+	       ;; render it
+	       (let ((pos1 (organism-pos g (highlight-id1 hl)))
+		     (pos2 (organism-pos g (highlight-id2 hl))))
+		 (set! ctx.strokeStyle "#ff0000")
+		 (set! ctx.lineWidth 3)
+		 (set! ctx.globalAlpha 0.6)
+		 (when pos1 (draw-circle (vx pos1) (vy pos1) 35))
+		 (when pos2 (draw-circle (vx pos2) (vy pos2) 35))
+		 (when (and pos1 pos2)
+		       (draw-line (vx pos1) (vy pos1) (vx pos2) (vy pos2)))
+		 (set! ctx.strokeStyle "#000000")
+		 (set! ctx.lineWidth 1)
+		 (set! ctx.globalAlpha 1)
+		 ;; return new one
+		 (cons
+		  (make-highlight
+		   (- (highlight-time hl) 1)
+		   (highlight-id1 hl)
+		   (highlight-id2 hl))
+		  r))
+	       r)) ;; it's gone...	   
+	 '()
+	 highlights)))
+
+(define host-info-id 0)
+
+(define (render-info! g)
+  (let ((pos (organism-pos g host-info-id))
+	(host (host-search host-info-id (exhib-mode-population g))))    
+    (if (not pos)
+	(set! host-info-id (host-id (choose (exhib-mode-population g))))
+	(ctx.fillText 
+	 (+ "" host-info-id ": " (host-health host)) 
+	 (vx pos)
+	 (vy pos)))))
+
+(define (exhib-mode-canvas-render g)
+  (textbox-render! title-text)
+  (image-button-render! back-button)
+  (window-render! infect-window)
+  (window-render! deaths-window)
+  (window-render! age-window)
+  (window-render! jumps-window)
+
+  (let ((y 550) (x (list 30 180 330 480))
+	(num-offs 70)) 
+    
+  (set! ctx.font "20pt Dosis")
+
+  (ctx.fillText "Infections" (list-ref x 0) y)
+  (ctx.fillText "Deaths" (list-ref x 1) y)
+  (ctx.fillText "Age" (list-ref x 2) y)
+  (ctx.fillText "Host jumps" (list-ref x 3) y)
+
+  (set! y (+ y 30))
+
+  (set! ctx.font "15pt Dosis")
+  (ctx.fillText "Current" (list-ref x 0) y)
+  (ctx.fillText "Current" (list-ref x 1) y)
+  (ctx.fillText "Current" (list-ref x 2) y)
+  (ctx.fillText "Current" (list-ref x 3) y)
+
+  (ctx.fillText (+ "" current-infections) (+ (list-ref x 0) num-offs) y)
+  (ctx.fillText (+ "" current-deaths) (+ (list-ref x 1) num-offs) y)
+  (ctx.fillText (+ "" (/ current-age 100)) (+ (list-ref x 2) num-offs) y)
+  (ctx.fillText (+ "" current-jumps) (+ (list-ref x 3) num-offs) y)
+
+  (set! y (+ y 30))
+
+  (ctx.fillText "Best" (list-ref x 0) y)
+  (ctx.fillText "Best" (list-ref x 1) y)
+  (ctx.fillText "Best" (list-ref x 2) y)
+  (ctx.fillText "Best" (list-ref x 3) y)
+
+  (ctx.fillText (+ "" highest-infections) (+ (list-ref x 0) num-offs) y)
+  (ctx.fillText (+ "" highest-deaths) (+ (list-ref x 1) num-offs) y)
+  (ctx.fillText (+ "" (/ highest-age 100)) (+ (list-ref x 2) num-offs) y)
+  (ctx.fillText (+ "" highest-jumps) (+ (list-ref x 3) num-offs) y)
+
+  (set! y (+ y 30))
+
+  (ctx.fillText "million years" (list-ref x 2) y)
+
+  (render-popups!)
+  (render-transmission-highlight! g)
+  ;;(render-info! g)
+  )
+

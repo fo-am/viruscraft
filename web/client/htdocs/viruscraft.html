@@ -4,10 +4,10 @@
     <title>Viruscraft</title>
     <link href="css/style.css" rel="stylesheet" type="text/css">
 
-    <link rel="stylesheet" href="codemirror/codemirror.css">
+<!--    <link rel="stylesheet" href="codemirror/codemirror.css">
     <script src="codemirror/codemirror.js"></script>
-    <script src="codemirror/scheme/scheme.js"></script>
-    
+    <script src="codemirror/scheme/scheme.js"></script> -->
+     
     <body style="color:#594430; background:#000;">
       <div>
         <canvas class="canvas" id="webgl-canvas" 
@@ -33,9 +33,9 @@
           $('.code-container').show(); 
           $('#show-code-button').hide(); 
           // Refresh CodeMirror
-          $('.CodeMirror').each(function(i, el){ 
-              el.CodeMirror.refresh(); 
-          });      
+          //$('.CodeMirror').each(function(i, el){ 
+          //    el.CodeMirror.refresh(); 
+          //});      
       }
 
       function hide_code() {
@@ -56,9 +56,9 @@
           xmlHttp.send( null );
           $('#code').html(xmlHttp.responseText);
 
-          editor = CodeMirror.fromTextArea($("#code")[0], {
-             mode: "scheme"
-          });
+          //editor = CodeMirror.fromTextArea($("#code")[0], {
+          //   mode: "scheme"
+          //});
 
           init(["flx/scm/fluxus.jscm","scm/game/viruscraft.jscm"]);    
       });

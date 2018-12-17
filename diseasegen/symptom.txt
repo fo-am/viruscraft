@@ -1,0 +1,50 @@
+    hypoventilation
+    hyperventilation
+    apnea
+    cough (R05)
+    sputum production (R09.3)
+alopecia
+blister (T14.0)
+edema (R60)
+hirsutism
+itching (L29)
+rash (R21)
+palpitation (R00.2)
+arrhythmia
+    bloating (R14)
+    belching (R14)
+    constipation (K59.0)
+    diarrhea (A09, K58, K59.1)
+    dyspepsia (K30)
+    flatulence (R14)
+    incontinence
+    nausea (R11)
+    vomiting (R11)
+confusion
+euphoria
+hallucination
+headache
+insomnia
+mania
+dry mouth (R68.2)
+fatigue (R53)
+jaundice (P58, P59, R17)
+pain
+tremor (R25.1)
+convulsions (R56)
+tinnitus (H93.1)
+dizziness
+vertigo (R42)
+hypothermia (T68)
+hyperthermia (T670)
+discharge
+swelling
+sweats
+wart
+verucca
+lump
+pulsation
+discolouration
+floppiness
+puffiness
+droop

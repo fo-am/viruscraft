@@ -1,3 +1,5 @@
+;; -*- mode: scheme; -*-
+
 ; try all the rules on this character - 
 ; returns #f if none are matched
 (define (lsys-run-rules char rules)
