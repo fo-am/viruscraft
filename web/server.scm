@@ -66,9 +66,21 @@
       (pluto-response (scheme->json '("hello")))))
 
    (register
-    (req 'virus '(name age infections deaths jumps time))
-    (lambda (req name age infections deaths jumps time)
-      (let* ((id (insert-virus db name age infections deaths jumps time)))
+    (req 'register-virus '(name time))
+    (lambda (req name time)
+      (let* ((id (insert-virus db name time)))
+	(pluto-response (scheme->json (list id))))))
+
+   (register
+    (req 'record-virus '(virus-id age infections deaths jumps))
+    (lambda (req virus-id age infections deaths jumps)
+      (update-virus db virus-id age infections deaths jumps)
+      (pluto-response (scheme->json (list 0)))))
+   
+   (register
+    (req 'record-mutation '(virus-id receptors time))
+    (lambda (req virus-id receptors time)
+      (let* ((id (insert-mutation db virus-id receptors time)))
 	(pluto-response (scheme->json (list id))))))
    
    (register

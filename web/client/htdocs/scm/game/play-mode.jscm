@@ -10,6 +10,7 @@
 (define virus (make-virus (list)))
 (define scores-list (list))
 (define hiscores-display (list))
+(define current-virus-id -1)
 
 (define (make-play-mode population organisms scores world-units world-pos-checker virus-name) 
   (list population organisms scores world-units world-pos-checker virus-name #f))
@@ -87,14 +88,35 @@
     (xmlHttp.overrideMimeType "script")
     (xmlHttp.send)))
 
+(define (register-virus name)
+  (server-call-ret
+   "register-virus"
+   (list (list "name" name)
+	 (list "time" (Date.now)))
+   (lambda (data)
+     (msg (JSON.parse data))
+     (set! current-virus-id (car (JSON.parse data))))))
+
 (define (record-virus g)
+  (msg "record-virus calling")
   (server-call
-   "virus"
-   (list (list "name" (play-mode-virus-name g))
+   "record-virus"
+   (list (list "virus-id" current-virus-id)
 	 (list "age" (scores-age (play-mode-scores g)))
 	 (list "infections" (scores-infections (play-mode-scores g)))
 	 (list "deaths" (scores-deaths (play-mode-scores g)))
-	 (list "jumps" (scores-jumps (play-mode-scores g)))
+	 (list "jumps" (scores-jumps (play-mode-scores g))))))
+
+(define (record-mutation)
+  (msg current-virus-id)
+  (server-call
+   "record-mutation"
+   (list (list "virus-id" current-virus-id)
+	 (list "receptors" (dbg (foldl (lambda (r s)
+					 (string-append 
+					  s (if (not r) "none" r) 
+					  " "))
+				       "" cur-receptor-types)))
 	 (list "time" (Date.now)))))
 
 (define (get-score-position score scores)
@@ -105,6 +127,7 @@
    scores))
 
 (define (init-play-mode virus-name)
+  (register-virus virus-name)
   (clear-virus)
   (clear-popups!)
 
@@ -282,10 +305,10 @@
      (scale (vector s s s)))
    (cond 
     ((> (+ last-highlight-time 10) (time))
-     (set! world-q (qslerp world-q world-target-q 0.01)))    
+     (set! world-q (qslerp world-q world-target-q 0.1)))    
     (else
      (set! world-q (qmul world-q (qaxisangle (vector 0 1 0) 0.25)))))   
-   (set! world-rotate-q (qslerp world-rotate-q world-q 0.01))
+   (set! world-rotate-q (qslerp world-rotate-q world-q 0.1))
    (concat (q->m world-rotate-q))))
 
 (define (make-highlight time id1 id2) (list time id1 id2))
@@ -318,11 +341,11 @@
 	      (qmul
 	       (qaxisangle 
 		(vector 0 1 0)
-		(+ (* x 360) 120))
+		(- (* x -360) 15))
 	       
 	       (qaxisangle 
 		(vector 1 0 0)
-		(+ 180 (* 180 (- (- y) 0.5))))
+	       	(+ 180 (* 180 (- (- y) 0.5))))
 	       
 	       ))
 	))))

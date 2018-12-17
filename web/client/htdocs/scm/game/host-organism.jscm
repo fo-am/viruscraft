@@ -77,16 +77,16 @@
     ;; remove the primitive as we have died
     (destroy (organism-root organism)))))
 
-(define (organisms-update organisms host world-units time)
+(define (organisms-update organisms host world-units time population)
   (cond
    ((null? organisms) 
     (make-organism world-units host))
    ((eq? (organism-id (car organisms)) (host-id host))
-    (organism-update! (car organisms) host time)
+    (organism-update! (car organisms) host time population)
     ;; no change
     (car organisms))
    (else
-    (organisms-update (cdr organisms) host world-units time))))
+    (organisms-update (cdr organisms) host world-units time population))))
 
 (define (organisms-update-fast organisms host world-units time population)
   (let ((organism (ordered-list-search organisms (host-id host))))

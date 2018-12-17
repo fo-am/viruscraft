@@ -86,7 +86,9 @@
 		(lambda (type r) 
 		  (if type (cons type r) r))
 		'()
-		cur-receptor-types))))
+		cur-receptor-types)))
+  (msg "recording mutation")
+  (record-mutation))
 
 (define (attach-virus-circle) (attach-virus receptor-circle 'circle) (update-virus))
 (define (attach-virus-triangle) (attach-virus receptor-triangle 'triangle) (update-virus))
@@ -206,8 +208,6 @@
    buttons))
 
 (define (build-virus-builder)
-  (msg "build-virus-builder")
-  (msg virus)
   (set! virus-builder (with-state 
 		       (shader-assign-compiled "virus")
 		       (translate builder-pos) 

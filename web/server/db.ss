@@ -20,6 +20,7 @@
 
 (define (setup db)
   (exec/ignore db "CREATE TABLE virus ( id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, age REAL, infections INTEGER, deaths INTEGER, jumps INTEGER, time TEXT);")
+  (exec/ignore db "create table mutation ( id INTEGER PRIMARY KEY AUTOINCREMENT, virus_id INTEGER, receptors TEXT, time TEXT);") 
   )
 
 (define (nuke db)
@@ -42,9 +43,17 @@
         ""
         (rows->csv s))))
 
-(define (insert-virus db name age infections deaths jumps time)
+(define (insert-virus db name time)
   (insert db "insert into virus values (NULL, ?, ?, ?, ?, ?, ?)"
-          name age infections deaths jumps time))
+          name 0 0 0 0 time))
+
+(define (update-virus db virus-id age infections deaths jumps)
+  (insert db "update virus set age=?, infections=?, deaths=?, jumps=? where id = ?"
+          age infections deaths jumps virus-id))
+
+(define (insert-mutation db virus-id receptors time)
+  (insert db "insert into mutation values (NULL, ?, ?, ?)"
+          virus-id receptors time))
 
 (define (get-hiscores db)
   (define count 0)
@@ -52,7 +61,7 @@
    (lambda (i)
      (set! count (+ count 1))
      (list count (vector-ref i 0) (vector-ref i 1)))
-   (cdr (select db "select name, age, infections, deaths, jumps from virus order by age desc;"))))
+   (cdr (select db "select name, age, infections, deaths, jumps from virus where age>0 order by age desc;"))))
 
 (define (get-scores db)
   (map
