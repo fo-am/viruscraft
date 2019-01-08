@@ -15,6 +15,7 @@
 (define (stats-mode-modify-finished m v) (list-replace m 2 v))
 
 (define current-score-position -1)
+(define exhib-restart-timer 10)
 
 (define (get-score-position score scores)
   (foldl
@@ -47,6 +48,8 @@
 
 
 (define (init-stats-mode name scores)
+  (set! exhib-restart-timer 10)
+
   (set! back-button 
 	(make-image-button (- screen-width 100) 570 "hexbutton.png"
 			   "End" "spin"
@@ -72,7 +75,13 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define (stats-mode-update g)
-  (image-button-update back-button g))
+  (set! exhib-restart-timer (- exhib-restart-timer canvas-delta))
+  (image-button-update back-button
+		       (cond
+			((and exhib-version (< exhib-restart-timer 0))
+			 (destroy-virus-builder)
+			 (stats-mode-modify-finished g #t))
+			(else g))))
 
 (define (stats-mode-render g)
   (with-primitive 
@@ -96,9 +105,11 @@
 	(jumps (scores-jumps (stats-mode-scores g)))) 
     (ctx.fillText (string-append "Infected " infections (if (eq? infections 1) " creature" " creatures")) 160 430)
     (ctx.fillText (string-append "Caused " deaths (if (eq? deaths 1) " death" " deaths")) 160 470)
-    (ctx.fillText (string-append "Jumped specties " jumps (if (eq? jumps 1) " time" " times")) 160 510))
+    (ctx.fillText (string-append "Jumped species " jumps (if (eq? jumps 1) " time" " times")) 160 510))
   (ctx.fillText (string-append "High scores position: " (+ current-score-position 1)) 160 550)
-  (image-button-render! back-button)
+
+  (when (not exhib-version)
+	(image-button-render! back-button))
 
   (render-stats-hiscores g)
   ;;(render-popups!)
