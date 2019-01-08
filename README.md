@@ -12,6 +12,10 @@ https://fo.am/viruscraft/
 - add virus description to score record
 - increase death rate with susceptibility? highly specialised = quicker extinction
 
+aims
+
+-
+
 # Parameters 
 
 These are ones that can be tweaked & need to be checked:

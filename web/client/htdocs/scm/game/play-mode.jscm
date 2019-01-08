@@ -194,10 +194,17 @@
   	 (scores-deaths (play-mode-scores g))
   	 (play-mode-population g)))
 
+  (set! current-infections
+	(foldl
+	 (lambda (host r)
+	   (if (host-infected? host)
+	       (+ r 1) r))
+	 0
+	 (play-mode-population g)))
+  
   (define new-infections (scores-infections (play-mode-scores g)))
   (define new-jumps (scores-jumps (play-mode-scores g)))
-  (set! current-infections new-infections)
-  
+
   ;; do we have a new infection?
   (when (not (eq? last-transmission-id (car transmission-ids)))
 	;;(set! new-infections (+ new-infections 1))
