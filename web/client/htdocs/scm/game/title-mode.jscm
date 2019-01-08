@@ -20,7 +20,7 @@
 	 "30pt" 50 "centre"
 	 (list
 	  "You are a virus, evolve to infect hosts, jump"
-	  "between species, say alive.")))
+	  "between species, stay alive.")))
 
   (set! start-button 
 	(make-image-button 

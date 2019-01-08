@@ -6,7 +6,7 @@
 
 (define receptor-types (list 'circle 'triangle 'square 'donut 'guitar))
 (define host-species-types (list 'sea 'land 'land2))
-(define virus-max-receptors 20)
+(define virus-max-receptors 10)
 
 (define size-conv 0.003)
 
