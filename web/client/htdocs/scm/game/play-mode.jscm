@@ -91,7 +91,7 @@
 		  (attach-from-code r))
 		r))
 	     (record-mutation))))
-    (xmlHttp.open "GET" "receptors.txt")
+    (xmlHttp.open "GET" (+ "receptors.txt?_=" (time)))
     (xmlHttp.overrideMimeType "script")
     (xmlHttp.send)))
 
