@@ -123,6 +123,12 @@
 	    ((eq? (car tx) 0) (rotate (vector 0 120 0)))
 	    ((eq? (car tx) 1) (rotate (vector 0 -120 0)))
 	    (else (rotate (vector 0 0 0))))
+
+	   ;; for the single problematic face...! (id:24)
+	   (when (eq? ori 1) 
+	    	 ;;(colour (vector 1 0.5 0.5))
+	    	 (rotate (vector 0 -120 0))
+	    	 (scale (vector 1 1 1)))
 	   
 	   (when (eq? ori 4) 
 	    	 ;;(colour (vector 1 0.5 0.5))

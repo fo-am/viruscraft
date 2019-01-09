@@ -82,7 +82,7 @@
        (exhib-version
 	(when (not world-units)
 	      ;; 10% to 80% sea level
-	      (set! world-units (build-world-from-params (+ (* (rndf) 80) 10))))
+	      (set! world-units (build-world-from-params (+ (* (rndf) 80) 5))))
 	(set! mode mode-play)
 	(init-play-mode (gen-disease-name)))
        (else
