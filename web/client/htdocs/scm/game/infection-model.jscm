@@ -24,10 +24,10 @@
 (define infect-likelihood-mult 10) ;; per second mult
 (define infect-spawn-reduction 0.2)
 
-(define host-loc-lat-start 0.1)
-(define host-loc-lat-width (* Math.PI 1))
-(define host-loc-lng-start 0.1)
-(define host-loc-lng-width (* Math.PI 2))
+(define host-loc-lat-safe 0.1)
+(define host-loc-lat-width (- (* Math.PI 1) (* 2 host-loc-lat-safe)))
+(define host-loc-lng-safe 0.1)
+(define host-loc-lng-width (- (* Math.PI 2) (* 2 host-loc-lng-safe)))
 
 (define new-organism-likelihood 3) ;; percent per second
 (define mutation-rate 10)
@@ -176,10 +176,10 @@
 ;; check if a point is within bounding box and 
 ;; far enough away from other hosts
 (define (check-location location population threshold)
-  (if (and (> (vx location) host-loc-lat-start) 
-	   (< (vx location) (+ host-loc-lat-start host-loc-lat-width))
-	   (> (vy location) host-loc-lng-start) 
-	   (< (vy location) (+ host-loc-lng-start host-loc-lng-width)))
+  (if (and (> (vx location) host-loc-lat-safe) 
+	   (< (vx location) (+ host-loc-lat-safe host-loc-lat-width))
+	   (> (vy location) host-loc-lng-safe) 
+	   (< (vy location) (+ host-loc-lng-safe host-loc-lng-width)))
       (foldl
        (lambda (host r)
 	 (if (and r (> (vec2-squashed-dist (host-location host) location) 
@@ -242,15 +242,11 @@
    (host-health host)
    (host-age host)))
 
-;;(* (rndf) host-loc-lng-width)
-;;(* (rndf) host-loc-lat-width)
-;; loop round until we find a position - todo: will hang!!
-
-
 (define (find-world-position species world-position-checker)
+  ;; loop round until we find a position - todo: will hang!!
   (let ((pos (vector
-	      (+ host-loc-lat-start (* (rndf) (- host-loc-lat-width host-loc-lat-start)))
-	      (+ host-loc-lng-start (* (rndf) (- host-loc-lng-width host-loc-lng-start))) 
+	      (+ host-loc-lat-safe (* (rndf) host-loc-lat-width))
+	      (+ host-loc-lng-safe (* (rndf) host-loc-lng-width)) 
 	      0)))
     (if (world-position-checker species pos) 
 	pos (find-world-position species world-position-checker))))

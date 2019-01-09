@@ -90,7 +90,7 @@
    virus-builder
    (identity)
    ;;(translate builder-pos) 
-   (rotate (vector 0 (* 30 (time)) 0))
+   (rotate (vector 0 (* -30 (time)) 0))
    (scale (vector 3.7 3.7 3.7))
    (concat (q->m virus-q))))
 

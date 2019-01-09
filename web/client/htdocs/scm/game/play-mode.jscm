@@ -331,7 +331,7 @@
 
 (define highlights '())
 (define last-highlight-time 0)
-(define highlight-duration 5)
+(define highlight-duration 10)
 
 (define (highlight-transmission! g host-id)
   (set! highlights (cons (make-highlight highlight-duration 
@@ -365,34 +365,43 @@
 	 (organism-root organism))
 	#f)))
 
+(define (organism-up? g id)
+  (let ((organism 
+	 (ordered-list-search (play-mode-organisms g) id)))
+    (if organism
+	(organism-up-toward-camera? organism)
+	#f)))
+
 
 (define (render-transmission-highlight! g)
   (set! highlights
 	(foldl
 	 (lambda (hl r)
-	   (if (and (> (highlight-time hl) 0)
-		    (< (length r) max-transmission-highlights))
-	       ;; render it
-	       (let ((pos1 (organism-pos g (highlight-id1 hl)))
-		     (pos2 (organism-pos g (highlight-id2 hl))))
-		 (set! ctx.strokeStyle "#ff0000")
-		 (set! ctx.lineWidth 3)
-		 (set! ctx.globalAlpha (/ (highlight-time hl) highlight-duration)) 
-		 (when pos1 (draw-circle (vx pos1) (vy pos1) 35))
-		 (when pos2 (draw-circle (vx pos2) (vy pos2) 35))
-		 (when (and pos1 pos2)
-		       (draw-line (vx pos1) (vy pos1) (vx pos2) (vy pos2)))
-		 (set! ctx.strokeStyle "#000000")
-		 (set! ctx.lineWidth 1)
-		 (set! ctx.globalAlpha 1)
-		 ;; return new one
-		 (cons
-		  (make-highlight
-		   (- (highlight-time hl) canvas-delta)
-		   (highlight-id1 hl)
-		   (highlight-id2 hl))
-		  r))
-	       r)) ;; it's gone...	   
+	   (cond 
+	    ((and (> (highlight-time hl) 0)
+		  (< (length r) max-transmission-highlights))
+	     (when (organism-up? g (highlight-id1 hl))
+		   ;; render it
+		   (let ((pos1 (organism-pos g (highlight-id1 hl)))
+			 (pos2 (organism-pos g (highlight-id2 hl))))
+		     (set! ctx.strokeStyle "#ff0000")
+		     (set! ctx.lineWidth 3)
+		     (set! ctx.globalAlpha (/ (highlight-time hl) highlight-duration)) 
+		     (when pos1 (draw-circle (vx pos1) (vy pos1) 35))
+		     (when pos2 (draw-circle (vx pos2) (vy pos2) 35))
+		     (when (and pos1 pos2)
+			   (draw-line (vx pos1) (vy pos1) (vx pos2) (vy pos2)))
+		     (set! ctx.strokeStyle "#000000")
+		     (set! ctx.lineWidth 1)
+		     (set! ctx.globalAlpha 1)))
+	     ;; return new one
+	     (cons
+	      (make-highlight
+	       (- (highlight-time hl) canvas-delta)
+	       (highlight-id1 hl)
+	       (highlight-id2 hl))
+	      r))
+	    (else r))) ;; it's gone...	   
 	 '()
 	 highlights)))
 

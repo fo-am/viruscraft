@@ -25,6 +25,7 @@
 	  (unit (list-ref t 2)))
       (list 
        (host-id host)
+       unit
        (with-state
 	(shader-assign-compiled "host-organism")
 	(shader-uniform! "speed" "f" (+ 3 (/ (modulo (host-id host) 10) 2)))
@@ -54,7 +55,14 @@
        ))))
 
 (define (organism-id c) (list-ref c 0))
-(define (organism-root c) (list-ref c 1))
+(define (organism-unit c) (list-ref c 1))
+(define (organism-root c) (list-ref c 2))
+
+(define (organism-up-toward-camera? c)
+  (with-primitive 
+   (unit-face-root (organism-unit c))
+   (> (vdot (vector 0 0 1) (mtransform (get-global-transform) (vector 0 1 0)))
+      0)))
 
 (define (organism-update! organism host time population)
   (cond 
