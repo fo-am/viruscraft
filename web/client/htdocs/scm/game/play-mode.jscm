@@ -4,6 +4,7 @@
 (define infection-rate 10)
 (define max-transmission-highlights 5)
 (define game-over-time 5)
+(define starting-pop-size 50) 
 
 (define world-zoom 0)
 (define game-started #f)
@@ -83,7 +84,7 @@
      (lambda ()
        (when (not (eq? last-tangible xmlHttp.responseText))
 	     (set! last-tangible xmlHttp.responseText)
-	     (msg last-tangible)
+	     ;;(msg last-tangible)
 	     (let ((r (last-tangible.split " ")))
 	       (index-for-each
 		(lambda (i r)
@@ -167,7 +168,7 @@
     
     (make-play-mode
      (population-infect 
-      (make-random-population 50 wpc) 
+      (make-random-population starting-pop-size wpc) 
       virus infection-rate)
      '() 0 world-units wpc virus-name)))
 
@@ -301,7 +302,6 @@
 (define world-rotate-q (qaxisangle (vector 0 1 0) 0))
 
 (define (play-mode-render g)
-  (msg builder-pos)
   (with-primitive 
    virus-builder
    (identity)
@@ -460,10 +460,10 @@
   (ctx.fillText "You are a virus, evolve to infect hosts, jump" 20 85)
   (ctx.fillText "between species, stay alive." 20 120)
   (set! ctx.font "25pt Dosis")
-  (ctx.fillText (string-append "You are playing: ") 20 180)
+  ;;(ctx.fillText (string-append "You are playing: ") 20 180)
   (set! ctx.font "bold 25pt Dosis")
   (set! ctx.fillStyle "#f00")
-  (ctx.fillText (string-append (play-mode-virus-name g) " virus") 225 180)
+  (ctx.fillText (string-append (play-mode-virus-name g) " virus") 20 170)
   (set! ctx.fillStyle "#000")
   (set! ctx.font "25pt Dosis")
   (ctx.fillText (string-append "You are " (trunc (scores-age (play-mode-scores g))) " days old with " current-infections " infections") 20 215)

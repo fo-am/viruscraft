@@ -24,9 +24,9 @@
 (define infect-likelihood-mult 10) ;; per second mult
 (define infect-spawn-reduction 0.2)
 
-(define host-loc-lat-start (* Math.PI 0))
+(define host-loc-lat-start 0.1)
 (define host-loc-lat-width (* Math.PI 1))
-(define host-loc-lng-start (* Math.PI 0))
+(define host-loc-lng-start 0.1)
 (define host-loc-lng-width (* Math.PI 2))
 
 (define new-organism-likelihood 3) ;; percent per second
@@ -245,10 +245,12 @@
 ;;(* (rndf) host-loc-lng-width)
 ;;(* (rndf) host-loc-lat-width)
 ;; loop round until we find a position - todo: will hang!!
+
+
 (define (find-world-position species world-position-checker)
   (let ((pos (vector
-	      (* (rndf) host-loc-lat-width) 
-	      (* (rndf) host-loc-lng-width) 
+	      (+ host-loc-lat-start (* (rndf) (- host-loc-lat-width host-loc-lat-start)))
+	      (+ host-loc-lng-start (* (rndf) (- host-loc-lng-width host-loc-lng-start))) 
 	      0)))
     (if (world-position-checker species pos) 
 	pos (find-world-position species world-position-checker))))
