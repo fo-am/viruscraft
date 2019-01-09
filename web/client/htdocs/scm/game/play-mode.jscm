@@ -1,7 +1,6 @@
 ;; -*- mode: scheme; -*-
 ;; Viruscraft Copyright (C) 2018 FoAM Kernow
 
-(define infection-rate 10)
 (define max-transmission-highlights 5)
 (define game-over-time 5)
 (define starting-pop-size 50) 
@@ -167,9 +166,7 @@
     (host-organism-load-models)
     
     (make-play-mode
-     (population-infect 
-      (make-random-population starting-pop-size wpc) 
-      virus infection-rate)
+     (make-random-population starting-pop-size wpc) 
      '() 0 world-units wpc virus-name)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

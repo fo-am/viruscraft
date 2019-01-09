@@ -14,15 +14,18 @@
 (define min-host-health 0)
 (define max-host-health 50)
 (define host-normal-growth 10) ;; units per second
-(define host-infection-decline -45) ; (* deadliness)
 (define host-age-decline -1)
 (define host-health-start 10)
 (define host-decline-age 60)
 (define host-spawn-min-distance 0.05)
 (define spawn-dist 0.2)
 (define host-spawn-dist-tries 5)
+
+;; main disease parameters
 (define infect-likelihood-mult 10) ;; per second mult
 (define infect-spawn-reduction 0.2)
+(define infection-distance 0.5)
+(define host-infection-decline -45) ; (* deadliness)
 
 (define host-loc-lat-safe 0.1)
 (define host-loc-lat-width (- (* Math.PI 1) (* 2 host-loc-lat-safe)))
@@ -36,7 +39,6 @@
 ;;(define susceptibility-prob-factor 0.2)
 (define max-pop-size 100)
 
-(define infection-distance 0.5)
 
 ;; hacky global state 
 (define cross-species-infection-happened #f)
