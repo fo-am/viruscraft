@@ -50,6 +50,8 @@
 
 (define tangible-timer 0)
 (define end-game-timer 1000)
+(define game-start-timer 0)
+(define game-start-delay 0)
 
 ;; so we can check when infected-id changes
 (define last-transmission-id 0)
@@ -148,6 +150,7 @@
 			     (organisms-destroy (play-mode-organisms m))
 			     (play-mode-modify-finished m #t))))
   
+  (set! game-start-timer 0)
   (set! end-game-timer 1000)
   (set! game-started #f)
 
@@ -174,6 +177,8 @@
 (define (play-mode-update g)
   (virus-builder-update-buttons buttons)
 
+  (set! game-start-timer (+ game-start-timer canvas-delta))
+  
   (when (and exhib-version (> tangible-timer 0.5))
 	(set! tangible-timer 0)
 	(load-receptor-tangible))
@@ -250,8 +255,10 @@
        g)
 
       ;; not started and no infections yet...
-      ((and (not game-started)
-	    (zero? num-infections))
+      ((and
+	(> game-start-timer game-start-delay)
+	(not game-started)
+	(zero? num-infections))
        (make-play-mode
 	(population-update 
 	 (population-infect-one (play-mode-population g) virus)
@@ -314,7 +321,7 @@
    (let ((s (+ (min (max 0.02 (* canvas-mouse-zoom 0.02)) 2) 0.7)))
      (scale (vector s s s)))
    (cond 
-    ((> (+ last-highlight-time 10) (time))
+    ((> (+ last-highlight-time 30) (time))
      (set! world-q (qslerp world-q world-target-q camera-drift)))    
     (else
      (set! world-q (qmul world-q (qaxisangle (vector 0 1 0) 0.25)))))   
@@ -381,7 +388,7 @@
 		   ;; render it
 		   (let ((pos1 (organism-pos g (highlight-id1 hl)))
 			 (pos2 (organism-pos g (highlight-id2 hl))))
-		     (set! ctx.strokeStyle "#ff0000")
+		     (set! ctx.strokeStyle infect-colour-hex)
 		     (set! ctx.lineWidth 3)
 		     (set! ctx.globalAlpha (/ (highlight-time hl) highlight-duration)) 
 		     (when pos1 (draw-circle (vx pos1) (vy pos1) 35))
@@ -439,7 +446,7 @@
 
 (define (render-hiscores g)
   (set! ctx.font "20pt Dosis")
-  (ctx.fillText "How your virus compares to others" 20 590)   
+  (ctx.fillText "How your virus compares to others" 40 590)   
   (set! ctx.font "15pt Dosis")
   (let ((displayed #f)
 	(age (scores-age (play-mode-scores g))))
@@ -448,31 +455,28 @@
        (let ((score (list-ref hiscore 2))
 	     (y (+ 620 (* (if displayed (+ i 1) i) 20))))
 	 (when (and (not displayed) (< score age))
-	       (set! ctx.fillStyle "#f00")
+	       (set! ctx.fillStyle infect-colour-hex)
 	       (set! displayed #t)
 	       (set! y (+ y 20))
 	       (ctx.fillText (string-append (car hiscore) ": " (play-mode-virus-name g) " virus " 
 					    (trunc age))
-			     20 (+ 620 (* i 20))))
+			     40 (+ 620 (* i 20))))
 	 (set! ctx.fillStyle "#000")
 	 (ctx.fillText (+ (if displayed (+ (car hiscore) 1) (car hiscore)) ": " (list-ref hiscore 1) " virus " (trunc score))
-		       20 y)))
+		       40 y)))
      (highscore-get-n-around 3 age hiscores-display))))
 
 (define (play-mode-canvas-render g)
   (set! ctx.font "40pt Dosis")
-  (ctx.fillText (string-append "Viruscraft") 20 53)
+  (ctx.fillText (string-append "Viruscraft") 40 60)
   (set! ctx.font "25pt Dosis")
-  (ctx.fillText "You are a virus, evolve to infect hosts, jump" 20 85)
-  (ctx.fillText "between species, stay alive." 20 120)
-  (set! ctx.font "25pt Dosis")
-  ;;(ctx.fillText (string-append "You are playing: ") 20 180)
-  (set! ctx.font "bold 25pt Dosis")
-  (set! ctx.fillStyle "#f00")
-  (ctx.fillText (string-append (play-mode-virus-name g) " virus") 20 170)
+  (ctx.fillText "You are a virus, evolve to infect hosts, jump" 40 100)
+  (ctx.fillText "between species, stay alive." 40 140)
+  (set! ctx.fillStyle infect-colour-hex)
+  (ctx.fillText (string-append (play-mode-virus-name g) " virus") 40 200)
   (set! ctx.fillStyle "#000")
   (set! ctx.font "25pt Dosis")
-  (ctx.fillText (string-append "You are " (trunc (scores-age (play-mode-scores g))) " days old with " current-infections " infections") 20 215)
+  (ctx.fillText (string-append "You are " (trunc (scores-age (play-mode-scores g))) " days old with " current-infections " infections") 40 240)
   (when (not exhib-version)
 	(image-button-render! back-button))
   (when game-started (render-hiscores g))

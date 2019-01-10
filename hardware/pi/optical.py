@@ -6,6 +6,7 @@ bus=smbus.SMBus(1)
 
 old_dat = [0,0,0,0,0,0,0,0,0,0]
 
+os.system("aplay startup.wav")
 
 while True:
     try:

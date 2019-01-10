@@ -24,15 +24,18 @@ const float min_scale = 0.3;
 
 void main()
 {
+  P=p;
+  
   /* main animation */
-  P = mix(p,p2,abs(mod(time*speed,2.0)-1.0));
-
+  if (health>=low_health) {
+    P = mix(p,p2,abs(mod(time*speed,2.0)-1.0));
+  }
+  
   /* child scale up growth */
   if (age<adult_age) P *= max(min_scale,age/adult_age);
 
   if (health<low_health) {
     /* stop moving and lower into the ground! */
-    P=p;
     P.z-=((low_health-health)/low_health)*3.0;
   }
 

@@ -24,7 +24,7 @@
 ;; main disease parameters
 (define infect-likelihood-mult 10) ;; per second mult
 (define infect-spawn-reduction 0.2)
-(define infection-distance 0.5)
+(define infection-distance 0.25)
 (define host-infection-decline -45) ; (* deadliness)
 
 (define host-loc-lat-safe 0.1)

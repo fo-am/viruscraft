@@ -34,6 +34,10 @@
 (define mode mode-loading)
 (define exhib-version #t)
 
+;;(define infect-colour-hex "#f07")
+(define infect-colour-hex "#ff1053")
+(define infect-colour-flt (vmul (vector 1 (/ 16 255) (/ 82 255)) 2))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (clear-colour (vector 0.0 0.0 0.0))
@@ -82,7 +86,7 @@
        (exhib-version
 	(when (not world-units)
 	      ;; 10% to 80% sea level
-	      (set! world-units (build-world-from-params (+ (* (rndf) 80) 5))))
+	      (set! world-units (build-world-from-params (+ (* (rndf) 50) 5))))
 	(set! mode mode-play)
 	(init-play-mode (gen-disease-name)))
        (else
