@@ -4,6 +4,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define start-button '())
+(define about-button '())
 (define intro-text '())
 (define title-text '())
 
@@ -24,17 +25,26 @@
 
   (set! start-button 
 	(make-image-button 
-	 (/ screen-width 2) 400 "hexbutton.png"
+	 (+ (/ screen-width 2) 200) 400 "hexbutton.png"
 	 "Play" "spin"
 	 (lambda (m)
-	   (title-mode-modify-ready m #t))))
+	   (title-mode-modify-ready m "next"))))
+  
+  (set! about-button 
+	(make-image-button 
+	 (- (/ screen-width 2) 200) 400 "hexbutton.png"
+	 "About" "spin"
+	 (lambda (m)
+	   (title-mode-modify-ready m "about"))))
   (list #f))
 
 (define (title-mode-ready? m) (list-ref m 0))
 (define (title-mode-modify-ready m v) (list-replace m 0 v))
 
 (define (title-mode-update m)
-  (image-button-update start-button m))
+  (image-button-update 
+   start-button 
+   (image-button-update about-button m)))
 
 (define (title-mode-render m)
   0)
@@ -43,4 +53,5 @@
 (define (title-mode-canvas-render m)
   (textbox-render! title-text)
   (textbox-render! intro-text)
+  (image-button-render! about-button)
   (image-button-render! start-button))

@@ -20,8 +20,8 @@
 (load "scm/game/title-mode.jscm")
 (load "scm/game/world-design-mode.jscm")
 (load "scm/game/play-mode.jscm")
-;;(load "scm/game/exhib-mode.jscm")
 (load "scm/game/stats-mode.jscm")
+(load "scm/game/about-mode.jscm")
 (load "scm/game/diseases.jscm")
 
 (define mode-loading 0)
@@ -30,9 +30,12 @@
 (define mode-play 3)
 (define mode-exhib 4)
 (define mode-stats 5)
+(define mode-about 6)
+(define mode-science 7)
+(define mode-dev 8)
 
 (define mode mode-loading)
-(define exhib-version #t)
+(define exhib-version #f)
 
 ;;(define infect-colour-hex "#f07")
 (define infect-colour-hex "#ff1053")
@@ -61,12 +64,30 @@
    
    ((eq? mode mode-title) 
     (cond 
-     ((title-mode-ready? current-mode)
+     ((eq? (title-mode-ready? current-mode) "next")
       (set! mode mode-world-design)
       (init-world-design-mode))
+     ((eq? (title-mode-ready? current-mode) "about")
+      (set! mode mode-about)
+      (init-about-mode))
      (else
       (title-mode-update current-mode))))
 
+   ((eq? mode mode-about) 
+    (cond 
+     ((eq? (about-mode-ready? current-mode) "back")
+      (msg "back..")
+      (set! mode mode-title)
+      (init-title-mode))
+     ((eq? (about-mode-ready? current-mode) "science")
+      (set! mode mode-about)
+      (init-about-mode))
+     ((eq? (about-mode-ready? current-mode) "dev")
+      (set! mode mode-about)
+      (init-about-mode))
+     (else
+      (about-mode-update current-mode))))
+   
    ((eq? mode mode-world-design) 
     (cond 
      ((eq? (world-design-mode-ready current-mode) "next")
@@ -115,6 +136,7 @@
   (cond
    ((eq? mode mode-loading) (loading-mode-render current-mode))
    ((eq? mode mode-title) (title-mode-render current-mode))
+   ((eq? mode mode-about) (about-mode-render current-mode))
    ((eq? mode mode-world-design) (world-design-mode-render current-mode))
    ((eq? mode mode-exhib) (exhib-mode-render current-mode))
    ((eq? mode mode-stats) (stats-mode-render current-mode))
@@ -124,6 +146,7 @@
   (cond
    ((eq? mode mode-loading) (loading-mode-canvas-render current-mode))
    ((eq? mode mode-title) (title-mode-canvas-render current-mode))
+   ((eq? mode mode-about) (about-mode-canvas-render current-mode))
    ((eq? mode mode-world-design) (world-design-mode-canvas-render current-mode))
    ((eq? mode mode-exhib) (exhib-mode-canvas-render current-mode))
    ((eq? mode mode-stats) (stats-mode-canvas-render current-mode))
