@@ -3,7 +3,7 @@
 
 (define max-transmission-highlights 5)
 (define game-over-time 5)
-(define starting-pop-size 50) 
+(define starting-pop-size 65) 
 
 (define world-zoom 0)
 (define game-started #f)

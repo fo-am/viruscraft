@@ -23,9 +23,9 @@
 
 ;; main disease parameters
 (define infect-likelihood-mult 10) ;; per second mult
-(define infect-spawn-reduction 0.2)
-(define infection-distance 0.25)
-(define host-infection-decline -45) ; (* deadliness)
+(define infect-spawn-reduction 0.75)
+(define infection-distance 0.35)
+(define host-infection-decline -1) ; (* deadliness)
 
 (define host-loc-lat-safe 0.1)
 (define host-loc-lat-width (- (* Math.PI 1) (* 2 host-loc-lat-safe)))
@@ -94,7 +94,8 @@
 ;; this is simply based on the number of receptors to provide
 ;; a cost for generalist viruses
 (define (virus-deadliness virus)
-  (pow (/ (length (virus-keys virus)) virus-max-receptors) 2))
+  1)
+;;  (pow (/ (length (virus-keys virus)) virus-max-receptors) 2))
   
 ;;;;;;;;;;;;;;;;;;;
 ;; host
