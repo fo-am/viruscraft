@@ -18,45 +18,57 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define (make-organism world-units host)
+(define organism-move-speed 0.01)
+
+(define (make-organism id root pos dest t) (list id root pos dest t))
+(define (organism-id c) (list-ref c 0))
+(define (organism-root c) (list-ref c 1))
+(define (organism-position c) (list-ref c 2))
+(define (organism-destination c) (list-ref c 3))
+(define (organism-t c) (list-ref c 4))
+
+(define (calc-organism-position world-units host)
   (let ((t (find-local/bary/unit-from-latlng world-units (host-location host))))
     (let ((pos (list-ref t 0)) 
-	  (bary (list-ref t 1))
 	  (unit (list-ref t 2)))
-      (list 
-       (host-id host)
-       unit
-       (with-state
-	(shader-assign-compiled "host-organism")
-	(shader-uniform! "speed" "f" (+ 3 (/ (modulo (host-id host) 10) 2)))
-	(shader-uniform! "age" "f" (host-age host))
-	(translate pos)
-	(when (not (eq? (host-species host) 'sea)) 
-	      (translate (vector 0 0 0.2)))
-	(scale (vector 0.05 0.05 0.05))
-	(parent (unit-face-root unit))
-	(rotate (vector 0 0 (random 360)))
+      (let ((ptx (with-primitive (unit-face-root unit) (get-transform))))
+	;; detect error condition
+	(when (> (vmag pos) 1) (msg (host-location host)))
+	(mtransform ptx pos)))))
 
-	(texture (load-texture 
-		  (cond 
-		   ((eq? (host-receptor host) 'circle) "host-circle4.png")
-		   ((eq? (host-receptor host) 'triangle) "host-triangle4.png")
-		   ((eq? (host-receptor host) 'square) "host-square4.png")
-		   ((eq? (host-receptor host) 'tee) "host-tee4.png")
-		   ((eq? (host-receptor host) 'angle) "host-angle4.png")
-		   ((eq? (host-receptor host) 'guitar) "host-guitar4.png")
-		   (else "host-donut4.png"))))
-	
-	(build-instance 
-	 (cond ((eq? (host-species host) 'sea) (list-ref host-blends 0))
-	       ((eq? (host-species host) 'land) (list-ref host-blends 1)) 
-	       (else (list-ref host-blends 2)) 
-	       )))
-       ))))
-
-(define (organism-id c) (list-ref c 0))
-(define (organism-unit c) (list-ref c 1))
-(define (organism-root c) (list-ref c 2))
+(define (build-organism world-units host)
+  (let ((pos (calc-organism-position world-units host)))
+    (make-organism
+     (host-id host)
+     (with-state
+      (shader-assign-compiled "host-organism")
+      (shader-uniform! "speed" "f" (+ 3 (/ (modulo (host-id host) 10) 2)))
+      (shader-uniform! "age" "f" (host-age host))
+      ;;(translate pos)
+      ;;(when (not (eq? (host-species host) 'sea)) 
+;;	    (translate (vector 0 0 0.2)))
+ ;;     (scale (vector 0.2 0.2 0.2))
+      ;;(parent (unit-face-root unit))
+      (parent world-root)
+      
+      (rotate (vector 0 0 (random 360)))
+      
+      (texture (load-texture 
+		(cond 
+		 ((eq? (host-receptor host) 'circle) "host-circle4.png")
+		 ((eq? (host-receptor host) 'triangle) "host-triangle4.png")
+		 ((eq? (host-receptor host) 'square) "host-square4.png")
+		 ((eq? (host-receptor host) 'tee) "host-tee4.png")
+		 ((eq? (host-receptor host) 'angle) "host-angle4.png")
+		 ((eq? (host-receptor host) 'guitar) "host-guitar4.png")
+		 (else "host-donut4.png"))))
+      
+      (build-instance 
+       (cond ((eq? (host-species host) 'sea) (list-ref host-blends 0))
+	     ((eq? (host-species host) 'land) (list-ref host-blends 1)) 
+	     (else (list-ref host-blends 2)) 
+	     )))
+     pos pos 0)))
 
 (define (organism-up-toward-camera? c)
   (with-primitive 
@@ -64,35 +76,71 @@
    (> (vdot (vector 0 0 1) (mtransform (get-global-transform) (vector 0 1 0)))
       0)))
 
-(define (organism-update! organism host time population)
-  (cond 
-   ((host-alive? host)
-    (with-primitive 
-     (organism-root organism)
-     (shader-shared-uniform! "time" "f" time)
-     (shader-uniform! "age" "f" (host-age host))
-     (shader-uniform! "health" "f" (host-health host))
-     (when (> (host-health host) 10)
-	   (translate (vector 0 -0.025 0))
-	   (rotate (vector 0 0 (if (zero? (modulo (host-id host) 2)) 1 -1))))
+(define (organism-update! organism host time population world-units)
+  (let ((pos (vlerp (organism-position organism) 
+		    (organism-destination organism)
+		    (organism-t organism)))	
+	(destination 
+	 (if (host-moved? host) 
+	     (calc-organism-position world-units host)
+	     (organism-destination organism)))
+	(t (if (host-moved? host) 
+	       0 
+	       (min (+ (organism-t organism) 
+		       organism-move-speed) 1))))
+    
+    (cond 
+     ((host-alive? host)
+      (with-primitive 
+       (organism-root organism)
+	;; update with new positions
+	;;(when (host-moved? host)
+	      (identity)
+	      ;; animate position
+	      (translate pos)      
+	      ;;(maim (vnormalise (vsub last-pos pos)) (vector 1 0 0))
+	      (maim (vnormalise pos) (vector 0 1 0))
+	      (rotate (vector 0 90 0))
+	      (when (not (eq? (host-species host) 'sea)) 
+		    (translate (vector 0 0 0.5)))	     
+	      (scale (vector 0.2 0.2 0.2))	     
+	  ;;    )
+	
+	
+	(shader-shared-uniform! "time" "f" time)
+	(shader-uniform! "age" "f" (host-age host))
+	(shader-uniform! "health" "f" (host-health host))
+	
+	;;(when (> (host-health host) 10)
+	;;	   (translate (vector 0 -0.025 0))
+	;;	   (rotate (vector 0 0 (if (zero? (modulo (host-id host) 2)) 1 -1))))
+	
+	;; uncomment to view infection range
+	;;(when (population-in-infection-range? host population)
+	;;      (colour (vector 2 2 0.5)))
+	
+	(if (host-infected? host) 
+	    (colour infect-colour-flt)
+	    (colour (vector 0.5 0.5 0.5)))))
+      (else
+       ;; remove the primitive as we have died
+       (destroy (organism-root organism))))
+  
+     (make-organism
+      (organism-id organism)
+      (organism-root organism)
+      pos
+      destination
+      t
+      )))
 
-     ;; uncomment to view infection range
-     ;;(when (population-in-infection-range? host population)
-     ;;      (colour (vector 2 2 0.5)))
-
-     (if (host-infected? host) 
-	 (colour infect-colour-flt)
-	 (colour (vector 0.5 0.5 0.5)))))	   
-   (else
-    ;; remove the primitive as we have died
-    (destroy (organism-root organism)))))
 
 (define (organisms-update organisms host world-units time population)
   (cond
    ((null? organisms) 
-    (make-organism world-units host))
+    (build-organism world-units host))
    ((eq? (organism-id (car organisms)) (host-id host))
-    (organism-update! (car organisms) host time population)
+    (organism-update! (car organisms) host time population world-units)
     ;; no change
     (car organisms))
    (else
@@ -102,12 +150,13 @@
   (let ((organism (ordered-list-search organisms (host-id host))))
     (cond
      (organism
-      (organism-update! organism host time population)
+      (ordered-list-update! organisms (host-id host)
+			    (organism-update! organism host time population world-units))
       (if (host-alive? host)
-	  organisms
+	  organisms 
 	  (ordered-list-remove organisms (host-id host))))
      (else
-      (ordered-list-insert organisms (make-organism world-units host))))))
+      (ordered-list-insert organisms (build-organism world-units host))))))
 
 (define (organisms-destroy organisms)
   (for-each 

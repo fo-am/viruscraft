@@ -12,6 +12,9 @@ uniform float time;
 uniform float age;
 uniform float health;
 uniform float speed;
+uniform float dirtime;
+uniform vec3 dir;
+
 attribute vec3 p;
 attribute vec3 t;
 attribute vec3 n;

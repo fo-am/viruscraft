@@ -35,3 +35,27 @@
    ((null? l) '())
    ((eq? (car (car l)) id) (cdr l))
    (else (cons (car l) (ordered-list-remove (cdr l) id)))))
+
+;; binary search
+(define (ordered-list-update! l id v)
+  (define (_ start end)
+    (cond
+     ;; no children
+     ((null? l) #f)
+     (else
+      (let ((mid (floor (+ start (/ (- end start) 2)))))
+	(cond
+	 ;; not found
+	 ((< (- end start) 2) #f)
+	 ;; found
+	 ((eq? id (car (list-ref l mid))) (set! (list-ref l mid) v))
+	 ;; search down
+	 ((> (car (list-ref l mid)) id)
+	  (_ start mid))
+	 ;; search up
+	 (else
+	  (_ mid end)))))))
+  (_ 0 (length l)))
+
+
+
