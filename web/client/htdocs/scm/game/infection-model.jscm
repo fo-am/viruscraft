@@ -216,6 +216,18 @@
 	 host-loc-lng-width))
    0))
 
+;; (define (find-free-location position population distance num-tries)
+;;   (vector
+;;    (max host-loc-lat-safe 
+;; 	(modulo 
+;; 	 (+ (vx position) 0.1) 
+;; 	 host-loc-lat-width))
+;;    (max host-loc-lng-safe
+;; 	(modulo 
+;; 	 (+ (vy position) 0.1)
+;; 	 host-loc-lng-width))
+;;    0))
+
 
 ;(let ((point (random-point-nearby position)))
 ;  (cond

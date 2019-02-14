@@ -12,8 +12,7 @@ uniform float time;
 uniform float age;
 uniform float health;
 uniform float speed;
-uniform float dirtime;
-uniform vec3 dir;
+uniform float movetime;
 
 attribute vec3 p;
 attribute vec3 t;
@@ -31,7 +30,7 @@ void main()
   
   /* main animation */
   if (health>=low_health) {
-    P = mix(p,p2,abs(mod(time*speed,2.0)-1.0));
+    P = mix(p,p2,abs(mod(movetime*speed,2.0)-1.0));
   }
   
   /* child scale up growth */

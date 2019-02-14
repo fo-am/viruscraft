@@ -14,7 +14,7 @@
 
 (define (init-world-design-mode)
   (when (not world-units)
-	(set! world-units (build-world-from-params 20)))
+	(set! world-units (build-world-from-params 5)))
 
   (set-canvas-drag-fn
    (lambda ()

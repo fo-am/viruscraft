@@ -19,6 +19,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define organism-move-speed 0.01)
+(define organism-idle-speed 0.0025)
 
 (define (make-organism id root pos dest t) (list id root pos dest t))
 (define (organism-id c) (list-ref c 0))
@@ -42,7 +43,7 @@
      (host-id host)
      (with-state
       (shader-assign-compiled "host-organism")
-      (shader-uniform! "speed" "f" (+ 3 (/ (modulo (host-id host) 10) 2)))
+      (shader-uniform! "speed" "f" (+ 3 (/ (modulo (host-id host) 10) 1)))
       (shader-uniform! "age" "f" (host-age host))
       ;;(translate pos)
       ;;(when (not (eq? (host-species host) 'sea)) 
@@ -51,7 +52,7 @@
       ;;(parent (unit-face-root unit))
       (parent world-root)
       
-      (rotate (vector 0 0 (random 360)))
+      ;;(rotate (vector 0 0 (random 360)))
       
       (texture (load-texture 
 		(cond 
@@ -72,22 +73,24 @@
 
 (define (organism-up-toward-camera? c)
   (with-primitive 
-   (unit-face-root (organism-unit c))
+   (organism-root c)
    (> (vdot (vector 0 0 1) (mtransform (get-global-transform) (vector 0 1 0)))
       0)))
 
 (define (organism-update! organism host time population world-units)
   (let ((pos (vlerp (organism-position organism) 
 		    (organism-destination organism)
-		    (organism-t organism)))	
+		    0.02))	
 	(destination 
 	 (if (host-moved? host) 
 	     (calc-organism-position world-units host)
 	     (organism-destination organism)))
 	(t (if (host-moved? host) 
 	       0 
-	       (min (+ (organism-t organism) 
-		       organism-move-speed) 1))))
+	       (+ (organism-t organism) 
+		  (if (< (organism-t organism) 1) 
+		      organism-move-speed
+		      organism-idle-speed)))))
     
     (cond 
      ((host-alive? host)
@@ -99,8 +102,14 @@
 	      ;; animate position
 	      (translate pos)      
 	      ;;(maim (vnormalise (vsub last-pos pos)) (vector 1 0 0))
-	      (maim (vnormalise pos) (vector 0 1 0))
-	      (rotate (vector 0 90 0))
+	      ;;(maim (vnormalise (vsub destination pos))
+	      ;;(vector 0 1 0)
+	      ;;)
+	      (maim (vnormalise pos) (vnormalise (vsub destination pos)))
+	      ;;(rotate (vector (* 57.2958 (Math.atan2 (- (vx (host-last-location host)) (vx (host-location host)))
+	      ;;(- (vy (host-last-location host)) (vy (host-location host)))))
+	      ;;0 0))
+	      (rotate (vector 0 90 90))
 	      (when (not (eq? (host-species host) 'sea)) 
 		    (translate (vector 0 0 0.5)))	     
 	      (scale (vector 0.2 0.2 0.2))	     
@@ -108,6 +117,7 @@
 	
 	
 	(shader-shared-uniform! "time" "f" time)
+	(shader-uniform! "movetime" "f" t)
 	(shader-uniform! "age" "f" (host-age host))
 	(shader-uniform! "health" "f" (host-health host))
 	
