@@ -28,14 +28,14 @@
 (define infect-likelihood-mult 10) ;; per second mult
 (define infect-spawn-reduction 0.25) ;; eden: 0.75
 (define infection-distance 0.35)
-(define host-infection-decline -3) ; (* deadliness)
+(define host-infection-decline -4) ; (* deadliness)
 
 (define host-loc-lat-safe 0.1)
 (define host-loc-lat-width (- (* Math.PI 1) (* 2 host-loc-lat-safe)))
 (define host-loc-lng-safe 0.1)
 (define host-loc-lng-width (- (* Math.PI 2) (* 2 host-loc-lng-safe)))
 
-(define new-organism-likelihood 3) ;; percent per second
+(define new-organism-likelihood 1.5) ;; eden:3 percent per second
 (define mutation-rate 10)
 (define susceptibility-slope 2)
 

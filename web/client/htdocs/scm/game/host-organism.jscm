@@ -21,13 +21,14 @@
 (define organism-move-speed 0.01)
 (define organism-idle-speed 0.0025)
 
-(define (make-organism id root pos dest t) (list id root pos dest t))
+(define (make-organism id root pos dest t dir) (list id root pos dest t dir))
 (define (organism-id c) (list-ref c 0))
 (define (organism-root c) (list-ref c 1))
 (define (organism-position c) (list-ref c 2))
 (define (organism-destination c) (list-ref c 3))
 (define (organism-t c) (list-ref c 4))
-
+(define (organism-dir c) (list-ref c 5))
+  
 (define (calc-organism-position world-units host)
   (let ((t (find-local/bary/unit-from-latlng world-units (host-location host))))
     (let ((pos (list-ref t 0)) 
@@ -61,7 +62,7 @@
 	     ((eq? (host-species host) 'land) (list-ref host-blends 1)) 
 	     (else (list-ref host-blends 2)) 
 	     )))
-     pos pos 0)))
+     pos pos 0 (host-direction host))))
 
 (define (organism-up-toward-camera? c)
   (with-primitive 
@@ -74,6 +75,10 @@
   (let ((pos (vlerp (organism-position organism) 
 		    (organism-destination organism)
 		    0.02))	
+	(dir (vlerp (organism-dir organism)
+		    (vsub (organism-destination organism)
+			  (organism-position organism))
+		    0.02))
 	(destination 
 	 (if (host-moved? host) 
 	     (calc-organism-position world-units host)
@@ -89,12 +94,12 @@
      ((host-alive? host)
       (with-primitive 
        (organism-root organism)
-	;; update with new position
+       ;; update with new position
 	;;(when (host-moved? host)
 	      (identity)
 	      ;; animate position
 	      (translate pos)      
-	      (maim (vnormalise pos) (vnormalise (vsub destination pos)))
+	      (maim (vnormalise pos) (vnormalise dir))
 	      (rotate (vector 0 90 90))
 	      (when (not (eq? (host-species host) 'sea)) 
 		    (translate (vector 0 0 0.5)))	     
@@ -126,6 +131,7 @@
       pos
       destination
       t
+      dir
       )))
 
 
