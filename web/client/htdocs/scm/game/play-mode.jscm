@@ -320,11 +320,11 @@
    (translate (vector 5 0 0))
    (let ((s (+ (min (max 0.02 (* canvas-mouse-zoom 0.02)) 2) 0.7)))
      (scale (vector s s s)))
-   (cond 
-    ((> (+ last-highlight-time 30) (time))
-     (set! world-q (qslerp world-q world-target-q camera-drift)))    
-    (else
-     (set! world-q (qmul world-q (qaxisangle (vector 0 1 0) 0.25)))))   
+   ;; (cond 
+   ;;  ((> (+ last-highlight-time 30) (time))
+   ;;   (set! world-q (qslerp world-q world-target-q camera-drift)))    
+   ;;  (else
+   ;;   (set! world-q (qmul world-q (qaxisangle (vector 0 1 0) 0.25)))))   
    (set! world-rotate-q (qslerp world-rotate-q world-q camera-drift))
    (concat (q->m world-rotate-q))))
 
@@ -482,6 +482,6 @@
   (when game-started (render-hiscores g))
   (render-popups!)
   (render-transmission-highlight! g)
-  ;;(render-info! g)
+  (render-info! g)
   )
 

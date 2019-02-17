@@ -20,14 +20,15 @@
 (define host-spawn-min-distance 0.05)
 (define spawn-dist 0.2)
 (define host-spawn-dist-tries 5)
-(define host-move-distance 0.08)
-(define host-movement-likelihood 0.4)
+(define host-move-max-distance 0.08)
+(define host-movement-likelihood 2.8)
+(define host-direction-change 0.1)
 
 ;; main disease parameters
 (define infect-likelihood-mult 10) ;; per second mult
-(define infect-spawn-reduction 0.75)
+(define infect-spawn-reduction 0.25) ;; eden: 0.75
 (define infection-distance 0.35)
-(define host-infection-decline -1) ; (* deadliness)
+(define host-infection-decline -3) ; (* deadliness)
 
 (define host-loc-lat-safe 0.1)
 (define host-loc-lat-width (- (* Math.PI 1) (* 2 host-loc-lat-safe)))
@@ -41,10 +42,12 @@
 ;;(define susceptibility-prob-factor 0.2)
 (define max-pop-size 100)
 
-
 ;; hacky global state 
 (define cross-species-infection-happened #f)
 (define transmission-ids (list 0 0))
+
+(define (clamp low high v)
+  (min high (max low v)))
 
 ;;;;;;;;;;;;;;;;;;;
 ;; minimal geometry
@@ -60,17 +63,6 @@
 	   (sq (/ (- (vy a) (vy b)) 2)))))
 
 (define two-pi (* 2 3.141))
-
-;;(define (random-point-nearby position)
-;;  (vector
-;;   (+ (vx position) 0.05)
-;;   (+ (vy position) 0)
-;;   0))
-
-;;(vector
-;; (+ (vx position) (* spawn-dist (sin (* (rndf) two-pi))))
-;; (+ (vy position) (* spawn-dist (cos (* (rndf) two-pi)))) 
-;; 0)
 
 ;;;;;;;;;;;;;;;;;;;
 ;; receptor types
@@ -112,8 +104,8 @@
   (set! current-host-id (+ current-host-id 1))
   current-host-id)
 
-(define (make-host id receptor species infected pos health age moved last-pos)
-  (list id receptor species infected pos health age moved last-pos))
+(define (make-host id receptor species infected pos health age moved direction)
+  (list id receptor species infected pos health age moved direction))
 
 (define (host-id h) (list-ref h 0))
 (define (host-receptor h) (list-ref h 1))
@@ -123,7 +115,7 @@
 (define (host-health h) (list-ref h 5))
 (define (host-age h) (list-ref h 6))
 (define (host-moved? h) (list-ref h 7))
-(define (host-last-location h) (list-ref h 8))
+(define (host-direction h) (list-ref h 8))
 
 ;;;;;;;;;;;;;;;;;;;
 ;; host model
@@ -156,18 +148,18 @@
 ;; returns an updated health based on infection and age constraints
 (define (host-calculate-health host susceptibility deadliness)
   ;;(msg (* host-infection-decline deadliness))
-  (cond
-   ;; old age
-   ((> (host-age host) host-decline-age) 
-    (max min-host-health (+ (host-health host) (* canvas-delta host-age-decline))))
-   ((host-infected? host) 
-    ;; uniform reduction in health no matter how susceptible
-    ;; might be better to change this see todo
-    (max min-host-health 
-	 (+ (host-health host) 
-	    (* canvas-delta host-infection-decline deadliness))))
-   ((>= (host-health host) max-host-health) max-host-health)
-   (else (+ (host-health host) (* canvas-delta host-normal-growth)))))
+  (clamp min-host-health max-host-health 
+	 (cond
+	  ;; old age
+	  ((> (host-age host) host-decline-age) 
+	   (+ (host-health host) (* canvas-delta host-age-decline)))
+	  ((host-infected? host) 
+	   ;; uniform reduction in health no matter how susceptible
+	   ;; might be better to change this see todo
+	   (+ (host-health host) 
+	      (* canvas-delta host-infection-decline deadliness)))
+	  (else (+ (host-health host) 
+		   (* canvas-delta host-normal-growth))))))
 
 (define (host-alive? host)
   (> (host-health host) min-host-health))
@@ -186,55 +178,41 @@
 
 ;; check if a point is within bounding box and 
 ;; far enough away from other hosts
-;;(define (check-location location population threshold)
-;;  (if (and (> (vx location) host-loc-lat-safe) 
-;;	   (< (vx location) (+ host-loc-lat-safe host-loc-lat-width))
-;;	   (> (vy location) host-loc-lng-safe) 
-;;	   (< (vy location) (+ host-loc-lng-safe host-loc-lng-width)))
-      ;; (foldl
-      ;;  (lambda (host r)
-      ;; 	 (if (and r (> (vec2-squashed-dist (host-location host) location) 
-      ;; 		       threshold))
-      ;; 	     #t #f))
-      ;;  #t
-      ;;  population)
-      ;; #f))
+(define (check-location location population threshold)
+  (if (and (> (vx location) host-loc-lat-safe) 
+	   (< (vx location) (+ host-loc-lat-safe host-loc-lat-width))
+	   (> (vy location) host-loc-lng-safe) 
+	   (< (vy location) (+ host-loc-lng-safe host-loc-lng-width)))
+      (foldl
+       (lambda (host r)
+      	 (if (and r (> (vec2-squashed-dist (host-location host) location) 
+      		       threshold))
+      	     #t #f))
+       #t
+       population)
+      #f))
 
-;; find a space far enough away from other hosts, returns #f if 
-;; there are none present
+(define (jitter-direction direction)
+  (let ((ret (vadd direction (vmul (crndvec) host-direction-change))))
+    (if (> (vmag ret) host-move-max-distance)
+	(vmul (vnormalise ret) host-move-max-distance)
+	ret)))
 
-;; we don't care about collisions any more as everyone is moving around
-(define (find-free-location position population distance num-tries)
+(define (wrap-location location)
   (vector
    (max host-loc-lat-safe 
-	(modulo 
-	 (+ (vx position) (* distance (sin (* (rndf) two-pi)))) 
-	 host-loc-lat-width))
+	(modulo (vx location) host-loc-lat-width))
    (max host-loc-lng-safe
-	(modulo 
-	 (+ (vy position) (* distance (cos (* (rndf) two-pi)))) 
-	 host-loc-lng-width))
+	(modulo (vy location) host-loc-lng-width))
    0))
 
-;; (define (find-free-location position population distance num-tries)
-;;   (vector
-;;    (max host-loc-lat-safe 
-;; 	(modulo 
-;; 	 (+ (vx position) 0.1) 
-;; 	 host-loc-lat-width))
-;;    (max host-loc-lng-safe
-;; 	(modulo 
-;; 	 (+ (vy position) 0.1)
-;; 	 host-loc-lng-width))
-;;    0))
-
-
-;(let ((point (random-point-nearby position)))
-;  (cond
-;   ;; give up!!
-;   ((< num-tries 1) #f)
-;   ((check-location point population distance) point)
-;   (else (find-free-location position population distance (- num-tries 1)))))
+;; move in a random direction
+(define (jitter-location position distance)
+  (wrap-location 
+   (vector
+    (+ (vx position) (* distance (sin (* (rndf) two-pi))))
+    (+ (vy position) (* distance (cos (* (rndf) two-pi)))) 
+    0)))
 
 ;; returns a new, mutated host organism
 (define (host-new-organism host population location)
@@ -251,41 +229,45 @@
    host-health-start
    0
    #t
-   location))
+   (crndvec)))
 
 (define (host-update host virus population world-position-checker)
   (let ((susceptibility (host-susceptibility host virus))
-	(new-location
-	 ;; shall we move somewhere??
-	 (if (< (rndf) (* canvas-delta host-movement-likelihood))
-	     ;; use spawn distance for the moment, probably good enough distance
-	     (let ((location (find-free-location 
-			      (host-location host) 
-			      population host-move-distance 1)))
-	       ;; only move if we can
-	       ;; now check that we can live there
-	       (if (and location (world-position-checker (host-species host) location))
-		   location
-		   #f))
-	     #f)))    
-    ;;(msg susceptibility)
-    (make-host
-     (host-id host)
-     (host-receptor host) ;; doesn't change
-     (host-species host)
-     (cond
-      ((host-infected? host) #t)
-      ;; randomise check based on suscept
-      ((< (rndf) (* canvas-delta susceptibility infect-likelihood-mult))
-       (population-is-infection-present? host population))
-      (else #f))
-     (if new-location new-location (host-location host))
-     (host-calculate-health host susceptibility (virus-deadliness virus))
-     (+ (host-age host) canvas-delta)
-     (if new-location #t #f)
-     (if new-location 
-	 (host-location host) 
-	 (host-last-location host)))))
+	(move-time (< (rndf) (* canvas-delta host-movement-likelihood))))
+    (let ((new-location
+	   ;; shall we move somewhere??
+	   (if move-time
+	       ;; add direction times move-distance on to location
+	       (let ((location 
+		      (wrap-location 
+		       (vadd
+			(host-location host) 
+			(host-direction host)))))
+		 ;; only actually move if we can
+		 (if (world-position-checker (host-species host) location)
+		     location
+		     #f))
+	       #f)))
+      (make-host
+       (host-id host)
+       (host-receptor host) ;; doesn't change
+       (host-species host)
+       (cond
+	((host-infected? host) #t)
+	;; randomise check based on suscept
+	((< (rndf) (* canvas-delta susceptibility infect-likelihood-mult))
+	 (population-is-infection-present? host population))
+	(else #f))
+       (if new-location new-location (host-location host))
+       (host-calculate-health host susceptibility (virus-deadliness virus))
+       (+ (host-age host) canvas-delta)
+       (if new-location #t #f)
+       ;; changing direction is independent of movement - otherwise
+       ;; we tend to get stuck on edges (this gives us a chance to 
+       ;; turn around)
+       (if move-time
+	   (jitter-direction (host-direction host))
+	   (host-direction host))))))
 
 ;; for background infection, doesn't check sus
 (define (host-infect host)
@@ -298,7 +280,7 @@
    (host-health host)
    (host-age host)
    (host-moved? host)
-   (host-last-location host)))
+   (host-direction host)))
 
 (define (find-world-position species world-position-checker)
   ;; loop round until we find a position - todo: will hang!!
@@ -321,7 +303,7 @@
        (+ host-health-start (random (- max-host-health host-health-start)))
        (random host-decline-age)
        #t
-       location))))
+       (crndvec)))))
 
 (define (make-grid-host i width)
   (make-host 
@@ -334,7 +316,7 @@
    host-health-start
    (random host-decline-age)
    #t
-   (vector (* (quotient i 10) width) (* (modulo i 10) width) 0)))
+   (crndvec)))
 
 (define (host-print host)
   (when (host-infected? host) (display "X")(display " "))
@@ -362,11 +344,15 @@
    (lambda (host r)
      (if (host-can-breed? host)
 	 ;; first find a location free of other organisms
-	 (let ((location (find-free-location 
-			  (host-location host) population 
-			  host-spawn-min-distance host-spawn-dist-tries)))
+	 (let ((location (jitter-location 
+			  (host-location host)  
+			  host-spawn-min-distance)))
 	   ;; now check that we can live there
-	   (if (and location (world-position-checker (host-species host) location))
+	   (if (and location 
+		    (check-location 
+		     location population host-spawn-min-distance)
+		    (world-position-checker 
+		     (host-species host) location))
 	       (cons (host-new-organism host population location) r) r))
 	 r))
    '()

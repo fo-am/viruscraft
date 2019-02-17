@@ -45,15 +45,7 @@
       (shader-assign-compiled "host-organism")
       (shader-uniform! "speed" "f" (+ 3 (/ (modulo (host-id host) 10) 1)))
       (shader-uniform! "age" "f" (host-age host))
-      ;;(translate pos)
-      ;;(when (not (eq? (host-species host) 'sea)) 
-;;	    (translate (vector 0 0 0.2)))
- ;;     (scale (vector 0.2 0.2 0.2))
-      ;;(parent (unit-face-root unit))
-      (parent world-root)
-      
-      ;;(rotate (vector 0 0 (random 360)))
-      
+      (parent world-root)          
       (texture (load-texture 
 		(cond 
 		 ((eq? (host-receptor host) 'circle) "host-circle4.png")
@@ -78,6 +70,7 @@
       0)))
 
 (define (organism-update! organism host time population world-units)
+  ;; figure out where we are and where we are going
   (let ((pos (vlerp (organism-position organism) 
 		    (organism-destination organism)
 		    0.02))	
@@ -86,7 +79,7 @@
 	     (calc-organism-position world-units host)
 	     (organism-destination organism)))
 	(t (if (host-moved? host) 
-	       0 
+	       0 ;; restart
 	       (+ (organism-t organism) 
 		  (if (< (organism-t organism) 1) 
 		      organism-move-speed
@@ -96,26 +89,17 @@
      ((host-alive? host)
       (with-primitive 
        (organism-root organism)
-	;; update with new positions
+	;; update with new position
 	;;(when (host-moved? host)
 	      (identity)
 	      ;; animate position
 	      (translate pos)      
-	      ;;(maim (vnormalise (vsub last-pos pos)) (vector 1 0 0))
-	      ;;(maim (vnormalise (vsub destination pos))
-	      ;;(vector 0 1 0)
-	      ;;)
 	      (maim (vnormalise pos) (vnormalise (vsub destination pos)))
-	      ;;(rotate (vector (* 57.2958 (Math.atan2 (- (vx (host-last-location host)) (vx (host-location host)))
-	      ;;(- (vy (host-last-location host)) (vy (host-location host)))))
-	      ;;0 0))
 	      (rotate (vector 0 90 90))
 	      (when (not (eq? (host-species host) 'sea)) 
 		    (translate (vector 0 0 0.5)))	     
-	      (scale (vector 0.2 0.2 0.2))	     
-	  ;;    )
-	
-	
+	      (scale (vector 0.2 0.2 0.2)))
+    	
 	(shader-shared-uniform! "time" "f" time)
 	(shader-uniform! "movetime" "f" t)
 	(shader-uniform! "age" "f" (host-age host))
