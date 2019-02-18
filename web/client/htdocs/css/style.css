@@ -40,31 +40,45 @@ input {
     width: 100%;
 }
 
-#webgl-canvas { }
+
+/* forcing everything into 16:9 aspect ratio all the time */
+
+.force-aspect {
+    position: absolute;
+    width: 100%; 
+    padding-bottom: 50%; /* 56.25% */
+}
+
+div.stretchy-wrapper {
+    position: relative;
+}
+
+div.stretchy-wrapper > div {
+    position: absolute;
+    top: 0; bottom: 0; left: 0; right: 0;
+}
+
+#webgl-canvas {
+    width: 100vw;
+    position: absolute;
+    left: 0;
+    right: 0;
+    margin-left: auto;
+    margin-right: auto;
+    min-width: 800px;
+}
 
 #canvas {
-    position: absolute;
-    left: 0px;
-    top: 0px;
     width: 100vw;
-    height: 100vh;
+    position: absolute;
+    left: 0;
+    right: 0;
+    margin-left: auto;
+    margin-right: auto;
+    min-width: 800px;
 }
 
 input {
     width: 3em;
 }
 
-.zoomed-canvas {
-    width:100%; 
-    height:auto; 
-    position:fixed; 
-    left:0; 
-    top:0; 
-    z-index:-100; 
-}
-
-input[type=number]::-webkit-inner-spin-button, 
-input[type=number]::-webkit-outer-spin-button { 
-  -webkit-appearance: none; 
-  margin: 0; 
-}

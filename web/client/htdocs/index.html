@@ -9,10 +9,14 @@
     <script src="codemirror/scheme/scheme.js"></script> -->
      
     <body style="color:#594430; background:#000;">
-      <div>
-        <canvas class="canvas" id="webgl-canvas" 
-		style="background: url('textures/bg.jpg'); position: absolute; left: 0px; top: 0px; width: 100vw; height: 100vh;"></canvas>
-        <canvas class="canvas" id="canvas"></canvas>
+      <div class="force-aspect" "overflow: hidden;">
+	<div class="stretchy-wrapper">
+          <canvas class="canvas" id="webgl-canvas" width="1500" height="843" 
+		  style="background: url('textures/bg.jpg');"></canvas>
+          <canvas class="canvas" id="canvas" width="1500" height="843"></canvas>
+	</div>
+      </div>
+      
 	<div class="code-container" style="display: none;">
 	  <button onclick="hide_code();">Hide code</button>
 	  <button onclick="run_code();">Run me</button>
