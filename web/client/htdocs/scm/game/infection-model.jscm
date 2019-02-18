@@ -198,13 +198,21 @@
 	(vmul (vnormalise ret) host-move-max-distance)
 	ret)))
 
+;; not sure why but clamping seems to work fine...
 (define (wrap-location location)
   (vector
-   (max host-loc-lat-safe 
-	(modulo (vx location) host-loc-lat-width))
-   (max host-loc-lng-safe
-	(modulo (vy location) host-loc-lng-width))
+   (clamp host-loc-lat-safe host-loc-lat-width
+	  (vx location))
+;   (clamp host-loc-lng-safe host-loc-lng-width
+;	  (vy location))
+   (+ host-loc-lng-safe
+      (modulo (- (vy location) host-loc-lng-safe) host-loc-lng-width))
+
    0))
+
+;   (+ host-loc-lng-safe
+;      (modulo (- (vy location) host-loc-lng-safe) host-loc-lng-width))
+
 
 ;; move in a random direction
 (define (jitter-location position distance)
@@ -240,9 +248,7 @@
 	       ;; add direction times move-distance on to location
 	       (let ((location 
 		      (wrap-location 
-		       (vadd
-			(host-location host) 
-			(host-direction host)))))
+		       (vadd (host-location host) (host-direction host)))))
 		 ;; only actually move if we can
 		 (if (world-position-checker (host-species host) location)
 		     location

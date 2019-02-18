@@ -411,13 +411,21 @@
 
 (define host-info-id 0)
 
+(define (display-trunc num)
+  (/ (trunc (* num 100)) 100.))
+
 (define (render-info! g)
   (let ((pos (organism-pos g host-info-id))
 	(host (host-search host-info-id (play-mode-population g))))    
+    (set! ctx.font "10pt Dosis")
     (if (not pos)
 	(set! host-info-id (host-id (choose (play-mode-population g))))
 	(ctx.fillText 
-	 (+ "" host-info-id ": " (host-health host)) 
+	 (+ "" host-info-id ": " 
+	    (display-trunc (host-health host)) " " 
+	    (display-trunc (host-age host)) " " 
+	    (host-infected? host) " "
+	    (host-moved? host) " ")
 	 (vx pos)
 	 (vy pos)))))
 
@@ -482,6 +490,6 @@
   (when game-started (render-hiscores g))
   (render-popups!)
   (render-transmission-highlight! g)
-  (render-info! g)
+  ;; (render-info! g)
   )
 

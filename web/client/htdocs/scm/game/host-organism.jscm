@@ -35,8 +35,8 @@
 	  (unit (list-ref t 2)))
       (let ((ptx (with-primitive (unit-face-root unit) (get-transform))))
 	;; detect error condition
-	(when (> (vmag pos) 1) (msg (host-location host)))
-	(mtransform ptx pos)))))
+	(if (> (vmag pos) 1) 
+	    #f (mtransform ptx pos))))))
 
 (define (build-organism world-units host)
   (let ((pos (calc-organism-position world-units host)))
@@ -75,13 +75,14 @@
   (let ((pos (vlerp (organism-position organism) 
 		    (organism-destination organism)
 		    0.02))	
-	(dir (vlerp (organism-dir organism)
-		    (vsub (organism-destination organism)
-			  (organism-position organism))
-		    0.02))
+	(dir (vnormalise (vlerp (organism-dir organism)
+				(vsub (organism-destination organism)
+				      (organism-position organism))
+				0.02)))
 	(destination 
 	 (if (host-moved? host) 
-	     (calc-organism-position world-units host)
+	     (let ((pos (calc-organism-position world-units host)))
+	       (if pos pos (organism-destination organism)))
 	     (organism-destination organism)))
 	(t (if (host-moved? host) 
 	       0 ;; restart
