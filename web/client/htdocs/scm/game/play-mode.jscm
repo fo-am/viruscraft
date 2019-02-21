@@ -143,7 +143,7 @@
   (fire-popup! "good" (list "Add a ligand to start"))
   
   (set! back-button 
-	(make-image-button (- screen-width 100) 570 "hexbutton.png"
+	(make-image-button (- screen-width 100) 750 "hexbutton.png"
 			   "End" "spin"
 			   (lambda (m)
 			     (destroy-virus-buttons)
@@ -263,7 +263,8 @@
 	(population-update 
 	 (population-infect-one (play-mode-population g) virus)
 	 virus
-	 (play-mode-world-pos-checker g))      
+	 (play-mode-world-pos-checker g)
+	 (scores-age (play-mode-scores g)))      
 	(update-organisms 
 	 (play-mode-organisms g)
 	 (play-mode-population g)
@@ -289,7 +290,8 @@
 	(population-update 
 	 (play-mode-population g) 
 	 virus
-	 (play-mode-world-pos-checker g))
+	 (play-mode-world-pos-checker g)
+	 (scores-age (play-mode-scores g)))      
 	(update-organisms 
 	 (play-mode-organisms g)
 	 (play-mode-population g)
@@ -320,11 +322,11 @@
    (translate (vector 5 0 0))
    (let ((s (+ (min (max 0.02 (* canvas-mouse-zoom 0.02)) 2) 0.7)))
      (scale (vector s s s)))
-   ;; (cond 
-   ;;  ((> (+ last-highlight-time 30) (time))
-   ;;   (set! world-q (qslerp world-q world-target-q camera-drift)))    
-   ;;  (else
-   ;;   (set! world-q (qmul world-q (qaxisangle (vector 0 1 0) 0.25)))))   
+   (cond 
+    ((> (+ last-highlight-time 30) (time))
+     (set! world-q (qslerp world-q world-target-q camera-drift)))    
+    (else
+     (set! world-q (qmul world-q (qaxisangle (vector 0 1 0) 0.25)))))   
    (set! world-rotate-q (qslerp world-rotate-q world-q camera-drift))
    (concat (q->m world-rotate-q))))
 
@@ -454,21 +456,21 @@
 
 (define (render-hiscores g)
   (set! ctx.font "20pt Dosis")
-  (ctx.fillText "How your virus compares to others" 40 590)   
+  (ctx.fillText "How your virus compares to others" 40 670)   
   (set! ctx.font "15pt Dosis")
   (let ((displayed #f)
 	(age (scores-age (play-mode-scores g))))
     (index-for-each
      (lambda (i hiscore)
        (let ((score (list-ref hiscore 2))
-	     (y (+ 620 (* (if displayed (+ i 1) i) 20))))
+	     (y (+ 700 (* (if displayed (+ i 1) i) 20))))
 	 (when (and (not displayed) (< score age))
 	       (set! ctx.fillStyle infect-colour-hex)
 	       (set! displayed #t)
 	       (set! y (+ y 20))
 	       (ctx.fillText (string-append (car hiscore) ": " (play-mode-virus-name g) " virus " 
 					    (trunc age))
-			     40 (+ 620 (* i 20))))
+			     40 (+ 700 (* i 20))))
 	 (set! ctx.fillStyle "#000")
 	 (ctx.fillText (+ (if displayed (+ (car hiscore) 1) (car hiscore)) ": " (list-ref hiscore 1) " virus " (trunc score))
 		       40 y)))
@@ -476,15 +478,15 @@
 
 (define (play-mode-canvas-render g)
   (set! ctx.font "40pt Dosis")
-  (ctx.fillText (string-append "Viruscraft") 40 60)
-  (set! ctx.font "25pt Dosis")
-  (ctx.fillText "You are a virus, evolve to infect hosts, jump" 40 100)
-  (ctx.fillText "between species, stay alive." 40 140)
+;;  (ctx.fillText (string-append "Viruscraft") 40 60)
+;;  (set! ctx.font "20pt Dosis")
+;;  (ctx.fillText "You are a virus, evolve to infect hosts, jump" 40 100)
+;;  (ctx.fillText "between species, stay alive." 40 130)
   (set! ctx.fillStyle infect-colour-hex)
-  (ctx.fillText (string-append (play-mode-virus-name g) " virus") 40 200)
+  (ctx.fillText (string-append (play-mode-virus-name g) " virus") 40 60)
   (set! ctx.fillStyle "#000")
-  (set! ctx.font "25pt Dosis")
-  (ctx.fillText (string-append "You are " (trunc (scores-age (play-mode-scores g))) " days old with " current-infections " infections") 40 240)
+  (set! ctx.font "30pt Dosis")
+  (ctx.fillText (string-append "Your virus is " (trunc (scores-age (play-mode-scores g))) " days old with " current-infections " infections") 40 110)
   (when (not exhib-version)
 	(image-button-render! back-button))
   (when game-started (render-hiscores g))

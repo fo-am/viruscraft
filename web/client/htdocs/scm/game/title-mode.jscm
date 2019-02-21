@@ -25,14 +25,14 @@
 
   (set! start-button 
 	(make-image-button 
-	 (+ (/ screen-width 2) 200) 400 "hexbutton.png"
+	 (+ (/ screen-width 2) 200) 750 "hexbutton.png"
 	 "Play" "spin"
 	 (lambda (m)
 	   (title-mode-modify-ready m "next"))))
   
   (set! about-button 
 	(make-image-button 
-	 (- (/ screen-width 2) 200) 400 "hexbutton.png"
+	 (- (/ screen-width 2) 200) 750 "hexbutton.png"
 	 "About" "spin"
 	 (lambda (m)
 	   (title-mode-modify-ready m "about"))))

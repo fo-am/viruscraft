@@ -78,7 +78,7 @@
 	(dir (vnormalise (vlerp (organism-dir organism)
 				(vsub (organism-destination organism)
 				      (organism-position organism))
-				0.02)))
+				0.2)))
 	(destination 
 	 (if (host-moved? host) 
 	     (let ((pos (calc-organism-position world-units host)))
@@ -103,7 +103,8 @@
 	      (maim (vnormalise pos) (vnormalise dir))
 	      (rotate (vector 0 90 90))
 	      (when (not (eq? (host-species host) 'sea)) 
-		    (translate (vector 0 0 0.5)))	     
+		    (translate (vector 0 0 0.35)))
+	      (translate (vector 0 0 0.15))	     
 	      (scale (vector 0.2 0.2 0.2)))
     	
 	(shader-shared-uniform! "time" "f" time)

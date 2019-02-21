@@ -263,7 +263,7 @@
 		((< virus-dist 100)
 		 (set! virus-q (qmul virus-q (qaxisangle (vnormalise rot-axis) 6))))
 		((> virus-dist 300)
-		 (set! world-q (qmul world-q (qaxisangle (vnormalise rot-axis) 2))))		   
+		 (set! world-q (qmul world-q (qaxisangle (vnormalise rot-axis) 6))))		   
 		(else 0)))))))
   (attach-virus-clear-all))
 

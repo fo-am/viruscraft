@@ -37,14 +37,14 @@
   
   (set! next-button 
 	(make-image-button 
-	 (+ (/ screen-width 2) 100) 600 "hexbutton.png"
+	 (+ (/ screen-width 2) 100) 750 "hexbutton.png"
 	 "Done" "spin"
 	 (lambda (m)
 	   (world-design-mode-modify-ready m "next"))))
   
   (set! last-button 
 	(make-image-button 
-	 (- (/ screen-width 2) 100) 600 "hexbutton.png"
+	 (- (/ screen-width 2) 100) 750 "hexbutton.png"
 	 "Back" "spin"
 	 (lambda (m)
 	   (world-design-mode-modify-ready m "back"))))

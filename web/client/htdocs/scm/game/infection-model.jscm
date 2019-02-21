@@ -21,14 +21,16 @@
 (define spawn-dist 0.2)
 (define host-spawn-dist-tries 5)
 (define host-move-max-distance 0.08)
-(define host-movement-likelihood 2.8)
+(define host-movement-likelihood 1.8)
 (define host-direction-change 0.1)
 
 ;; main disease parameters
-(define infect-likelihood-mult 10) ;; per second mult
+(define infect-likelihood-mult 8) ;; per second mult
 (define infect-spawn-reduction 0.25) ;; eden: 0.75
-(define infection-distance 0.35)
-(define host-infection-decline -4) ; (* deadliness)
+(define infection-distance 0.25)
+(define host-infection-decline -10) ; (* deadliness)
+
+(define virus-deadliness-rise-time 20) ;; seconds
 
 (define host-loc-lat-safe 0.1)
 (define host-loc-lat-width (- (* Math.PI 1) (* 2 host-loc-lat-safe)))
@@ -38,6 +40,7 @@
 (define new-organism-likelihood 1.5) ;; eden:3 percent per second
 (define mutation-rate 10)
 (define susceptibility-slope 2)
+(define host-low-health 10) ;; stop moving when nearly dead (matches shader)
 
 ;;(define susceptibility-prob-factor 0.2)
 (define max-pop-size 100)
@@ -89,11 +92,25 @@
 	(append (build-list f (lambda (_) (list-ref receptor-types c))) r))
       '() freq))))
 
-;; this is simply based on the number of receptors to provide
-;; a cost for generalist viruses
-(define (virus-deadliness virus)
-  1)
-;;  (pow (/ (length (virus-keys virus)) virus-max-receptors) 2))
+;; deadliness calculation
+
+;; this used to be simply based on the number of receptors to provide
+;; a cost for generalist viruses - eden testing showed this was too
+;; complicated and unnessesary
+
+;; now it is a set value based on time - this is because if we either
+;; have viruses that are too deadly they kill off the first host easily 
+;; or not deadly enough that they carry on endlessly, which is boring
+
+;; so we use a sigmoid to allow a period of time at the start with low
+;; deadliness which gradually rises to a maximum deadliness
+
+(define (sigmoid x offset scale)
+  (/ 1 (+ 1 (exp (- (/ (- x offset) scale))))))
+
+;; returns number between 0 and 1, and is multiplied by host-infection-decline
+(define (virus-deadliness virus age)
+  (sigmoid age virus-deadliness-rise-time 3))
   
 ;;;;;;;;;;;;;;;;;;;
 ;; host
@@ -239,9 +256,10 @@
    #t
    (crndvec)))
 
-(define (host-update host virus population world-position-checker)
+(define (host-update host virus population world-position-checker age)
   (let ((susceptibility (host-susceptibility host virus))
-	(move-time (< (rndf) (* canvas-delta host-movement-likelihood))))
+	(move-time (and (> (host-health host) host-low-health)
+			(< (rndf) (* canvas-delta host-movement-likelihood)))))
     (let ((new-location
 	   ;; shall we move somewhere??
 	   (if move-time
@@ -265,7 +283,7 @@
 	 (population-is-infection-present? host population))
 	(else #f))
        (if new-location new-location (host-location host))
-       (host-calculate-health host susceptibility (virus-deadliness virus))
+       (host-calculate-health host susceptibility (virus-deadliness virus age))
        (+ (host-age host) canvas-delta)
        (if new-location #t #f)
        ;; changing direction is independent of movement - otherwise
@@ -402,7 +420,7 @@
    population))
 
 ;; requires a function to check the new position for organisms
-(define (population-update population virus world-position-checker)
+(define (population-update population virus world-position-checker age)
   (append
    (if (< (length population) max-pop-size)
        (population-collect-new-organisms 
@@ -411,7 +429,7 @@
        '())
    (map
     (lambda (host)
-      (host-update host virus population world-position-checker)) ;; update organisms
+      (host-update host virus population world-position-checker age)) ;; update organisms
     (filter
      host-alive? ;; remove dead host organisms
      ;; do this before main update so we can detect dead ones 
