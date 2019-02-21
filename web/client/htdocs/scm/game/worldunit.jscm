@@ -145,10 +145,9 @@
 		      (build-instance (unit->model unit unit-models)))))))
     face-ids)))
 
-(define (build-world-from-params sea-level)
-  (let ((values (pentakis-build-values sea-level)))
+(define (build-world-from-params sea-level scale)
+  (let ((values (pentakis-build-values-noise sea-level scale)))
     (build-world values (pentakis-build-units values))))
-
 
 (define (find-face-from-latlng pentakis face-ids location)
   (with-primitive 

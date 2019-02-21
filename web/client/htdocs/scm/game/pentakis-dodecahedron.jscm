@@ -292,6 +292,26 @@
    (build-list 15 (lambda (i) (list (list 4 i) (pentakis-random-edge prob))))
    (build-list 5 (lambda (i) (list (list 5 i) (pentakis-random-edge prob))))))
 
+(define noisegen (js "new ClassicalNoise()"))
+  ;;(let ((thresh (* prob
+
+(define (pentakis-noise-edge x y prob scale)
+  (let ((thresh (- (/ prob 100) 0.5))
+	(sc (/ scale 10)))
+    (list (< (noisegen.noise (* x sc) (* y sc) 0) (+ thresh 0.01))
+	  (< (noisegen.noise (* x sc) (* y sc) 0) (- thresh 0.02)) 
+	  (< (noisegen.noise (* x sc) (* y sc) 0) thresh))))
+
+(define (pentakis-build-values-noise thresh scale)
+  (list
+   (build-list 5 (lambda (i) (list (list 0 i) (pentakis-noise-edge (/ i 5) (/ 0 6) thresh scale))))
+   (build-list 15 (lambda (i) (list (list 1 i) (pentakis-noise-edge (/ i 15) (/ 1 6) thresh scale))))
+   (build-list 20 (lambda (i) (list (list 2 i) (pentakis-noise-edge (/ i 20) (/ 2 6) thresh scale))))
+   (build-list 20 (lambda (i) (list (list 3 i) (pentakis-noise-edge (/ i 20) (/ 3 6) thresh scale))))
+   (build-list 15 (lambda (i) (list (list 4 i) (pentakis-noise-edge (/ i 15) (/ 4 6) thresh scale))))
+   (build-list 5 (lambda (i) (list (list 5 i) (pentakis-noise-edge (/ i 5) (/ 5 6) thresh scale))))))
+
+
 (define (pentakis-build-test-values prob)
   (list
    (list (list (list 0 0) (list #f #f #f))

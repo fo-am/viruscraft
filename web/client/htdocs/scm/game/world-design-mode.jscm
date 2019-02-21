@@ -5,6 +5,7 @@
 
 (define title-text '())
 (define sealevel-text '())
+(define fracture-text '())
 (define next-button '())
 (define last-button '())
 (define tl-window '())
@@ -14,8 +15,8 @@
 
 (define (init-world-design-mode)
   (when (not world-units)
-	(set! world-units (build-world-from-params 5)))
-
+	(set! world-units (build-world-from-params 50 50)))
+  
   (set-canvas-drag-fn
    (lambda ()
      (let ((drag (vector (- canvas-drag-x) canvas-drag-y 0)))
@@ -34,17 +35,23 @@
 	 100 150
 	 "30pt" 30 "centre"
 	 (list "Sea level")))
+
+  (set! fracture-text 
+	(make-textbox 
+	 190 450
+	 "30pt" 30 "centre"
+	 (list "Habitat connectivity")))
   
   (set! next-button 
 	(make-image-button 
-	 (+ (/ screen-width 2) 100) 750 "hexbutton.png"
+	 1400 650 "hexbutton.png"
 	 "Done" "spin"
 	 (lambda (m)
 	   (world-design-mode-modify-ready m "next"))))
   
   (set! last-button 
 	(make-image-button 
-	 (- (/ screen-width 2) 100) 750 "hexbutton.png"
+	 1200 650 "hexbutton.png"
 	 "Back" "spin"
 	 (lambda (m)
 	   (world-design-mode-modify-ready m "back"))))
@@ -61,6 +68,7 @@
 
 (define (world-design-mode-update m)
   (set! sealevel-slider (slider-update sealevel-slider))
+  (set! fracture-slider (slider-update fracture-slider))
   (image-button-update
    next-button
    (image-button-update last-button m)))
@@ -74,15 +82,27 @@
      (scale (vmul (vector s s s) 0.80)))
    (concat (q->m world-q))))
 
-(define last-v 0)
+(define last-sealevel 150)
+(define last-fracture 150)
 
 (define sealevel-slider 
-  (make-slider 50 280 300 (- 300 90)
+  (make-slider 50 280 300 (- 300 150)
 	       (lambda (v)
-		 (when (not (eq? v last-v))
-		       (set! last-v v)
+		 (when (not (eq? v last-sealevel))
+		       (set! last-sealevel v)
 		       (destroy world-root)
-		       (set! world-units (build-world-from-params (- 100 (/ v 3)))))
+		       (set! world-units (build-world-from-params (- 100 (/ last-sealevel 3)) 
+								  (- 100 (/ last-fracture 3)))))
+		 )))
+
+(define fracture-slider 
+  (make-slider 50 580 300 (- 300 150)
+	       (lambda (v)
+		 (when (not (eq? v last-fracture))
+		       (set! last-fracture v)
+		       (destroy world-root)
+		       (set! world-units (build-world-from-params (- 100 (/ last-sealevel 3)) 
+								  (- 100 (/ last-fracture 3)))))
 		 )))
 
 
@@ -90,11 +110,33 @@
   (window-render! tl-window)
   (window-render! tr-window)
   (window-render! bl-window)
-  (window-render! br-window)
+;;  (window-render! br-window)
+
+  (set! ctx.font "30pt Dosis")
+  
+  (let ((sea-difficulty (cond ((< last-sealevel 100) "Low sea level means less diverse habitat, while ")
+			      ((> last-sealevel 200) "High sea level means less diverse habitat, while ")
+			      (else "Medium sea level means a high diversity of habitat, while ")))
+	(fracture-difficulty (cond ((< last-fracture 150) "low connectivity means creatures are cut off from one another, ")
+				   (else "high connecitivy means creatures can easily reach each other, ")))
+	(score (cond
+		((and
+		  (or (< last-sealevel 100) (> last-sealevel 200))
+		  (> last-fracture 150)) "Easy")
+		((and
+		  (and (> last-sealevel 100) (< last-sealevel 200))
+		  (< last-fracture 150)) "Hard")
+		(else "Medium"))))
+    (ctx.fillText (+ "Difficulty: " score) 1120 140)
+    (set! ctx.font "20pt Dosis")		 
+    (wrap-text ctx sea-difficulty+fracture-difficulty 1120 200 350 30))
   
   (textbox-render! title-text)
   (textbox-render! sealevel-text)
+  (textbox-render! fracture-text)
   (set! sealevel-slider (slider-update sealevel-slider))
+  (set! fracture-slider (slider-update fracture-slider))
   (slider-render! sealevel-slider)
+  (slider-render! fracture-slider)
   (image-button-render! next-button)
   (image-button-render! last-button))
