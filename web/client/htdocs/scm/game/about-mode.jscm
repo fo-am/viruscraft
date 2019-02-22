@@ -21,25 +21,25 @@
 	 (/ screen-width 2) 250
 	 "30pt" 50 "centre"
 	 (list
-	  "...")))
+	  "Blah blah...")))
 
   (set! science-button 
 	(make-image-button 
-	 (+ (/ screen-width 2) 300) 400 "hexbutton.png"
+	 (+ (/ screen-width 2) 300) 650 "hexbutton.png"
 	 "Virus science" "spin"
 	 (lambda (m)
 	   (about-mode-modify-ready m "science"))))
 
   (set! dev-button 
 	(make-image-button 
-	 (/ screen-width 2) 400 "hexbutton.png"
+	 (/ screen-width 2) 650 "hexbutton.png"
 	 "How to make Viruscraft" "spin"
 	 (lambda (m)
 	   (about-mode-modify-ready m "dev"))))
 
   (set! back-button 
 	(make-image-button 
-	 (- (/ screen-width 2) 300) 400 "hexbutton.png"
+	 (- (/ screen-width 2) 300) 650 "hexbutton.png"
 	 "Back" "spin"
 	 (lambda (m)
 	   (about-mode-modify-ready m "back"))))

@@ -39,7 +39,7 @@
 			        7  6  5  9  8
 			        2  1  0  4  3))
 
-(define builder-pos (vector -9.5 0 0))
+(define builder-pos (vector -9.5 1.5 0))
 
 (define virus-builder #f)
 (define receptor-circle #f)

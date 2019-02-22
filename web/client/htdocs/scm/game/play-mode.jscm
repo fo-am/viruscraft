@@ -143,7 +143,7 @@
   (fire-popup! "good" (list "Add a ligand to start"))
   
   (set! back-button 
-	(make-image-button (- screen-width 100) 750 "hexbutton.png"
+	(make-image-button (- screen-width 100) 650 "hexbutton.png"
 			   "End" "spin"
 			   (lambda (m)
 			     (destroy-virus-buttons)
@@ -319,8 +319,8 @@
   (with-primitive 
    world-root 
    (identity)
-   (translate (vector 5 0 0))
-   (let ((s (+ (min (max 0.02 (* canvas-mouse-zoom 0.02)) 2) 0.7)))
+   (translate (vector 5 1 0))
+   (let ((s (+ (min (max 0.02 (* canvas-mouse-zoom 0.02)) 2) 0.6)))
      (scale (vector s s s)))
    (cond 
     ((> (+ last-highlight-time 30) (time))
@@ -456,21 +456,21 @@
 
 (define (render-hiscores g)
   (set! ctx.font "20pt Dosis")
-  (ctx.fillText "How your virus compares to others" 40 670)   
+  (ctx.fillText "How your virus compares to others" 40 590)   
   (set! ctx.font "15pt Dosis")
   (let ((displayed #f)
 	(age (scores-age (play-mode-scores g))))
     (index-for-each
      (lambda (i hiscore)
        (let ((score (list-ref hiscore 2))
-	     (y (+ 700 (* (if displayed (+ i 1) i) 20))))
+	     (y (+ 615 (* (if displayed (+ i 1) i) 20))))
 	 (when (and (not displayed) (< score age))
 	       (set! ctx.fillStyle infect-colour-hex)
 	       (set! displayed #t)
 	       (set! y (+ y 20))
 	       (ctx.fillText (string-append (car hiscore) ": " (play-mode-virus-name g) " virus " 
 					    (trunc age))
-			     40 (+ 700 (* i 20))))
+			     40 (+ 615 (* i 20))))
 	 (set! ctx.fillStyle "#000")
 	 (ctx.fillText (+ (if displayed (+ (car hiscore) 1) (car hiscore)) ": " (list-ref hiscore 1) " virus " (trunc score))
 		       40 y)))

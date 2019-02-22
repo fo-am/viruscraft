@@ -298,8 +298,8 @@
 (define (pentakis-noise-edge x y prob scale)
   (let ((thresh (- (/ prob 100) 0.5))
 	(sc (/ scale 10)))
-    (list (< (noisegen.noise (* x sc) (* y sc) 0) (+ thresh 0.01))
-	  (< (noisegen.noise (* x sc) (* y sc) 0) (- thresh 0.02)) 
+    (list (< (noisegen.noise (* x (+ sc 0.01)) (* y sc) 0) thresh)
+	  (< (noisegen.noise (* x (- sc 0.02)) (* y (+ sc 0.03)) 0) thresh)
 	  (< (noisegen.noise (* x sc) (* y sc) 0) thresh))))
 
 (define (pentakis-build-values-noise thresh scale)

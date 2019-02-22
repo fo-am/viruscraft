@@ -21,12 +21,19 @@
    (lambda ()
      (let ((drag (vector (- canvas-drag-x) canvas-drag-y 0)))
        (when (not (veq? drag (vector 0 0 0)))
-	     (let ((rot-axis (vcross drag (vector 0 0 -1))))
- 	       (set! world-q (qmul world-q (qaxisangle (vnormalise rot-axis) 2))))))))
+	     (let ((rot-axis (vcross drag (vector 0 0 -1)))
+		   (world-dist (vdist (vector 750 422 0) 
+				      (vector canvas-mouse-x canvas-mouse-y 0))))
+	       (msg world-dist)
+	       (cond
+		((< world-dist 250)
+		 (set! world-q (qmul world-q (qaxisangle (vnormalise rot-axis) 6))))		   
+		(else 0)))))))
+  
 
   (set! title-text 
 	(make-textbox 
-	 (/ screen-width 2) 70
+	 230 70
 	 "50pt" 30 "centre"
 	 (list "Build your world")))
 
@@ -56,10 +63,10 @@
 	 (lambda (m)
 	   (world-design-mode-modify-ready m "back"))))
   
-  (set! tl-window (make-window 10 80 400 270))
-  (set! tr-window (make-window (- screen-width 410) 80 400 270))
-  (set! bl-window (make-window 10 380 400 270))
-  (set! br-window (make-window (- screen-width 410) 380 400 270))
+  (set! tl-window (make-window 10 100 400 270))
+  (set! tr-window (make-window (- screen-width 410) 100 400 270))
+  (set! bl-window (make-window 10 400 400 270))
+  (set! br-window (make-window (- screen-width 410) 400 400 270))
 
   (list #f))
 
@@ -77,9 +84,9 @@
   (with-primitive 
    world-root 
    (identity)
-   (translate (vector 0 0 0))
+   (translate (vector 0 1 0))
    (let ((s (+ (min (max 0.02 (* canvas-mouse-zoom 0.02)) 2) 0.7)))
-     (scale (vmul (vector s s s) 0.80)))
+     (scale (vmul (vector s s s) 0.75)))
    (concat (q->m world-q))))
 
 (define last-sealevel 150)
@@ -127,9 +134,9 @@
 		  (and (> last-sealevel 100) (< last-sealevel 200))
 		  (< last-fracture 150)) "Hard")
 		(else "Medium"))))
-    (ctx.fillText (+ "Difficulty: " score) 1120 140)
+    (ctx.fillText (+ "Difficulty: " score) 1120 160)
     (set! ctx.font "20pt Dosis")		 
-    (wrap-text ctx sea-difficulty+fracture-difficulty 1120 200 350 30))
+    (wrap-text ctx sea-difficulty+fracture-difficulty 1120 220 350 30))
   
   (textbox-render! title-text)
   (textbox-render! sealevel-text)

@@ -27,13 +27,13 @@
 (define (render-stats-hiscores g)
   (set! ctx.font "25pt Dosis")
   (ctx.fillText "Top 15 viruses (by age)" 40 350)   
-  (set! ctx.font "20pt Dosis")
+  (set! ctx.font "15pt Dosis")
   (let ((displayed #f)
 	(age (scores-age (play-mode-scores g))))
     (index-for-each
      (lambda (i hiscore)
        (let ((score (list-ref hiscore 2))
-	     (y (+ 390 (* (if displayed (+ i 1) i) 30))))
+	     (y (+ 390 (* (if displayed (+ i 1) i) 20))))
 	 (when (and (not displayed) (< score age))
 	       (set! ctx.fillStyle "#f00")
 	       (set! displayed #t)
@@ -53,7 +53,7 @@
   
 
   (set! back-button 
-	(make-image-button (- screen-width 100) 750 "hexbutton.png"
+	(make-image-button (- screen-width 100) 650 "hexbutton.png"
 			   "Restart" "spin"
 			   (lambda (m)
 			     (destroy-virus-builder)

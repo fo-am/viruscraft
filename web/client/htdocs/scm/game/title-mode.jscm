@@ -25,14 +25,14 @@
 
   (set! start-button 
 	(make-image-button 
-	 (+ (/ screen-width 2) 200) 750 "hexbutton.png"
+	 (+ (/ screen-width 2) 150) 650 "hexbutton.png"
 	 "Play" "spin"
 	 (lambda (m)
 	   (title-mode-modify-ready m "next"))))
   
   (set! about-button 
 	(make-image-button 
-	 (- (/ screen-width 2) 200) 750 "hexbutton.png"
+	 (- (/ screen-width 2) 150) 650 "hexbutton.png"
 	 "About" "spin"
 	 (lambda (m)
 	   (title-mode-modify-ready m "about"))))
@@ -51,6 +51,9 @@
 
 
 (define (title-mode-canvas-render m)
+  (ctx.drawImage (find-image "bg2.jpg" image-lib) 0 0)
+  (ctx.drawImage (find-image "logos.png" image-lib) 510 400)
+  
   (textbox-render! title-text)
   (textbox-render! intro-text)
   (image-button-render! about-button)

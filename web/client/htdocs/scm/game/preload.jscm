@@ -61,6 +61,8 @@
 
 (load-images!
  (list
-  "hexbutton.png")
+  "hexbutton.png"
+  "logos.png"
+  "bg2.jpg")
  (lambda ()
    0))

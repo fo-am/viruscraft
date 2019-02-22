@@ -5,7 +5,10 @@
 ;; the main infection and population model
 
 (define receptor-types (list 'circle 'triangle 'square 'donut 'guitar))
-(define host-species-types (list 'sea 'land 'land2))
+(define host-species-land (list 'land 'land2))
+(define host-species-sea (list 'sea))
+(define host-species-types (append host-species-land host-species-sea))
+
 (define virus-max-receptors 10)
 
 (define size-conv 0.003)
@@ -306,28 +309,36 @@
    (host-moved? host)
    (host-direction host)))
 
-(define (find-world-position species world-position-checker)
-  ;; loop round until we find a position - todo: will hang!!
-  (let ((pos (vector
-	      (+ host-loc-lat-safe (* (rndf) host-loc-lat-width))
-	      (+ host-loc-lng-safe (* (rndf) host-loc-lng-width)) 
-	      0)))
-    (if (world-position-checker species pos) 
-	pos (find-world-position species world-position-checker))))
+(define (random-world-position species world-position-checker)
+  (vector
+   (+ host-loc-lat-safe (* (rndf) host-loc-lat-width))
+   (+ host-loc-lng-safe (* (rndf) host-loc-lng-width)) 
+   0))
 
 (define (make-random-host world-position-checker)
-  (let ((species (choose host-species-types)))
-    (let ((location (find-world-position species world-position-checker)))  
-      (make-host 
-       (make-host-id)
-       (pick-random-receptor-type)
-       species
-       #f
-       location
-       (+ host-health-start (random (- max-host-health host-health-start)))
-       (random host-decline-age)
-       #t
-       (crndvec)))))
+  (let ((habitat (choose (list 'land 'sea))))
+    (let ((test-species (if (eq? habitat 'land)
+			    (choose host-species-land)
+			    (choose host-species-sea))))
+      (let ((location (random-world-position)))
+	;; this mess is to check the position for the randomly 
+	;; selected species, and pick the other kind if we can't
+	;; spawn there...
+	(let ((species (if (world-position-checker test-species location) 
+			   test-species ;; we are ok
+			   (if (eq? habitat 'land) ;; flip
+			       (choose host-species-sea)
+			       (choose host-species-land)))))	  
+	  (make-host 
+	   (make-host-id)
+	   (pick-random-receptor-type)
+	   species
+	   #f
+	   location
+	   (+ host-health-start (random (- max-host-health host-health-start)))
+	   (random host-decline-age)
+	   #t
+	   (crndvec)))))))
 
 (define (make-grid-host i width)
   (make-host 
