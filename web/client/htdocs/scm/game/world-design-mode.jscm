@@ -24,7 +24,6 @@
 	     (let ((rot-axis (vcross drag (vector 0 0 -1)))
 		   (world-dist (vdist (vector 750 422 0) 
 				      (vector canvas-mouse-x canvas-mouse-y 0))))
-	       (msg world-dist)
 	       (cond
 		((< world-dist 250)
 		 (set! world-q (qmul world-q (qaxisangle (vnormalise rot-axis) 6))))		   
@@ -85,7 +84,7 @@
    world-root 
    (identity)
    (translate (vector 0 1 0))
-   (let ((s (+ (min (max 0.02 (* canvas-mouse-zoom 0.02)) 2) 0.7)))
+   (let ((s 0.72))
      (scale (vmul (vector s s s) 0.75)))
    (concat (q->m world-q))))
 

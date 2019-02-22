@@ -5,6 +5,7 @@
 (define virus (make-virus (list)))
 (define scores-list (list))
 (define hiscores-display (list))
+(define save-button #f)
 
 (define (make-stats-mode name scores) 
   (list name scores #f))
@@ -48,9 +49,8 @@
 
 
 (define (init-stats-mode name scores)
-  (set! exhib-restart-timer 10)
-
-  
+  (set! exhib-restart-timer 10)  
+  (clear-popups!)
 
   (set! back-button 
 	(make-image-button (- screen-width 100) 650 "hexbutton.png"
@@ -59,6 +59,26 @@
 			     (destroy-virus-builder)
 			     (stats-mode-modify-finished m #t))))
 
+  (set! save-button 
+	(make-image-button (- screen-width 300) 650 "hexbutton.png"
+			   "Save your score" "spin"
+			   (lambda (g)			     
+			     (fire-popup! "good" (list "Virus saved!"))		    
+			     (server-call-ret
+			      "record-virus"
+			      (list (list "virus-id" current-virus-id)
+				    (list "age" (scores-age (stats-mode-scores g)))
+				    (list "infections" (scores-infections (stats-mode-scores g)))
+				    (list "deaths" (scores-deaths (stats-mode-scores g)))
+				    (list "jumps" (scores-jumps (stats-mode-scores g))))
+			      (lambda (data)			     
+				(server-call-ret
+				 "hiscores" (list) 
+				 (lambda (data)
+				   (set! hiscores-display (JSON.parse data))))
+				
+				)))))
+  
   ;; (server-call-ret
   ;;  "scores" (list) 
   ;;  (lambda (data)
@@ -78,6 +98,7 @@
 
 (define (stats-mode-update g)
   (set! exhib-restart-timer (- exhib-restart-timer canvas-delta))
+  (image-button-update save-button g)
   (image-button-update back-button
 		       (cond
 			((and exhib-version (< exhib-restart-timer 0))
@@ -114,10 +135,11 @@
   (ctx.fillText (string-append "High scores position: " (+ current-score-position 1)) 40 290)
 
   (when (not exhib-version)
+	(image-button-render! save-button)
 	(image-button-render! back-button))
-
+  
   (render-stats-hiscores g)
-  ;;(render-popups!)
+  (render-popups!)
   ;;(render-transmission-highlight! g)
   ;;(render-info! g)
   )

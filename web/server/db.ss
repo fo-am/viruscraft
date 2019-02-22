@@ -19,7 +19,7 @@
 (require "logger.ss")
 
 (define (setup db)
-  (exec/ignore db "CREATE TABLE virus ( id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, age REAL, infections INTEGER, deaths INTEGER, jumps INTEGER, time TEXT);")
+  (exec/ignore db "CREATE TABLE virus ( id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, age REAL, infections INTEGER, deaths INTEGER, jumps INTEGER, world_sealevel INTEGER, world_fracture INTEGER, time TEXT);")
   (exec/ignore db "create table mutation ( id INTEGER PRIMARY KEY AUTOINCREMENT, virus_id INTEGER, receptors TEXT, time TEXT);") 
   )
 
@@ -43,9 +43,9 @@
         ""
         (rows->csv s))))
 
-(define (insert-virus db name time)
-  (insert db "insert into virus values (NULL, ?, ?, ?, ?, ?, ?)"
-          name 0 0 0 0 time))
+(define (insert-virus db name sealevel fracture time)
+  (insert db "insert into virus values (NULL, ?, ?, ?, ?, ?, ?, ?, ?)"
+          name 0 0 0 0 sealevel fracture time))
 
 (define (update-virus db virus-id age infections deaths jumps)
   (insert db "update virus set age=?, infections=?, deaths=?, jumps=? where id = ?"

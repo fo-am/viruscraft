@@ -101,6 +101,8 @@
   (server-call-ret
    "register-virus"
    (list (list "name" name)
+	 (list "sealevel" last-sealevel)
+	 (list "fracture" last-fracture)
 	 (list "time" (Date.now)))
    (lambda (data)
      (set! current-virus-id (car (JSON.parse data))))))
@@ -248,9 +250,8 @@
       ((and (zero? (length (play-mode-population g)))
 	    (> end-game-timer 999))
        (fire-popup! "bad" (list "The hosts all died out!"
-				"Your virus is extinct"))
-       
-       (record-virus g)
+				"Your virus is extinct"))       
+       (when exhib-version (record-virus g))
        (set! end-game-timer game-over-time)
        g)
 
@@ -280,7 +281,7 @@
 	    (zero? num-infections)
 	    (> end-game-timer 999))
        (fire-popup! "bad" (list "Your virus died out!"))
-       (record-virus g)
+       (when exhib-version (record-virus g))
        (set! end-game-timer game-over-time)
        g)
       
@@ -320,7 +321,7 @@
    world-root 
    (identity)
    (translate (vector 5 1 0))
-   (let ((s (+ (min (max 0.02 (* canvas-mouse-zoom 0.02)) 2) 0.6)))
+   (let ((s 0.62))
      (scale (vector s s s)))
    (cond 
     ((> (+ last-highlight-time 30) (time))
