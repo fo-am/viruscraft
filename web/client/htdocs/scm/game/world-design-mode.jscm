@@ -125,7 +125,7 @@
 			      ((> last-sealevel 200) "High sea level means less diverse habitat, while ")
 			      (else "Medium sea level means a high diversity of habitat, while ")))
 	(fracture-difficulty (cond ((< last-fracture 150) "low connectivity means creatures are cut off from one another, ")
-				   (else "high connecitivy means creatures can easily reach each other, ")))
+				   (else "high connectivity means creatures can easily reach each other, ")))
 	(score (cond
 		((and
 		  (or (< last-sealevel 100) (> last-sealevel 200))

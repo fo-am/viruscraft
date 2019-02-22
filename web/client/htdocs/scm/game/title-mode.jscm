@@ -12,27 +12,27 @@
   (set! title-text 
 	(make-textbox 
 	 (/ screen-width 2) 150
-	 "50pt" 30 "centre"
+	 "60pt" 30 "centre"
 	 (list "VIRUSCRAFT")))
   
   (set! intro-text 
 	(make-textbox 
 	 (/ screen-width 2) 250
-	 "30pt" 50 "centre"
+	 "40pt" 50 "centre"
 	 (list
 	  "You are a virus, evolve to infect hosts, jump"
 	  "between species, stay alive.")))
 
   (set! start-button 
 	(make-image-button 
-	 (+ (/ screen-width 2) 150) 650 "hexbutton.png"
+	 (+ (/ screen-width 2) 150) 450 "hexbutton.png"
 	 "Play" "spin"
 	 (lambda (m)
 	   (title-mode-modify-ready m "next"))))
   
   (set! about-button 
 	(make-image-button 
-	 (- (/ screen-width 2) 150) 650 "hexbutton.png"
+	 (- (/ screen-width 2) 150) 450 "hexbutton.png"
 	 "About" "spin"
 	 (lambda (m)
 	   (title-mode-modify-ready m "about"))))
@@ -52,7 +52,7 @@
 
 (define (title-mode-canvas-render m)
   (ctx.drawImage (find-image "bg2.jpg" image-lib) 0 0)
-  (ctx.drawImage (find-image "logos.png" image-lib) 510 400)
+  (ctx.drawImage (find-image "logos.png" image-lib) 565 630)
   
   (textbox-render! title-text)
   (textbox-render! intro-text)
