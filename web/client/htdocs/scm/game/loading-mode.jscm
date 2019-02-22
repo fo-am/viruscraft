@@ -24,4 +24,5 @@
   (let ((load-percent
 	 (floor (* (- 1 (/ (+ meshes-load-outstanding textures-load-outstanding)
 			   (+ textures-total-load meshes-total-load))) 100))))
+    (set! ctx.font "40pt Dosis")
     (ctx.fillText (+ "Loading: " load-percent "%") 100 110)))
