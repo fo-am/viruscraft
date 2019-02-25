@@ -146,7 +146,7 @@
   
   (set! back-button 
 	(make-image-button (- screen-width 100) 650 "hexbutton.png"
-			   "End" "spin"
+			   "End" 0 "spin"
 			   (lambda (m)
 			     (destroy-virus-buttons)
 			     (organisms-destroy (play-mode-organisms m))

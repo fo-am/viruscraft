@@ -63,7 +63,12 @@
  (list
   "hexbutton.png"
   "logos.png"
-  "bg2.jpg")
+  "bg2.jpg"
+  "bg3.jpg"
+  "bg4.jpg"
+  "world.png"
+  "builder.png"
+  )
  (lambda ()
    0))
 

@@ -1,0 +1,46 @@
+;; -*- mode: scheme; -*-
+;; Viruscraft Copyright (C) 2018 FoAM Kernow
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define back-button '())
+(define intro-text '())
+(define title-text '())
+
+(define (init-about-dev-mode)
+  (set! title-text 
+	(make-textbox 
+	 (/ screen-width 2) 100
+	 "50pt" 30 "centre"
+	 (list "ABOUT THE GAME")))
+  
+  (set! back-button 
+	(make-image-button 
+	 (/ screen-width 2) 650 "hexbutton.png"
+	 "Back" 0 "spin"
+	 (lambda (m)
+	   (about-dev-mode-modify-ready m "back"))))
+
+  (list #f))
+
+(define (about-dev-mode-ready? m) (list-ref m 0))
+(define (about-dev-mode-modify-ready m v) (list-replace m 0 v))
+
+(define (about-dev-mode-update m)
+  (image-button-update back-button m))
+
+(define (about-dev-mode-render m)
+  0)
+
+
+(define (about-dev-mode-canvas-render m)
+  (ctx.drawImage (find-image "bg4.jpg" image-lib) 0 0)
+  (textbox-render! title-text)
+  (image-button-render! back-button)
+
+  (set! ctx.font "30pt Dosis")
+  (wrap-text ctx "There are two versions of the Viruscraft game. One is screen based (the one you are using now), and the other is a tangible interface designed for exhibitions. The tangible interface is a large wood virus with plug in shapes that represent the proteins on the surface of the viruses - these are automatically detected when they are changed." 180 160 1200 40)
+  (wrap-text ctx "Viruscraft was developed through a series of open workshops, with biologists and craft specialists working together. We are now planning to develop Viruscraft into a full exhibition version that can be installed long-term." 180 370 1200 40)
+  (wrap-text ctx "You can see photos and videos for the project throughout its development here." 180 510 1200 40)
+  
+  )

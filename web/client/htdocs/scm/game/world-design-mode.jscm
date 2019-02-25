@@ -51,14 +51,14 @@
   (set! next-button 
 	(make-image-button 
 	 1400 650 "hexbutton.png"
-	 "Done" "spin"
+	 "Done" 0 "spin"
 	 (lambda (m)
 	   (world-design-mode-modify-ready m "next"))))
   
   (set! last-button 
 	(make-image-button 
 	 1200 650 "hexbutton.png"
-	 "Back" "spin"
+	 "Back" 0 "spin"
 	 (lambda (m)
 	   (world-design-mode-modify-ready m "back"))))
   

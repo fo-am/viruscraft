@@ -54,14 +54,14 @@
 
   (set! back-button 
 	(make-image-button (- screen-width 100) 650 "hexbutton.png"
-			   "Restart" "spin"
+			   "Restart" 0 "spin"
 			   (lambda (m)
 			     (destroy-virus-builder)
 			     (stats-mode-modify-finished m #t))))
 
   (set! save-button 
 	(make-image-button (- screen-width 300) 650 "hexbutton.png"
-			   "Save your score" "spin"
+			   "Save your score" -20 "spin"
 			   (lambda (g)			     
 			     (fire-popup! "good" (list "Virus saved!"))		    
 			     (server-call-ret

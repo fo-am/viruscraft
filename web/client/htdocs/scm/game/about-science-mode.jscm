@@ -1,0 +1,55 @@
+;; -*- mode: scheme; -*-
+;; Viruscraft Copyright (C) 2018 FoAM Kernow
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define back-button '())
+(define intro-text '())
+(define title-text '())
+
+(define (init-about-science-mode)
+  (msg "initialising science mode")
+  (set! title-text 
+	(make-textbox 
+	 (/ screen-width 2) 100
+	 "50pt" 30 "centre"
+	 (list "VIRUS SCIENCE")))
+  
+  (set! back-button 
+	(make-image-button 
+	 (/ screen-width 2) 650 "hexbutton.png"
+	 "Back" 0 "spin"
+	 (lambda (m)
+	   (about-science-mode-modify-ready m "back"))))
+
+  (list #f))
+
+(define (about-science-mode-ready? m) (list-ref m 0))
+(define (about-science-mode-modify-ready m v) (list-replace m 0 v))
+
+(define (about-science-mode-update m)
+  (image-button-update back-button m)) 
+
+(define (about-science-mode-render m)
+  0)
+
+
+(define (about-science-mode-canvas-render m)
+
+  (textbox-render! title-text)
+  (image-button-render! back-button)
+
+  (set! ctx.font "30pt Dosis")
+
+  (wrap-text ctx "Viruscraft is based on scientific research on the evolution of viruses and their hosts, conducted by Dr. Ben Longdon at the University of Exeter." 180 160 1100 40)
+  (wrap-text ctx "Many viral diseases like Influenza and Ebola have jumped into humans from other animals. Ben’s research uses fruit flies and their viruses to answer fundamental questions about disease emergence:"  180 250 1100 40)
+  
+  (wrap-text ctx "1." 180 380 1100 35)
+  (wrap-text ctx "Why are some host species more likely to become infected than others?"  220 380 1150 40)
+  (wrap-text ctx "2." 180 435 1100 35)
+  (wrap-text ctx "How do environmental factors like temperature affect the ability of a virus to jump between species?"  220 435 1050 40)
+  (wrap-text ctx "3." 180 525 1100 35)
+  (wrap-text ctx "Do generalist viruses evolve to be a 'jack of all trades' that are more likely to jump between species?"  220 525 1050 40)
+  
+  
+  )
