@@ -62,6 +62,7 @@
 (define virus-recep-id 1)
 
 (define (attach-virus instance type)
+  (play-sound "mutate.wav")
   (when (not (zero? (list-ref receptor-ids virus-recep-id)))
 	(destroy (list-ref receptor-ids virus-recep-id)))
   (set! cur-receptor-types (list-replace cur-receptor-types virus-recep-id type))
@@ -100,6 +101,7 @@
 (define (attach-virus-guitar) (attach-virus receptor-guitar 'guitar) (update-virus))
 
 (define (attach-virus-clear)
+  (play-sound "remove.wav")
   (when (not (zero? (list-ref receptor-ids virus-recep-id)))
 	(destroy (list-ref receptor-ids virus-recep-id)))
   (set! receptor-ids

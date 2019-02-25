@@ -410,6 +410,7 @@
 	 (begin 
 	   ;; set a bunch of globals to keep track of what's happening :[
 	   (set! transmission-ids (list (host-id host) (host-id other-host)))
+	   (play-sound (+ "infect-" (+ (random 3) 1) ".wav"))
 	   (when (not (eq? (host-species host)
 			   (host-species other-host)))
 		 (set! cross-species-infection-happened (list (host-id other-host) (host-id host))))

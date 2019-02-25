@@ -66,3 +66,13 @@
   "bg2.jpg")
  (lambda ()
    0))
+
+(load-sounds!
+ (list
+  "button.wav"
+  "end.wav"
+  "infect-1.wav"
+  "infect-2.wav"
+  "infect-3.wav"
+  "remove.wav"
+  "mutate.wav"))

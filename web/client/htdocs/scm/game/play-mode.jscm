@@ -253,6 +253,7 @@
 				"Your virus is extinct"))       
        (when exhib-version (record-virus g))
        (set! end-game-timer game-over-time)
+       (play-sound "end.wav")
        g)
 
       ;; not started and no infections yet...
@@ -281,6 +282,7 @@
 	    (zero? num-infections)
 	    (> end-game-timer 999))
        (fire-popup! "bad" (list "Your virus died out!"))
+       (play-sound "end.wav")
        (when exhib-version (record-virus g))
        (set! end-game-timer game-over-time)
        g)
