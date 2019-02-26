@@ -63,6 +63,7 @@
 
 (define (attach-virus instance type)
   (play-sound "mutate.wav")
+  (set! help-stack (help-bubble-stack-trigger help-stack 'click-ligand))
   (when (not (zero? (list-ref receptor-ids virus-recep-id)))
 	(destroy (list-ref receptor-ids virus-recep-id)))
   (set! cur-receptor-types (list-replace cur-receptor-types virus-recep-id type))
@@ -257,6 +258,9 @@
   (set-canvas-drag-fn
    (lambda ()
      (set! virus-recep-id (display-front-face))
+     ;; update help system
+     (set! help-stack (help-bubble-stack-trigger help-stack 'drag-virus))
+     (set! help-stack (help-bubble-stack-trigger help-stack 'drag-world))
      (let ((drag (vector (- canvas-drag-x) canvas-drag-y 0)))
        (when (not (veq? drag (vector 0 0 0)))
 	     (let ((rot-axis (vcross drag (vector 0 0 -1)))

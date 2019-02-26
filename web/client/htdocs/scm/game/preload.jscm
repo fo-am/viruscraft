@@ -68,7 +68,7 @@
   "bg4.jpg"
   "world.png"
   "builder.png"
-  )
+  "help-bubble.png")
  (lambda ()
    0))
 

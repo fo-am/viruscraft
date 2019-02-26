@@ -1,0 +1,99 @@
+;; -*- mode: scheme; -*-
+;; Viruscraft Copyright (C) 2019 FoAM Kernow
+
+;; a stack of helpful tips!
+
+(define (make-help-bubble text code x y bg-image timeout)
+  (list text code x y (find-image bg-image image-lib) timeout))
+
+(define (help-bubble-text b) (list-ref b 0))
+(define (help-bubble-code b) (list-ref b 1))
+(define (help-bubble-x b) (list-ref b 2))
+(define (help-bubble-y b) (list-ref b 3))
+(define (help-bubble-bg-image b) (list-ref b 4))
+(define (help-bubble-timeout b) (list-ref b 5))
+
+(define (help-bubble-update-pos b pos)
+  (list
+   (help-bubble-text b)
+   (help-bubble-code b)
+   (vx pos)
+   (vy pos)
+   (help-bubble-bg-image b)
+   (help-bubble-timeout b)))
+
+(define (help-bubble-render! b ctx)
+  (ctx.drawImage 
+   (help-bubble-bg-image b)
+   (help-bubble-x b)
+   (help-bubble-y b))
+  (set! ctx.font "20pt Dosis")
+  (let ((m (ctx.measureText (help-bubble-text b))))
+    (ctx.fillText 
+     (help-bubble-text b) 
+     (- (help-bubble-x b) (/ m.width 2)) 
+     (+ (help-bubble-y b) 25))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define (make-help-bubble-stack bubbles last-time started)
+  (list bubbles last-time started))
+
+(define (help-bubble-stack-list b) (list-ref b 0))
+(define (help-bubble-stack-last-time b) (list-ref b 1))
+(define (help-bubble-stack-started b) (list-ref b 2))
+
+;; drop the top of the stack
+(define (help-bubble-stack-drop b)
+  (make-help-bubble-stack 
+   (cdr (help-bubble-stack-list b))
+   (time)
+   (help-bubble-stack-started b)))
+
+;; drop the top of the stack
+(define (help-bubble-stack-start b)
+  (make-help-bubble-stack 
+   (help-bubble-stack-list b)
+   (time)
+   #t))
+
+(define (help-bubble-stack-trigger b code)
+  (if (eq? (help-bubble-code 
+	    (car (help-bubble-stack-list b)))
+	   code)
+      (help-bubble-stack-drop b)
+      b))
+
+;; drop the top of the stack
+(define (help-bubble-stack-update-top b bubble)
+  (make-help-bubble-stack 
+   (cons bubble (cdr (help-bubble-stack-list b)))
+   (help-bubble-stack-last-time b)
+   (help-bubble-stack-started b)))
+
+(define (help-bubble-stack-update b) 
+  (cond
+   ((null? b) b)
+   ((null? (help-bubble-stack-list b)) b)
+   ((not (help-bubble-stack-started b)) b)
+   ((> (time) (+ (help-bubble-timeout (car (help-bubble-stack-list b))) 
+		 (help-bubble-stack-last-time b)))
+    (help-bubble-stack-drop b))
+   (else b)))
+
+(define (render-bubble-stack! b ctx)
+  (when (and (help-bubble-stack-started b)
+	     (not (null? (help-bubble-stack-list b))))
+	(help-bubble-render! (car (help-bubble-stack-list b)) ctx)))
+
+(define (help-bubble-stack-update-infection-pos b pos)
+  (cond
+   ((or (not (help-bubble-stack-started b))
+	(null? (help-bubble-stack-list b)))
+    b)
+   ;; if the top one is infection
+   ((eq? (help-bubble-code (car (help-bubble-stack-list b))) 'infected-host)
+    (help-bubble-stack-update-top 
+     b (help-bubble-update-pos 
+	(car (help-bubble-stack-list b)) pos)))
+   (else b)))

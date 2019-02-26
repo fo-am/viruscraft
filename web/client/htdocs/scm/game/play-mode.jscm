@@ -39,6 +39,8 @@
 (define (scores-jumps s) (list-ref s 3))
 (define (scores-modify-jumps s v) (list-replace s 3 v))
 
+(define help-button #f)
+
 (define (scores-update s infections deaths jumps)
   (list
    (+ (scores-age s) canvas-delta)
@@ -134,12 +136,16 @@
    0
    scores))
 
+(define help-stack '())    
+
 (define (init-play-mode virus-name)
   (register-virus virus-name)
   (clear-virus)
   (clear-popups!)
   (set! last-tangible "")
 
+  (set! help-stack '())
+  
   (fire-popup! "good" (list "Can you evolve a long lived" 
 			    "successful virus?"))
   (fire-popup! "good" (list "Add a ligand to start"))
@@ -151,6 +157,22 @@
 			     (destroy-virus-buttons)
 			     (organisms-destroy (play-mode-organisms m))
 			     (play-mode-modify-finished m #t))))
+
+  (set! help-button 
+	(make-image-button (- screen-width 100) 100 "hexbutton.png"
+			   "?" 0 "spin"
+			   (lambda (m)
+			     (set! help-stack 
+				   (make-help-bubble-stack 
+				    (list
+				     (make-help-bubble "Drag the virus to select a face" 'drag-virus 100 100 "help-bubble.png" 9999)
+				     (make-help-bubble "Now click on a ligand to attach it to your virus" 'click-ligand 100 200 "help-bubble.png" 9999)
+				     (make-help-bubble "Your virus has infected this host, mutate the virus to help it spread" 'infected-host 100 300 "help-bubble.png" 5)
+				     (make-help-bubble "You can drag the world to have a look around" 'drag-world 100 400 "help-bubble.png" 9999)
+				     (make-help-bubble "You can see your position on the leaderboard here" 'leaderboard 100 500 "help-bubble.png" 5))
+				    (time) #t))
+			     m)))
+  
   
   (set! game-start-timer 0)
   (set! end-game-timer 1000)
@@ -185,6 +207,9 @@
 	(set! tangible-timer 0)
 	(load-receptor-tangible))
   (set! tangible-timer (+ tangible-timer canvas-delta))
+
+  (when (not exhib-version)
+	(set! help-stack (help-bubble-stack-update help-stack)))
 
   ;;  (when (eq? highlight-time 0)
 ;;	(highlight-host! (choose (play-mode-population g))))
@@ -234,79 +259,81 @@
     (when (> num-infections 0) (set! game-started #t))
 
     (image-button-update 
-     back-button
-     (cond
-      ;; delayed game end...
-      ((< end-game-timer 999)
-       (set! end-game-timer (- end-game-timer canvas-delta))
-       (cond 
-	((< end-game-timer 0)
-	 (destroy-virus-buttons)
-	 (organisms-destroy (play-mode-organisms g))
-	 (play-mode-modify-finished g #t))
-	(else g)))
+     help-button
+     (image-button-update 
+      back-button
+      (cond
+       ;; delayed game end...
+       ((< end-game-timer 999)
+	(set! end-game-timer (- end-game-timer canvas-delta))
+	(cond 
+	 ((< end-game-timer 0)
+	  (destroy-virus-buttons)
+	  (organisms-destroy (play-mode-organisms g))
+	  (play-mode-modify-finished g #t))
+	 (else g)))
+       
+       ;; no hosts!
+       ((and (zero? (length (play-mode-population g)))
+	     (> end-game-timer 999))
+	(fire-popup! "bad" (list "The hosts all died out!"
+				 "Your virus is extinct"))       
+	(when exhib-version (record-virus g))
+	(set! end-game-timer game-over-time)
+	(play-sound "end.wav")
+	g)
 
-      ;; no hosts!
-      ((and (zero? (length (play-mode-population g)))
-	    (> end-game-timer 999))
-       (fire-popup! "bad" (list "The hosts all died out!"
-				"Your virus is extinct"))       
-       (when exhib-version (record-virus g))
-       (set! end-game-timer game-over-time)
-       (play-sound "end.wav")
-       g)
-
-      ;; not started and no infections yet...
-      ((and
-	(> game-start-timer game-start-delay)
-	(not game-started)
-	(zero? num-infections))
-       (make-play-mode
-	(population-update 
-	 (population-infect-one (play-mode-population g) virus)
-	 virus
+       ;; not started and no infections yet...
+       ((and
+	 (> game-start-timer game-start-delay)
+	 (not game-started)
+	 (zero? num-infections))
+	(make-play-mode
+	 (population-update 
+	  (population-infect-one (play-mode-population g) virus)
+	  virus
+	  (play-mode-world-pos-checker g)
+	  (scores-age (play-mode-scores g)))      
+	 (update-organisms 
+	  (play-mode-organisms g)
+	  (play-mode-population g)
+	  (play-mode-world-units g) (time))
+	 (list 0 0 0 0) 
+	 (play-mode-world-units g)
 	 (play-mode-world-pos-checker g)
-	 (scores-age (play-mode-scores g)))      
-	(update-organisms 
-	 (play-mode-organisms g)
-	 (play-mode-population g)
-	 (play-mode-world-units g) (time))
-	(list 0 0 0 0) 
-	(play-mode-world-units g)
-	(play-mode-world-pos-checker g)
-	(play-mode-virus-name g)))
-      
+	 (play-mode-virus-name g)))
+       
 
-      ;; game started but no infections
-      ((and game-started
-	    (zero? num-infections)
-	    (> end-game-timer 999))
-       (fire-popup! "bad" (list "Your virus died out!"))
-       (play-sound "end.wav")
-       (when exhib-version (record-virus g))
-       (set! end-game-timer game-over-time)
-       g)
-      
-      ;; normal
-      (else
-       (make-play-mode
-	(population-update 
-	 (play-mode-population g) 
-	 virus
+       ;; game started but no infections
+       ((and game-started
+	     (zero? num-infections)
+	     (> end-game-timer 999))
+	(fire-popup! "bad" (list "Your virus died out!"))
+	(play-sound "end.wav")
+	(when exhib-version (record-virus g))
+	(set! end-game-timer game-over-time)
+	g)
+       
+       ;; normal
+       (else
+	(make-play-mode
+	 (population-update 
+	  (play-mode-population g) 
+	  virus
+	  (play-mode-world-pos-checker g)
+	  (scores-age (play-mode-scores g)))      
+	 (update-organisms 
+	  (play-mode-organisms g)
+	  (play-mode-population g)
+	  (play-mode-world-units g) (time))
+	 (scores-update
+	  (play-mode-scores g) 
+	  new-infections
+	  new-deaths
+	  new-jumps)
+	 (play-mode-world-units g)
 	 (play-mode-world-pos-checker g)
-	 (scores-age (play-mode-scores g)))      
-	(update-organisms 
-	 (play-mode-organisms g)
-	 (play-mode-population g)
-	 (play-mode-world-units g) (time))
-	(scores-update
-	 (play-mode-scores g) 
-	 new-infections
-	 new-deaths
-	 new-jumps)
-	(play-mode-world-units g)
-	(play-mode-world-pos-checker g)
-	(play-mode-virus-name g)))))))
+	 (play-mode-virus-name g))))))))
 
 (define world-rotate-q (qaxisangle (vector 0 1 0) 0))
 
@@ -347,6 +374,7 @@
 					 (list-ref host-id 0)
 					 (list-ref host-id 1))
 			 highlights))
+  
   (set! last-highlight-time (time))  
   (let ((host (host-search (car host-id) (play-mode-population g))))
     ;; convert from lat/lon to quaternion 
@@ -393,6 +421,7 @@
 		   ;; render it
 		   (let ((pos1 (organism-pos g (highlight-id1 hl)))
 			 (pos2 (organism-pos g (highlight-id2 hl))))
+		     (set! help-stack (help-bubble-stack-update-infection-pos help-stack pos1))    
 		     (set! ctx.strokeStyle infect-colour-hex)
 		     (set! ctx.lineWidth 3)
 		     (set! ctx.globalAlpha (/ (highlight-time hl) highlight-duration)) 
@@ -491,10 +520,14 @@
   (set! ctx.font "30pt Dosis")
   (ctx.fillText (string-append "Your virus is " (trunc (scores-age (play-mode-scores g))) " days old with " current-infections " infections") 40 110)
   (when (not exhib-version)
-	(image-button-render! back-button))
+	(image-button-render! back-button)
+	(image-button-render! help-button))
   (when game-started (render-hiscores g))
   (render-popups!)
   (render-transmission-highlight! g)
+  (when (not exhib-version)
+	(render-bubble-stack! help-stack ctx))
+  
   ;; (render-info! g)
   )
 

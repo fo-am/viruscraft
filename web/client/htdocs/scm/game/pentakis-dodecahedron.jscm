@@ -183,7 +183,7 @@
     
     (with-primitive 
      pent-rings
-     (msg (pent-calc 0 (pdata-size)))
+     (pent-calc 0 (pdata-size))
      )))
 
 ;; convert the geom data into ordered orientation info on each triangle
