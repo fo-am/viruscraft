@@ -13,9 +13,13 @@
 (define bl-window '())
 (define br-window '())
 
+(define last-sealevel 150)
+(define last-fracture 150)
+
 (define (init-world-design-mode)
-  (when (not world-units)
-	(set! world-units (build-world-from-params 50 50)))
+  (set! world-units (build-world-from-params 
+		     (- 100 (/ last-sealevel 3)) 
+		     (- 100 (/ last-fracture 3))))
   
   (set-canvas-drag-fn
    (lambda ()
@@ -88,8 +92,6 @@
      (scale (vmul (vector s s s) 0.75)))
    (concat (q->m world-q))))
 
-(define last-sealevel 150)
-(define last-fracture 150)
 
 (define sealevel-slider 
   (make-slider 50 280 300 (- 300 150)

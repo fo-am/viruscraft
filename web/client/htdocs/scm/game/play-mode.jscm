@@ -4,6 +4,7 @@
 (define max-transmission-highlights 5)
 (define game-over-time 5)
 (define starting-pop-size 65) 
+(define infection-time-warning 10)
 
 (define world-zoom 0)
 (define game-started #f)
@@ -13,6 +14,7 @@
 (define current-virus-id -1)
 (define camera-drift 0.01)
 (define current-infections 0)
+(define last-infection-time (time))
 
 (define (make-play-mode population organisms scores world-units world-pos-checker virus-name) 
   (list population organisms scores world-units world-pos-checker virus-name #f))
@@ -139,6 +141,7 @@
 (define help-stack '())    
 
 (define (init-play-mode virus-name)
+  (init-popups!)
   (register-virus virus-name)
   (clear-virus)
   (clear-popups!)
@@ -146,9 +149,7 @@
 
   (set! help-stack '())
   
-  (fire-popup! "good" (list "Can you evolve a long lived" 
-			    "successful virus?"))
-  (fire-popup! "good" (list "Add a ligand to start"))
+  (fire-popup! "good" "Can you evolve a long lived successful virus?")
   
   (set! back-button 
 	(make-image-button (- screen-width 100) 650 "hexbutton.png"
@@ -165,12 +166,15 @@
 			     (set! help-stack 
 				   (make-help-bubble-stack 
 				    (list
-				     (make-help-bubble "Drag the virus to select a face" 'drag-virus 100 100 "help-bubble.png" 9999)
-				     (make-help-bubble "Now click on a ligand to attach it to your virus" 'click-ligand 100 200 "help-bubble.png" 9999)
-				     (make-help-bubble "Your virus has infected this host, mutate the virus to help it spread" 'infected-host 100 300 "help-bubble.png" 5)
-				     (make-help-bubble "You can drag the world to have a look around" 'drag-world 100 400 "help-bubble.png" 9999)
-				     (make-help-bubble "You can see your position on the leaderboard here" 'leaderboard 100 500 "help-bubble.png" 5))
-				    (time) #t))
+				     (make-help-bubble "Drag your virus to select a face with the pink indicator." 'drag-virus 380 300 "help-bubble.png" 9999)
+				     (make-help-bubble "Now click on a shape to attach it to your virus." 'click-ligand 400 130 "help-bubble.png" 9999)
+				     (make-help-bubble "You have infected this host, mutate your virus to help it spread." 'infected-host 100 300 "help-bubble.png" 10)
+				     (make-help-bubble "Try shapes that match the uninfected host receptor shapes." 'click-ligand 400 130 "help-bubble.png" 5)
+				     (make-help-bubble "The more shapes you attach, the more likely it will spread." 'spread 400 130 "help-bubble.png" 5)
+				     (make-help-bubble "But if you are too deadly, you'll kill all the hosts and die out too." 'too-good 400 130 "help-bubble.png" 5)
+				     (make-help-bubble "You can also drag the world to have a look around." 'drag-world 350 300 "help-bubble-r.png" 5)
+				     (make-help-bubble "You can see your position on the leaderboard here." 'leaderboard 400 580 "help-bubble.png" 5))
+				    (time) #t #f))
 			     m)))
   
   
@@ -239,25 +243,38 @@
   ;; do we have a new infection?
   (when (not (eq? last-transmission-id (car transmission-ids)))
 	(set! new-infections (+ new-infections 1))
+	(set! last-infection-time (time))
 	(highlight-transmission! g transmission-ids)
 	(set! last-transmission-id (car transmission-ids)))
 
   (let ((cross (check-cross-species-infection!)))
     (when cross
 	  (set! new-jumps (+ new-jumps 1))
-	  (fire-popup! "good" (list "Cross-species infection!"))))
+	  (fire-popup! "good" "Your virus has just jumpled to a different species!")))
 
   ;; check for score position improvment
   (let ((position-now (get-score-position (scores-age (play-mode-scores g)) scores-list)))
     (when (not (eq? position-now current-score-position))
-	  (when (not (eq? current-score-position -1))
-		(fire-popup! "position-score" (list "Your virus is now at position" (+ "" current-score-position))))
+	  (when (and game-started
+		     (not (eq? current-score-position -1))
+		     (not (eq? current-score-position 0)))
+		(fire-popup! "position-score" 
+			     (string-append "Well done! Your virus is now at position " current-score-position)))
 	  (set! current-score-position position-now)))
   
   
   (let ((num-infections (population-num-infected (play-mode-population g))))
     (when (> num-infections 0) (set! game-started #t))
 
+    (when (> (/ num-infections (length (play-mode-population g)))
+	     0.9) ;; 90% infection
+	  (fire-popup! "bad" "Your virus may soon kill all the hosts and go extinct"))
+    
+    (when (and
+	   game-started
+	   (> (- (time) last-infection-time) infection-time-warning))
+	  (fire-popup! "bad" "Add more shapes - there hasn't been a new infection for a long time!"))
+    
     (image-button-update 
      help-button
      (image-button-update 
@@ -276,9 +293,8 @@
        ;; no hosts!
        ((and (zero? (length (play-mode-population g)))
 	     (> end-game-timer 999))
-	(fire-popup! "bad" (list "The hosts all died out!"
-				 "Your virus is extinct"))       
-	(when exhib-version (record-virus g))
+	(fire-popup! "bad" "The hosts all died out! Your virus is extinct")
+	(record-virus g)
 	(set! end-game-timer game-over-time)
 	(play-sound "end.wav")
 	g)
@@ -308,9 +324,9 @@
        ((and game-started
 	     (zero? num-infections)
 	     (> end-game-timer 999))
-	(fire-popup! "bad" (list "Your virus died out!"))
+	(fire-popup! "bad" "Your virus died out and is now extinct!")
 	(play-sound "end.wav")
-	(when exhib-version (record-virus g))
+	(record-virus g)
 	(set! end-game-timer game-over-time)
 	g)
        
@@ -417,11 +433,13 @@
 	   (cond 
 	    ((and (> (highlight-time hl) 0)
 		  (< (length r) max-transmission-highlights))
+	     (set! help-stack (help-bubble-stack-update-infected-organism help-stack g (highlight-id1 hl)))
 	     (when (organism-up? g (highlight-id1 hl))
 		   ;; render it
 		   (let ((pos1 (organism-pos g (highlight-id1 hl)))
 			 (pos2 (organism-pos g (highlight-id2 hl))))
-		     (set! help-stack (help-bubble-stack-update-infection-pos help-stack pos1))    
+
+		     
 		     (set! ctx.strokeStyle infect-colour-hex)
 		     (set! ctx.lineWidth 3)
 		     (set! ctx.globalAlpha (/ (highlight-time hl) highlight-duration)) 

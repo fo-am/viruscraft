@@ -7,6 +7,9 @@
 (define receptor-col (vector 0.82 0.76 0.65))
 (define virus-col (vector 0.6 0.39 0.2))
 
+;; 47c1a5
+;; 996333
+
 (define rad-conv 0.017453292)
 
 (define receptor-rotations
@@ -146,7 +149,7 @@
 (define buttons '())
 (define face-display #f)
 
-(define knobble-vec (vnormalise (vector 0 1 1)))
+(define knobble-vec (vnormalise (vector 0 0.25 1)))
 
 (define (display-front-face)
   (define (_ n closest r)
@@ -252,26 +255,27 @@
 	 ;;(when exhib-version (hide #t))
 	 (shader-assign-compiled "virus")
 	 (parent virus-builder)
-	 (colour receptor-col)
+	 (colour infect-colour-flt)
 	 (load-primitive "models/ico.obj")))
   
   (set-canvas-drag-fn
    (lambda ()
      (set! virus-recep-id (display-front-face))
      ;; update help system
-     (set! help-stack (help-bubble-stack-trigger help-stack 'drag-virus))
-     (set! help-stack (help-bubble-stack-trigger help-stack 'drag-world))
      (let ((drag (vector (- canvas-drag-x) canvas-drag-y 0)))
        (when (not (veq? drag (vector 0 0 0)))
 	     (let ((rot-axis (vcross drag (vector 0 0 -1)))
 		   (virus-dist (vdist (primitive-screen-pos virus-builder) (vector canvas-mouse-x canvas-mouse-y 0))))
 	       (cond
 		((< virus-dist 100)
+		 (set! help-stack (help-bubble-stack-trigger help-stack 'drag-virus))		 
 		 (set! virus-q (qmul virus-q (qaxisangle (vnormalise rot-axis) 6))))
 		((> virus-dist 300)
+		 (set! help-stack (help-bubble-stack-trigger help-stack 'drag-world))
 		 (set! world-q (qmul world-q (qaxisangle (vnormalise rot-axis) 6))))		   
 		(else 0)))))))
-  (attach-virus-clear-all))
+  (attach-virus-clear-all)
+  (display-front-face))
 
 (define (destroy-virus-builder)
   (for-each 

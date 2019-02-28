@@ -9,6 +9,7 @@
 (load "flx/scm/network.jscm")
 
 (load "scm/game/help-bubbles.jscm")
+(load "scm/game/popup.jscm")
 (load "scm/game/shaders.jscm")
 (load "scm/game/preload.jscm")
 (load "scm/game/spherical.jscm")

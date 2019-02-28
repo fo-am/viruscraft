@@ -29,7 +29,7 @@
 
 ;; main disease parameters
 (define infect-likelihood-mult 8) ;; per second mult
-(define infect-spawn-reduction 0.25) ;; eden: 0.75
+(define infect-spawn-reduction 0.125) ;; eden: 0.75
 (define infection-distance 0.25)
 (define host-infection-decline -10) ; (* deadliness)
 

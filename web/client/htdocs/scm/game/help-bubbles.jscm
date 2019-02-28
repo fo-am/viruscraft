@@ -27,40 +27,54 @@
    (help-bubble-bg-image b)
    (help-bubble-x b)
    (help-bubble-y b))
-  (set! ctx.font "20pt Dosis")
-  (let ((m (ctx.measureText (help-bubble-text b))))
-    (ctx.fillText 
-     (help-bubble-text b) 
-     (- (help-bubble-x b) (/ m.width 2)) 
-     (+ (help-bubble-y b) 25))))
+  (set! ctx.font "30pt Dosis")
+  (wrap-text 
+   ctx 
+   (help-bubble-text b) 
+   (+ 40 (help-bubble-x b))
+   (+ 45 (help-bubble-y b))
+   280 40))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define (make-help-bubble-stack bubbles last-time started)
-  (list bubbles last-time started))
+(define (make-help-bubble-stack bubbles last-time started organism)
+  (list bubbles last-time started organism))
 
 (define (help-bubble-stack-list b) (list-ref b 0))
 (define (help-bubble-stack-last-time b) (list-ref b 1))
 (define (help-bubble-stack-started b) (list-ref b 2))
+(define (help-bubble-stack-organism b) (list-ref b 3))
+
+(define (help-bubble-stack-update-organism b organism)
+  (make-help-bubble-stack 
+   (help-bubble-stack-list b)
+   (help-bubble-stack-last-time b)
+   (help-bubble-stack-started b)
+   organism))
 
 ;; drop the top of the stack
 (define (help-bubble-stack-drop b)
   (make-help-bubble-stack 
    (cdr (help-bubble-stack-list b))
    (time)
-   (help-bubble-stack-started b)))
+   (help-bubble-stack-started b)
+   (help-bubble-stack-organism b)))
 
 ;; drop the top of the stack
 (define (help-bubble-stack-start b)
   (make-help-bubble-stack 
    (help-bubble-stack-list b)
    (time)
-   #t))
+   #t
+   (help-bubble-stack-organism b)))
 
 (define (help-bubble-stack-trigger b code)
-  (if (eq? (help-bubble-code 
-	    (car (help-bubble-stack-list b)))
-	   code)
+  (if (and
+       (not (null? b))
+       (not (null? (help-bubble-stack-list b)))
+       (eq? (help-bubble-code 
+	     (car (help-bubble-stack-list b)))
+	    code))
       (help-bubble-stack-drop b)
       b))
 
@@ -69,7 +83,8 @@
   (make-help-bubble-stack 
    (cons bubble (cdr (help-bubble-stack-list b)))
    (help-bubble-stack-last-time b)
-   (help-bubble-stack-started b)))
+   (help-bubble-stack-started b)
+   (help-bubble-stack-organism b)))
 
 (define (help-bubble-stack-update b) 
   (cond
@@ -86,7 +101,7 @@
 	     (not (null? (help-bubble-stack-list b))))
 	(help-bubble-render! (car (help-bubble-stack-list b)) ctx)))
 
-(define (help-bubble-stack-update-infection-pos b pos)
+(define (help-bubble-stack-update-infected-organism b g organism)
   (cond
    ((or (not (help-bubble-stack-started b))
 	(null? (help-bubble-stack-list b)))
@@ -94,6 +109,12 @@
    ;; if the top one is infection
    ((eq? (help-bubble-code (car (help-bubble-stack-list b))) 'infected-host)
     (help-bubble-stack-update-top 
-     b (help-bubble-update-pos 
-	(car (help-bubble-stack-list b)) pos)))
+     ;; only update if this is the first time we have an organism
+     (if (not (help-bubble-stack-organism b))
+	 (help-bubble-stack-update-organism b organism)
+	 b)
+     (help-bubble-update-pos 
+      (car (help-bubble-stack-list b)) 
+      (vadd (vector 20 -43 0) 
+	    (organism-pos g (help-bubble-stack-organism b))))))
    (else b)))
