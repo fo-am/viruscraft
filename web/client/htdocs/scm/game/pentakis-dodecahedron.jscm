@@ -297,7 +297,7 @@
 
 (define (pentakis-noise-edge x y prob scale)
   (let ((thresh (* (- (/ prob 100) 0.5) 1.5)) ;; boost a bit
-	(sc (+ 1 (* 20 (square (square (/ scale 100)))))))
+	(sc (+ 1 (* 10 (square (square (/ scale 100)))))))
     (list (< (noisegen.noise (* x (+ sc 0.01)) (* y sc) 0) thresh)
 	  (< (noisegen.noise (* x (- sc 0.02)) (* y (+ sc 0.03)) 0) thresh)
 	  (< (noisegen.noise (* x sc) (* y sc) 0) thresh))))

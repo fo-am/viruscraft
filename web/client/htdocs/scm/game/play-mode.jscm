@@ -250,7 +250,7 @@
   (let ((cross (check-cross-species-infection!)))
     (when cross
 	  (set! new-jumps (+ new-jumps 1))
-	  (fire-popup! "good" "Your virus has just jumpled to a different species!")))
+	  (fire-popup! "good" "Your virus has just jumped to a different species!")))
 
   ;; check for score position improvment
   (let ((position-now (get-score-position (scores-age (play-mode-scores g)) scores-list)))
