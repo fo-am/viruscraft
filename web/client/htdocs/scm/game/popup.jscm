@@ -28,7 +28,7 @@
 	 (list (make-popup text type popup-lifespan)))))
 
 (define popup-x 870)
-(define popup-y 600)
+(define popup-y 580)
 (define bubble-image #f)
 
 (define (init-popups!)
