@@ -35,21 +35,26 @@
 
 
 (define (about-science-mode-canvas-render m)
+  (ctx.drawImage (find-image "world.png" image-lib) 1000 500)
 
   (textbox-render! title-text)
   (image-button-render! back-button)
 
+  (set! ctx.fillStyle bggreen-hex)
+  (ctx.fillRect 150 110 1220 460)
+  (canvas-init-defaults)
+
   (set! ctx.font "30pt Dosis")
 
-  (wrap-text ctx "Viruscraft is based on scientific research on the evolution of viruses and their hosts, conducted by Dr. Ben Longdon at the University of Exeter." 180 160 1100 40)
-  (wrap-text ctx "Many viral diseases like Influenza and Ebola have jumped into humans from other animals. Ben’s research uses fruit flies and their viruses to answer fundamental questions about disease emergence:"  180 250 1100 40)
+  (wrap-text ctx "Viruscraft is based on scientific research on the evolution of viruses and their hosts, conducted by Dr. Ben Longdon at the University of Exeter." 180 150 1100 40)
+  (wrap-text ctx "Many viral diseases like Influenza and Ebola have jumped into humans from other animals. Ben’s research uses fruit flies and their viruses to answer fundamental questions about disease emergence:"  180 240 1100 40)
   
-  (wrap-text ctx "1." 180 380 1100 35)
-  (wrap-text ctx "Why are some host species more likely to become infected than others?"  220 380 1150 40)
-  (wrap-text ctx "2." 180 435 1100 35)
-  (wrap-text ctx "How do environmental factors like temperature affect the ability of a virus to jump between species?"  220 435 1050 40)
-  (wrap-text ctx "3." 180 525 1100 35)
-  (wrap-text ctx "Do generalist viruses evolve to be a 'jack of all trades' that are more likely to jump between species?"  220 525 1050 40)
+  (wrap-text ctx "1." 180 370 1100 35)
+  (wrap-text ctx "Why are some host species more likely to become infected than others?"  220 370 1150 40)
+  (wrap-text ctx "2." 180 425 1100 35)
+  (wrap-text ctx "How do environmental factors like temperature affect the ability of a virus to jump between species?"  220 425 1050 40)
+  (wrap-text ctx "3." 180 515 1100 35)
+  (wrap-text ctx "Do generalist viruses evolve to be a 'jack of all trades' that are more likely to jump between species?"  220 515 1050 40)
   
   
   )

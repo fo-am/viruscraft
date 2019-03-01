@@ -67,7 +67,7 @@
 	   (world-design-mode-modify-ready m "back"))))
   
   (set! tl-window (make-window 10 100 400 270))
-  (set! tr-window (make-window (- screen-width 410) 100 400 320))
+  (set! tr-window (make-window (- screen-width 410) 100 400 340))
   (set! bl-window (make-window 10 400 400 270))
 
   (list #f))
@@ -121,12 +121,12 @@
 
   (set! ctx.font "30pt Dosis")
   
-  (let ((sea-difficulty (cond ((< last-sealevel 100) "Low sea level means less diverse habitat and this means less diverse host creatures, while ")
-			      ((> last-sealevel 200) "High sea level means less diverse habitat and this means less diverse host creatures, while ")
-			      (else "Medium sea level means a high diversity of habitat and this means more diverse host creatures, while ")))
-	(fracture-difficulty (cond ((< last-fracture 100) "low connectivity means creatures are cut off from one another.")
-				   ((> last-fracture 200)  "high connectivity means creatures can easily reach each other.")
-				   (else "medium connectivity means some creatures can reach each other.")))
+  (let ((sea-difficulty (cond ((< last-sealevel 100) "Low sea level means less diverse habitat and this means less diverse host creatures.")
+			      ((> last-sealevel 200) "High sea level means less diverse habitat and this means less diverse host creatures.")
+			      (else "Medium sea level means a high diversity of habitat and this means more diverse host creatures.")))
+	(fracture-difficulty (cond ((< last-fracture 100) "Low connectivity means creatures are cut off from one another.")
+				   ((> last-fracture 200)  "High connectivity means creatures can easily reach each other.")
+				   (else "Medium connectivity means some creatures can reach each other.")))
 	(score (cond
 		((and
 		  (or (< last-sealevel 100) (> last-sealevel 200))
@@ -137,7 +137,8 @@
 		(else "Medium"))))
     (ctx.fillText (+ "Difficulty: " score) 1120 160)
     (set! ctx.font "20pt Dosis")		 
-    (wrap-text ctx sea-difficulty+fracture-difficulty 1120 220 350 30))
+    (wrap-text ctx sea-difficulty 1120 220 350 30)
+    (wrap-text ctx fracture-difficulty 1120 350 350 30))
   
   (textbox-render! title-text)
   (textbox-render! sealevel-text)
