@@ -58,7 +58,12 @@
 (define (about-mode-canvas-render m)
 ;;  (ctx.drawImage (find-image "bg3.jpg" image-lib) 0 0)
   (ctx.drawImage (find-image "world.png" image-lib) 1000 500)
-  (ctx.drawImage (find-image "builder.png" image-lib) -100 -100)
+;;  (ctx.drawImage (find-image "builder.png" image-lib) -100 -100)
+
+  (set! ctx.fillStyle bggreen-hex)
+  (ctx.fillRect 150 110 1220 450)
+  (canvas-init-defaults)
+
   (textbox-render! title-text)
   (image-button-render! dev-button)
   (image-button-render! science-button)

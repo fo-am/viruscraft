@@ -27,13 +27,13 @@
    (help-bubble-bg-image b)
    (help-bubble-x b)
    (help-bubble-y b))
-  (set! ctx.font "20pt Dosis")
+  (set! ctx.font "28pt Dosis")
   (wrap-centred-text 
    ctx 
    (help-bubble-text b) 
-   (+ 170 (help-bubble-x b))
-   (+ 45 (help-bubble-y b))
-   250 35))
+   (+ 195 (help-bubble-x b))
+   (+ 53 (help-bubble-y b))
+   330 40))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

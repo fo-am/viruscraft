@@ -132,7 +132,7 @@
     (ctx.fillText (string-append "Infected " infections (if (eq? infections 1) " creature" " creatures")) 40 170)
     (ctx.fillText (string-append "Caused " deaths (if (eq? deaths 1) " death" " deaths")) 40 210)
     (ctx.fillText (string-append "Jumped species " jumps (if (eq? jumps 1) " time" " times")) 40 250))
-  (ctx.fillText (string-append "High scores position: " (+ current-score-position 1)) 40 290)
+  (ctx.fillText (string-append "High scores position " (+ current-score-position 1)) 40 290)
 
   (when (not exhib-version)
 	;;(image-button-render! save-button)

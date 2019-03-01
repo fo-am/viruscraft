@@ -12,7 +12,7 @@
   (set! title-text 
 	(make-textbox 
 	 (/ screen-width 2) 150
-	 "60pt" 30 "centre"
+	 "100pt" 30 "centre"
 	 (list "VIRUSCRAFT")))
   
   (set! intro-text 

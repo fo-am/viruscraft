@@ -274,7 +274,7 @@
 	   game-started
 	   (not (< end-game-timer 999))
 	   (> (- (time) last-infection-time) infection-time-warning))
-	  (fire-popup! "bad" "Add more shapes - there hasn't been a new infection for a long time!"))
+	  (fire-popup! "bad" "Add more shapes - infections are slowing down!"))
     
     (image-button-update 
      help-button
@@ -435,7 +435,9 @@
 	    ((and (> (highlight-time hl) 0)
 		  (< (length r) max-transmission-highlights))
 	     (set! help-stack (help-bubble-stack-update-infected-organism help-stack g (highlight-id1 hl)))
-	     (when (organism-up? g (highlight-id1 hl))
+	     (when (and 
+		    (organism-up? g (highlight-id1 hl))
+		    (organism-up? g (highlight-id2 hl)))
 		   ;; render it
 		   (let ((pos1 (organism-pos g (highlight-id1 hl)))
 			 (pos2 (organism-pos g (highlight-id2 hl))))

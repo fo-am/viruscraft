@@ -45,6 +45,18 @@
 (define infect-colour-hex "#ff1053")
 (define infect-colour-flt (vmul (vector 1 (/ 16 255) (/ 82 255)) 2))
 
+(define receptor-col (vector 0.82 0.76 0.65))
+(define virus-col (vector 0.6 0.39 0.2))
+(define bggreen-hex "#d0ffb8")
+
+;; bg blue 81eae3
+;; green = 
+
+;; 996333
+
+;; 47a5c1
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (clear-colour (vector 0.0 0.0 0.0))

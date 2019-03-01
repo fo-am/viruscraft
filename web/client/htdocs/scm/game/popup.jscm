@@ -36,13 +36,13 @@
 
 (define (render-popup! p)
   (ctx.drawImage bubble-image popup-x popup-y)
-  (set! ctx.font "20pt Dosis")
+  (set! ctx.font "30pt Dosis")
   (wrap-centred-text 
    ctx 
    (popup-text p) 
-   (+ 150 popup-x) 
-   (+ 45 popup-y) 
-   250 35))
+   (+ 170 popup-x) 
+   (+ 53 popup-y) 
+   330 40))
 
 (define popup-lifespan 5)
 
