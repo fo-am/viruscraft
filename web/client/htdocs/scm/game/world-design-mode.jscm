@@ -135,7 +135,7 @@
 		  (and (> last-sealevel 100) (< last-sealevel 200))
 		  (< last-fracture 100)) "Hard")
 		(else "Medium"))))
-    (ctx.fillText (+ "Virus difficulty: " score) 1120 160)
+    (ctx.fillText (+ "Difficulty: " score) 1120 160)
     (set! ctx.font "20pt Dosis")		 
     (wrap-text ctx sea-difficulty+fracture-difficulty 1120 220 350 30))
   
