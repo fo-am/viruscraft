@@ -115,6 +115,6 @@
 	 b)
      (help-bubble-update-pos 
       (car (help-bubble-stack-list b)) 
-      (vadd (vector 20 -43 0) 
+      (vadd (vector 20 -52 0) 
 	    (organism-pos g (help-bubble-stack-organism b))))))
    (else b)))
