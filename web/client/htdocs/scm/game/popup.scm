@@ -1,6 +1,3 @@
-;; -*- mode: scheme; -*-
-;; Viruscraft Copyright (C) 2018 FoAM Kernow
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define (make-popup text type time) (list text type time))
@@ -27,8 +24,8 @@
 	 popups-list 
 	 (list (make-popup text type popup-lifespan)))))
 
-(define popup-x 870)
-(define popup-y 600)
+(define popup-x 300)
+(define popup-y 650)
 (define bubble-image #f)
 
 (define (init-popups!)
@@ -36,14 +33,8 @@
 
 (define (render-popup! p)
   (ctx.drawImage bubble-image popup-x popup-y)
-  (set! ctx.font "20pt Dosis")
-  (wrap-centred-text 
-   ctx 
-   (popup-text p) 
-   (+ 150 popup-x) 
-   (+ 45 popup-y) 
-   250 35))
-
+  (wrap-text ctx (popup-text p) popup-x popup-y 20 250))
+  
 (define popup-lifespan 5)
 
 (define (render-popups!)

@@ -4,7 +4,7 @@
 (define max-transmission-highlights 5)
 (define game-over-time 5)
 (define starting-pop-size 65) 
-(define infection-time-warning 10)
+(define infection-time-warning 20)
 
 (define world-zoom 0)
 (define game-started #f)
@@ -161,7 +161,7 @@
 
   (set! help-button 
 	(make-image-button (- screen-width 100) 100 "hexbutton.png"
-			   "?" 0 "spin"
+			   "How to play" -20 "spin"
 			   (lambda (m)
 			     (set! help-stack 
 				   (make-help-bubble-stack 
@@ -169,9 +169,9 @@
 				     (make-help-bubble "Drag your virus to select a face with the pink indicator." 'drag-virus 380 300 "help-bubble.png" 9999)
 				     (make-help-bubble "Now click on a shape to attach it to your virus." 'click-ligand 400 130 "help-bubble.png" 9999)
 				     (make-help-bubble "You have infected this host, mutate your virus to help it spread." 'infected-host 100 300 "help-bubble.png" 10)
-				     (make-help-bubble "Try shapes that match the uninfected host receptor shapes." 'click-ligand 400 130 "help-bubble.png" 5)
-				     (make-help-bubble "The more shapes you attach, the more likely it will spread." 'spread 400 130 "help-bubble.png" 5)
-				     (make-help-bubble "But if you are too deadly, you'll kill all the hosts and die out too." 'too-good 400 130 "help-bubble.png" 5)
+				     (make-help-bubble "Try shapes that match the shapes on the uninfected hosts." 'click-ligand 400 130 "help-bubble-n.png" 5)
+				     (make-help-bubble "The more shapes you attach, the more likely it will spread." 'spread 400 130 "help-bubble-n.png" 5)
+				     (make-help-bubble "But if you are too deadly, you'll kill all the hosts and die out too." 'too-good 400 130 "help-bubble-n.png" 5)
 				     (make-help-bubble "You can also drag the world to have a look around." 'drag-world 350 300 "help-bubble-r.png" 5)
 				     (make-help-bubble "You can see your position on the leaderboard here." 'leaderboard 400 580 "help-bubble.png" 5))
 				    (time) #t #f))
@@ -272,6 +272,7 @@
     
     (when (and
 	   game-started
+	   (not (< end-game-timer 999))
 	   (> (- (time) last-infection-time) infection-time-warning))
 	  (fire-popup! "bad" "Add more shapes - there hasn't been a new infection for a long time!"))
     
@@ -438,7 +439,6 @@
 		   ;; render it
 		   (let ((pos1 (organism-pos g (highlight-id1 hl)))
 			 (pos2 (organism-pos g (highlight-id2 hl))))
-
 		     
 		     (set! ctx.strokeStyle infect-colour-hex)
 		     (set! ctx.lineWidth 3)

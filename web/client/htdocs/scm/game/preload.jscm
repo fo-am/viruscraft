@@ -70,6 +70,7 @@
   "builder.png"
   "bubble.png"
   "help-bubble.png"
+  "help-bubble-n.png"
   "help-bubble-r.png")
  (lambda ()
    0))
