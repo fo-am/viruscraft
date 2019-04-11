@@ -3,8 +3,7 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define science-button '())
-(define dev-button '())
+(define web-button '())
 (define back-button '())
 (define intro-text '())
 (define title-text '())
@@ -16,21 +15,12 @@
 	 "50pt" 30 "centre"
 	 (list "ABOUT VIRUSCRAFT")))
   
-  (set! science-button 
+  (set! web-button 
 	(make-image-button 
 	 (+ (/ screen-width 2) 300) 650 "hexbutton.png"
-	 "Virus Science" -20 "spin"
+	 "Project site" -20 "spin"
 	 (lambda (m)
-	   (msg "science button pressed")
-	   (about-mode-modify-ready m "science"))))
-
-  (set! dev-button 
-	(make-image-button 
-	 (/ screen-width 2) 650 "hexbutton.png"
-	 "Game Info" -20 "spin"
-	 (lambda (m)
-	   (msg "dev button pressed")
-	   (about-mode-modify-ready m "dev"))))
+	   (set! window.location "http://fo.am/activities/viruscraft"))))
 
   (set! back-button 
 	(make-image-button 
@@ -47,9 +37,7 @@
 (define (about-mode-update m)
   (image-button-update 
    back-button 
-   (image-button-update 
-    dev-button
-    (image-button-update science-button m))))
+   (image-button-update web-button m)))
 
 (define (about-mode-render m)
   0)
@@ -65,13 +53,14 @@
   (canvas-init-defaults)
 
   (textbox-render! title-text)
-  (image-button-render! dev-button)
-  (image-button-render! science-button)
+  (image-button-render! web-button)
   (image-button-render! back-button)
-
+  
   (set! ctx.font "30pt Dosis")
-  (wrap-text ctx "Viruscraft allows you to explore how viruses evolve and jump between host species." 180 160 1200 40)
-  (wrap-text ctx "Viruses are geometric structures, coated with shapes made from proteins. The shapes on the virus fit into shapes on the hosts’ cells. If they match, like a key fitting into a lock, then infection can happen." 180 260 1200 40)
-  (wrap-text ctx "To avoid infection, hosts evolve to change the shapes on their cells (the locks). To keep up with this change, or to move into a new host species, viruses have to evolve their own surface shapes (the keys). In real life, this happens all the time, like the bird flu virus mutating to infect humans." 180 400 1200 40)
+  (wrap-text ctx "Viruses are tiny geometric structures, covered in different shapes made from proteins. The shapes on the virus fit into shapes on the hosts’ cells. If they match, like a key fitting into a lock, then infection can happen." 180 160 1200 40)
+  (wrap-text ctx "Evolve your virus by changing the shapes on its surface. When your shape matches a nearby host creature, infection can take place. Keep your virus alive as long as possible by evolving to infect new hosts, but avoid killing off all the hosts or your virus will die too." 180 300 1200 40
+  (wrap-text ctx "The game dynamics in Viruscraft are based on scientific research on the evolution of viruses and their hosts."  180 480 1200 40)
+
+
   
   )
