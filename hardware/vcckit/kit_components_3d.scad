@@ -18,6 +18,7 @@ module dowel($length) {
 
 module cross_connector() {
     // odd in preview??
+
     difference() {
         linear_extrude($wood_thickness) {
             cross_connector_outline();
@@ -35,3 +36,16 @@ module angle_connector() {
     }
 }
 
+
+/*rotate([180,0,0])
+translate([0,0,-6])
+cross_connector();
+translate([40,0,0])
+angle_connector();
+translate([80,0,0])
+fixed_end();
+translate([120,0,0])
+loose_end();
+translate([160,0,0])
+dowel(10);
+*/
