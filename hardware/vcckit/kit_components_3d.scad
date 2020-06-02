@@ -36,6 +36,11 @@ module angle_connector() {
     }
 }
 
+module loose_middle_connector() {
+    linear_extrude($wood_thickness) {
+        loose_middle_outline();
+    }
+}
 
 /*rotate([180,0,0])
 translate([0,0,-6])

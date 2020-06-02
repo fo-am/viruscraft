@@ -1,6 +1,6 @@
 $fn = 100;
-$dowel_dia = 5;
-$wood_thickness = 6;
+$dowel_dia = 6;
+$wood_thickness = 7;
 $clearance = 1;
 $fixed_hole_dia = $dowel_dia-0.5;
 $loose_hole_dia = $dowel_dia+1.0;
@@ -79,6 +79,49 @@ module angle_connector_outline() {
         }        
     }
 }
+
+module loose_middle_outline() {
+    difference() {
+        union() {
+            square([20,10],true);
+            translate([0,5,0])
+            circle(d=20);
+            translate([0,-5,0])
+            circle(d=20);
+        }
+        union() {
+            circle(d=$loose_hole_dia);
+            translate([0,15,0])
+            square([$fixed_hole_dia,10],true);
+            rotate(180)
+            translate([0,15,0])
+            square([$fixed_hole_dia,10],true);            
+        }
+    }
+}
+
+module fixed_middle_outline() {
+    difference() {
+        union() {
+            square([20,10],true);
+            translate([0,5,0])
+            circle(d=20);
+            translate([0,-5,0])
+            circle(d=20);
+        }
+        union() {
+            circle(d=$fixed_hole_dia);
+            translate([0,15,0])
+            square([$fixed_hole_dia,10],true);
+            rotate(180)
+            translate([0,15,0])
+            square([$fixed_hole_dia,10],true);            
+        }
+    }
+}
+
+
+//loose_middle_outline();
 
 // cnc area
 //translate([0,50])
