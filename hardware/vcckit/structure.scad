@@ -2,7 +2,7 @@ include <servo.scad>
 include <kit_components_3d.scad>
 include <kit_components_parametric.scad>
 
-translate([0,-6,0])
+/*translate([0,-6,0])
 servo();
 
 // servo holder
@@ -27,3 +27,13 @@ fixed_dowel_loose(100);
 translate([292,0,12])
 rotate([0,0,90])
 fixed_dowel_loose(150);
+
+*/
+
+translate([100,-80,0])
+rotate([180,0,0])
+crank(50+18);
+translate([30,-120,0]) {
+
+fixed_dowel_loose(83);
+}

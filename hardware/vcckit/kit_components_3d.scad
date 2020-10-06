@@ -42,15 +42,24 @@ module loose_middle_connector() {
     }
 }
 
-/*rotate([180,0,0])
+module circlip_3d() {
+    linear_extrude(0.75) {
+        circlip();
+    }
+}
+
+/*
+rotate([180,0,0])
 translate([0,0,-6])
 cross_connector();
-translate([40,0,0])
+translate([32,0,0])
 angle_connector();
-translate([80,0,0])
+translate([52,0,0])
 fixed_end();
-translate([120,0,0])
+translate([75,0,0])
 loose_end();
-translate([160,0,0])
-dowel(10);
+translate([100,0,0])
+loose_middle_connector();
+translate([120,0,0])
+circlip_3d();
 */

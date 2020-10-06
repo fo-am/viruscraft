@@ -120,6 +120,23 @@ module fixed_middle_outline() {
     }
 }
 
+module circlip() {
+    difference() {
+        circle(d=14);
+        union() {
+            circle(d=$fixed_hole_dia);
+            translate([0,5])
+            square([2,10],true);
+
+            for (i=[0:5]) {
+                rotate(i/5*360)
+                translate([0,2])
+                square([2,3],true);
+            }
+        }
+    }
+}
+
 
 //loose_middle_outline();
 
