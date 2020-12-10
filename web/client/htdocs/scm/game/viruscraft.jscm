@@ -149,6 +149,7 @@
 	(destroy world-root)
 	(set! world-units #f)
 	(set! mode mode-title)
+	(set-canvas-drag-fn (lambda () 0))
 	(init-title-mode))
        (exhib-version
 	(when (not world-units)

@@ -22,7 +22,7 @@ attribute vec3 p2;
 
 const float adult_age = 20.0;
 const float low_health = 10.0;
-const float min_scale = 0.3;
+const float min_scale = 0.5;
 
 void main()
 {
@@ -36,10 +36,10 @@ void main()
   /* child scale up growth */
   if (age<adult_age) P *= max(min_scale,age/adult_age);
 
-  if (health<low_health) {
-    /* stop moving and lower into the ground! */
+/* stop moving and lower into the ground! */	
+  /*if (health<low_health) {
     P.z-=((low_health-health)/low_health)*3.0;
-  }
+  }*/
 
   T = t;
   C = c;
