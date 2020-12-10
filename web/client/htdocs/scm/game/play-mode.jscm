@@ -12,7 +12,7 @@
 (define scores-list (list))
 (define hiscores-display (list))
 (define current-virus-id -1)
-(define camera-drift 0.01)
+(define camera-drift 0.05)
 (define current-infections 0)
 (define last-infection-time (time))
 
@@ -249,6 +249,7 @@
 
   (let ((cross (check-cross-species-infection!)))
     (when cross
+	  (msg new-jumps)
 	  (set! new-jumps (+ new-jumps 1))
 	  (fire-popup! "good" "Your virus has just jumped to a different species!")))
 

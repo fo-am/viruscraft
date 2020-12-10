@@ -58,9 +58,7 @@
   
   (set! ctx.font "30pt Dosis")
   (wrap-text ctx "Viruses are tiny geometric structures, covered in different shapes made from proteins. The shapes on the virus fit into shapes on the hosts’ cells. If they match, like a key fitting into a lock, then infection can happen." 180 160 1200 40)
-  (wrap-text ctx "Evolve your virus by changing the shapes on its surface. When your shape matches a nearby host creature, infection can take place. Keep your virus alive as long as possible by evolving to infect new hosts, but avoid killing off all the hosts or your virus will die too." 180 300 1200 40
+  (wrap-text ctx "Evolve your virus by changing the shapes on its surface. When your shape matches a nearby host creature, infection can take place. Keep your virus alive as long as possible by evolving to infect new hosts, but avoid killing off all the hosts or your virus will die too." 180 300 1200 40)
   (wrap-text ctx "The game dynamics in Viruscraft are based on scientific research on the evolution of viruses and their hosts."  180 480 1200 40)
-
-
   
   )
