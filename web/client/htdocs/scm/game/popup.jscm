@@ -42,7 +42,7 @@
    (popup-text p) 
    (+ 170 popup-x) 
    (+ 53 popup-y) 
-   330 40))
+   300 40))
 
 (define popup-lifespan 5)
 

@@ -169,6 +169,7 @@
 				     (make-help-bubble "Drag your virus to select a face with the pink indicator." 'drag-virus 380 300 "help-bubble.png" 9999)
 				     (make-help-bubble "Now click on a shape to attach it to your virus." 'click-ligand 400 130 "help-bubble.png" 9999)
 				     (make-help-bubble "You have infected this host, mutate your virus to help it spread." 'infected-host 100 300 "help-bubble.png" 10)
+				     (make-help-bubble "Hosts turn red when they become infected." 'infected-host2 400 130 "help-bubble-n.png" 5)
 				     (make-help-bubble "Try shapes that match the shapes on the uninfected hosts." 'click-ligand 400 130 "help-bubble-n.png" 5)
 				     (make-help-bubble "The more shapes you attach, the more likely it will spread." 'spread 400 130 "help-bubble-n.png" 5)
 				     (make-help-bubble "But if you are too deadly, you'll kill all the hosts and die out too." 'too-good 400 130 "help-bubble-n.png" 5)
@@ -384,7 +385,7 @@
 (define (highlight-id2 h) (list-ref h 2))
 
 (define highlights '())
-(define last-highlight-time 0)
+(define last-highlight-time -30)
 (define highlight-duration 10)
 
 (define (highlight-transmission! g host-id)
@@ -393,7 +394,6 @@
 					 (list-ref host-id 1))
 			 highlights))
   
-  (set! last-highlight-time (time))  
   (let ((host (host-search (car host-id) (play-mode-population g))))
     ;; convert from lat/lon to quaternion 
     (let ((latlng (host-location host)))
@@ -402,15 +402,18 @@
 	;; these numbers are slightly arbitrary, as
 	;; the positioning is based on the texture mapping	
 	;; x rotates y world axis	
-	;; y rotates x world axis (where 1 is top 0 is bottom pole)
-	(set! world-target-q
-	      (qmul
-	       (qaxisangle 
-		(vector 0 1 0)
-		(- (* x -360) 15))	       
-	       (qaxisangle 
-		(vector 1 0 0)
-	       	(+ 180 (* 180 (- (- y) 0.5))))))))))
+	;; y rotates x world axis (where 1 is top 0 is bottom pole)	
+	(when (> (- (time) last-highlight-time) 10)
+	      ;; don't wanna skip around too much - nausea!
+	      (set! last-highlight-time (time))  
+	      (set! world-target-q
+		    (qmul
+		     (qaxisangle 
+		      (vector 0 1 0)
+		      (- (* x -360) 15))	       
+		     (qaxisangle 
+		      (vector 1 0 0)
+		      (+ 180 (* 180 (- (- y) 0.5)))))))))))
 
 (define (organism-pos g id)
   (let ((organism 

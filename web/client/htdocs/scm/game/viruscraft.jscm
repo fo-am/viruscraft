@@ -40,6 +40,7 @@
 
 (define mode mode-loading)
 (define exhib-version #f)
+(define skip-world-design #t)
 
 ;;(define infect-colour-hex "#f07")
 (define infect-colour-hex "#ff1053")
@@ -81,8 +82,16 @@
    ((eq? mode mode-title) 
     (cond 
      ((eq? (title-mode-ready? current-mode) "next")
-      (set! mode mode-world-design)
-      (init-world-design-mode))
+      (cond
+       (skip-world-design
+	(when (not world-units)
+	      ;; 10% to 80% sea level
+	      (set! world-units (build-world-from-params (+ (* (rndf) 50) 5) 50)))
+	(set! mode mode-play)
+	(init-play-mode (gen-disease-name)))
+       (else
+	(set! mode mode-world-design)
+	(init-world-design-mode))))
      ((eq? (title-mode-ready? current-mode) "about")
       (set! mode mode-about)
       (init-about-mode))
@@ -95,7 +104,6 @@
       (set! mode mode-title)
       (init-title-mode))
      ((eq? (about-mode-ready? current-mode) "science")
-      (msg "entering science mode")
       (set! mode mode-science)
       (init-about-science-mode))
      ((eq? (about-mode-ready? current-mode) "dev")
@@ -137,6 +145,12 @@
     (cond
      ((stats-mode-finished? current-mode)
       (cond
+       (skip-world-design
+	(destroy world-root)
+	(set! world-units #f)
+	(set! mode mode-title)
+	(set-canvas-drag-fn (lambda () 0))
+	(init-title-mode))
        (exhib-version
 	(when (not world-units)
 	      ;; 10% to 80% sea level

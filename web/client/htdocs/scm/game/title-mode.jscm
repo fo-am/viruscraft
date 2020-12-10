@@ -8,7 +8,16 @@
 (define intro-text '())
 (define title-text '())
 
+(define title-viruses '())
+
 (define (init-title-mode)
+  (with-state
+   (set! title-viruses
+	 (list
+	  (build-random-virus (vector 12 0 0) 0.9)
+	  (build-random-virus (vector 8 -5 0) 1.3)
+	  (build-random-virus (vector -10 -3 0) 1.9))))
+  
   (set! title-text 
 	(make-textbox 
 	 (/ screen-width 2) 150
@@ -18,16 +27,17 @@
   (set! intro-text 
 	(make-textbox 
 	 (/ screen-width 2) 250
-	 "40pt" 50 "centre"
+	 "40pt" 55 "centre"
 	 (list
-	  "You are a virus, evolve to infect hosts, jump"
-	  "between species, stay alive.")))
-
+	  "Play as a virus - evolve to infect hosts, jump"
+	  "between species, and stay alive as long as you can.")))
+  
   (set! start-button 
 	(make-image-button 
 	 (+ (/ screen-width 2) 150) 450 "hexbutton.png"
 	 "Play" 0 "spin"
 	 (lambda (m)
+	   (for-each (lambda (p) (destroy p)) title-viruses)
 	   (title-mode-modify-ready m "next"))))
   
   (set! about-button 
@@ -35,6 +45,7 @@
 	 (- (/ screen-width 2) 150) 450 "hexbutton.png"
 	 "About" 0 "spin"
 	 (lambda (m)
+	   (for-each (lambda (p) (destroy p)) title-viruses)
 	   (title-mode-modify-ready m "about"))))
   (list #f))
 
@@ -47,11 +58,16 @@
    (image-button-update about-button m)))
 
 (define (title-mode-render m)
-  0)
+  (for-each
+   (lambda (p)
+     (with-primitive
+      p
+      (rotate (vector 0 1 0))))
+   title-viruses))
 
 
 (define (title-mode-canvas-render m)
-  (ctx.drawImage (find-image "bg2.jpg" image-lib) 0 0)
+;;  (ctx.drawImage (find-image "bg2.jpg" image-lib) 0 0)
   (ctx.drawImage (find-image "logos.png" image-lib) 565 630)
   
   (textbox-render! title-text)

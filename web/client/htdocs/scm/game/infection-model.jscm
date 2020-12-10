@@ -24,11 +24,11 @@
 (define spawn-dist 0.2)
 (define host-spawn-dist-tries 5)
 (define host-move-max-distance 0.08)
-(define host-movement-likelihood 1.8)
+(define host-movement-likelihood 1.0) ;; survey down from 1.8
 (define host-direction-change 0.1)
 
 ;; main disease parameters
-(define infect-likelihood-mult 8) ;; per second mult
+(define infect-likelihood-mult 32) ;; per second mult - survey up from 8
 (define infect-spawn-reduction 0.125) ;; eden: 0.75
 (define infection-distance 0.25)
 (define host-infection-decline -10) ; (* deadliness)
