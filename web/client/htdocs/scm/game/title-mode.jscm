@@ -27,11 +27,11 @@
   (set! intro-text 
 	(make-textbox 
 	 (/ screen-width 2) 250
-	 "40pt" 50 "centre"
+	 "40pt" 55 "centre"
 	 (list
-	  "You are a virus, evolve to infect hosts, jump"
-	  "between species, stay alive.")))
-
+	  "Play as a virus - evolve to infect hosts, jump"
+	  "between species, and stay alive as long as you can.")))
+  
   (set! start-button 
 	(make-image-button 
 	 (+ (/ screen-width 2) 150) 450 "hexbutton.png"
