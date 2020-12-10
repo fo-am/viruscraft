@@ -72,9 +72,9 @@
 (define (go)
   (set! w (world-update w m))
   (update-springy-graph! sp w)
-  (requestAnimFrame go))
+  (window.requestAnimationFrame go))
 
-(requestAnimFrame go)
+(window.requestAnimationFrame go)
 
 (define (read-number id)
   (let ((w ($ (string-append "#" id))))

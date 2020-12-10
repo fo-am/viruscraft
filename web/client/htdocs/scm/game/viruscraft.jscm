@@ -8,6 +8,7 @@
 (load "flx/scm/canvas-widgets.jscm")
 (load "flx/scm/network.jscm")
 
+(load "scm/game/diseases.jscm")
 (load "scm/game/help-bubbles.jscm")
 (load "scm/game/popup.jscm")
 (load "scm/game/shaders.jscm")
@@ -26,7 +27,6 @@
 (load "scm/game/about-mode.jscm")
 (load "scm/game/about-dev-mode.jscm")
 (load "scm/game/about-science-mode.jscm")
-(load "scm/game/diseases.jscm")
 
 (define mode-loading 0)
 (define mode-title 1)
