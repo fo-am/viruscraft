@@ -145,7 +145,12 @@
     (cond
      ((stats-mode-finished? current-mode)
       (cond
-       ((or exhib-version skip-world-design)
+       (skip-world-design
+	(destroy world-root)
+	(set! world-units #f)
+	(set! mode mode-title)
+	(init-title-mode))
+       (exhib-version
 	(when (not world-units)
 	      ;; 10% to 80% sea level
 	      (set! world-units (build-world-from-params (+ (* (rndf) 50) 5) 50)))
