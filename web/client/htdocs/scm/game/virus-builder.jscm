@@ -208,6 +208,33 @@
 
    buttons))
 
+(define (build-random-virus pos sc)
+  (let ((p (with-state 
+	    (shader-assign-compiled "virus")
+	    (translate pos) 
+	    (scale (vector sc sc sc))
+	    (colour virus-col)
+	    (load-primitive "models/ico.obj"))))        
+    (for-each
+     (lambda (rot)
+       (with-state
+	(shader-assign-compiled "virus")	
+	(parent p)
+	(concat (minverse (q->m rot)))
+	(translate (vector 0 1.1 0))
+	(scale (vector 0.1 0.1 0.1))
+	(colour receptor-col)
+	(load-primitive
+	 (choose (list
+		  "models/receptor-circle.obj"
+		  "models/receptor-square.obj"
+		  "models/receptor-donut.obj"
+		  "models/receptor-guitar.obj"
+		  "models/receptor-triangle.obj"
+		  )))))
+     receptor-rotations)
+    p))
+
 (define (build-virus-builder)
   (set! virus-builder (with-state 
 		       (shader-assign-compiled "virus")
@@ -226,23 +253,23 @@
   (set! receptor-clear (with-state (hide #t) (load-primitive "models/receptor-clear.obj")))
 
   (when (not exhib-version)
-  (set! buttons 
-	(build-list
-	 num-buttons
-	 (lambda (i)
-	   (make-button
-	    (with-state 
-	     (shader-assign-compiled "virus")
-	     (translate builder-pos)
-	     (translate (vmul (vector (cos (* (/ i num-buttons) Math.PI 2))
-				      (sin (* (/ i num-buttons) Math.PI 2))
-				      0) 4))
-	     ;;(translate (vector 0 -0.7 0))
-	     (scale (vector 0.2 0.2 0.2))
-	     ;;(rotate (vector 0 90 0))
-	     (colour receptor-col)
-	     (load-primitive (list-ref button-objs i)))
-	    (list-ref button-fns i))))))
+	(set! buttons 
+	      (build-list
+	       num-buttons
+	       (lambda (i)
+		 (make-button
+		  (with-state 
+		   (shader-assign-compiled "virus")
+		   (translate builder-pos)
+		   (translate (vmul (vector (cos (* (/ i num-buttons) Math.PI 2))
+					    (sin (* (/ i num-buttons) Math.PI 2))
+					    0) 4))
+		   ;;(translate (vector 0 -0.7 0))
+		   (scale (vector 0.2 0.2 0.2))
+		   ;;(rotate (vector 0 90 0))
+		   (colour receptor-col)
+		   (load-primitive (list-ref button-objs i)))
+		  (list-ref button-fns i))))))
 
   (set! face-display 
 	(with-state
