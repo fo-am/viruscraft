@@ -28,7 +28,7 @@
 (define host-direction-change 0.1)
 
 ;; main disease parameters
-(define infect-likelihood-mult 16) ;; per second mult - survey up from 8
+(define infect-likelihood-mult 32) ;; per second mult - survey up from 8
 (define infect-spawn-reduction 0.125) ;; eden: 0.75
 (define infection-distance 0.25)
 (define host-infection-decline -10) ; (* deadliness)

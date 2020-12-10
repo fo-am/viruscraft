@@ -385,7 +385,7 @@
 (define (highlight-id2 h) (list-ref h 2))
 
 (define highlights '())
-(define last-highlight-time 0)
+(define last-highlight-time -30)
 (define highlight-duration 10)
 
 (define (highlight-transmission! g host-id)
