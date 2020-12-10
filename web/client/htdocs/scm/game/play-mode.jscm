@@ -169,6 +169,7 @@
 				     (make-help-bubble "Drag your virus to select a face with the pink indicator." 'drag-virus 380 300 "help-bubble.png" 9999)
 				     (make-help-bubble "Now click on a shape to attach it to your virus." 'click-ligand 400 130 "help-bubble.png" 9999)
 				     (make-help-bubble "You have infected this host, mutate your virus to help it spread." 'infected-host 100 300 "help-bubble.png" 10)
+				     (make-help-bubble "Hosts turn red when they become infected." 'infected-host2 400 130 "help-bubble-n.png" 5)
 				     (make-help-bubble "Try shapes that match the shapes on the uninfected hosts." 'click-ligand 400 130 "help-bubble-n.png" 5)
 				     (make-help-bubble "The more shapes you attach, the more likely it will spread." 'spread 400 130 "help-bubble-n.png" 5)
 				     (make-help-bubble "But if you are too deadly, you'll kill all the hosts and die out too." 'too-good 400 130 "help-bubble-n.png" 5)
