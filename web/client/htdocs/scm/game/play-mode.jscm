@@ -393,7 +393,6 @@
 					 (list-ref host-id 1))
 			 highlights))
   
-  (set! last-highlight-time (time))  
   (let ((host (host-search (car host-id) (play-mode-population g))))
     ;; convert from lat/lon to quaternion 
     (let ((latlng (host-location host)))
@@ -402,15 +401,18 @@
 	;; these numbers are slightly arbitrary, as
 	;; the positioning is based on the texture mapping	
 	;; x rotates y world axis	
-	;; y rotates x world axis (where 1 is top 0 is bottom pole)
-	(set! world-target-q
-	      (qmul
-	       (qaxisangle 
-		(vector 0 1 0)
-		(- (* x -360) 15))	       
-	       (qaxisangle 
-		(vector 1 0 0)
-	       	(+ 180 (* 180 (- (- y) 0.5))))))))))
+	;; y rotates x world axis (where 1 is top 0 is bottom pole)	
+	(when (> (- (time) last-highlight-time) 10)
+	      ;; don't wanna skip around too much - nausea!
+	      (set! last-highlight-time (time))  
+	      (set! world-target-q
+		    (qmul
+		     (qaxisangle 
+		      (vector 0 1 0)
+		      (- (* x -360) 15))	       
+		     (qaxisangle 
+		      (vector 1 0 0)
+		      (+ 180 (* 180 (- (- y) 0.5)))))))))))
 
 (define (organism-pos g id)
   (let ((organism 
