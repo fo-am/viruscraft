@@ -61,12 +61,14 @@
    (lambda (i)
      (set! count (+ count 1))
      (list count (vector-ref i 0) (vector-ref i 1)))
-   (cdr (select db "select name, age, infections, deaths, jumps from virus where age>5 order by age desc;"))))
+   (cdr (select db "select name, age, infections, deaths, jumps from virus where age>5 and time>? order by age desc limit 1000;"
+		(- (current-seconds) 604800)))))
 
 (define (get-scores db)
   (map
    (lambda (i)
      (vector-ref i 0))
-   (cdr (select db "select age from virus order by age desc;"))))
+   (cdr (select db "select age from virus where time>? order by age desc limit 1000;"
+		(- (current-seconds) 604800)))))
 
 

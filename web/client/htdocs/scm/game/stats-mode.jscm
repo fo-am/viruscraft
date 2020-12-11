@@ -27,7 +27,7 @@
 
 (define (render-stats-hiscores g)
   (set! ctx.font "25pt Dosis")
-  (ctx.fillText "Top 15 viruses (by age)" 40 350)   
+  (ctx.fillText "Top 15 viruses this week (by age)" 40 350)   
   (set! ctx.font "15pt Dosis")
   (let ((displayed #f)
 	(age (scores-age (play-mode-scores g))))
