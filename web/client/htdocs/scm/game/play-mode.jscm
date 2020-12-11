@@ -372,7 +372,7 @@
    (let ((s 0.62))
      (scale (vector s s s)))
    (cond 
-    ((> (+ last-highlight-time 30) (time))
+    ((> (+ last-highlight-time 3) (time))
      (set! world-q (qslerp world-q world-target-q camera-drift)))    
     (else
      (set! world-q (qmul world-q (qaxisangle (vector 0 1 0) 0.25)))))   
